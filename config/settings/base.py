@@ -42,9 +42,9 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'gac_django.db',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "gac_django.db",
     }
 }
 
