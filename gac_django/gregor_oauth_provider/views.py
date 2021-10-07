@@ -5,11 +5,11 @@ from django.conf import settings
 
 class CustomAdapter(OAuth2Adapter):
     provider_id = CustomProvider.id
-    
+
     # Fetched programmatically, must be reachable from container
     access_token_url = '{}/o/token/'.format(settings.GREGOR_OAUTH_SERVER_BASEURL)
     profile_url = '{}/profile/'.format(settings.GREGOR_OAUTH_SERVER_BASEURL)
-    
+
     # Accessed by the user browser, must be reachable by the host
     authorize_url = '{}/o/authorize/'.format(settings.GREGOR_OAUTH_SERVER_BASEURL)
 
