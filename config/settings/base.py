@@ -44,7 +44,7 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "gac_django.db",
+        "NAME": "gregor_django.db",
     }
 }
 
@@ -79,10 +79,9 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
+    "gregor_oauth_provider",
 ]
-# ***REMOVED***
-# ***REMOVED***
-# ***REMOVED***
+
 LOCAL_APPS = [
     "gac_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
@@ -280,5 +279,7 @@ ACCOUNT_ADAPTER = "gac_django.users.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "gac_django.users.adapters.SocialAccountAdapter"
 
 
-# Your stuff...
+# GREGOR
 # ------------------------------------------------------------------------------
+GREGOR_OAUTH_SERVER_BASEURL = "http://127.0.0.1:8001"
+
