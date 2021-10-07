@@ -9,22 +9,24 @@ class CustomAccount(ProviderAccount):
 
 class CustomProvider(OAuth2Provider):
 
-    id = 'gregor_oauth_provider'
-    name = 'Gregor OAuth2 Provider'
+    id = "gregor_oauth_provider"
+    name = "Gregor OAuth2 Provider"
     account_class = CustomAccount
 
     def extract_uid(self, data):
-        return str(data['id'])
+        return str(data["id"])
 
     def extract_common_fields(self, data):
-        from pprint import pprint
-        return dict(username=data['username'],
-                    email=data['email'],
-                    first_name=data['first_name'],
-                    last_name=data['last_name'],)
+
+        return dict(
+            username=data["username"],
+            email=data["email"],
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+        )
 
     def get_default_scope(self):
-        scope = ['read']
+        scope = ["read"]
         return scope
 
 

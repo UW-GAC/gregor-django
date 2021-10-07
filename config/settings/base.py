@@ -282,4 +282,3 @@ SOCIALACCOUNT_ADAPTER = "gac_django.users.adapters.SocialAccountAdapter"
 # GREGOR
 # ------------------------------------------------------------------------------
 GREGOR_OAUTH_SERVER_BASEURL = "http://127.0.0.1:8001"
-
