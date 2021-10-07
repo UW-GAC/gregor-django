@@ -79,12 +79,13 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
-    "gregor_oauth_provider",
+    
 ]
 
 LOCAL_APPS = [
     "gac_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
+    "gac_django.gregor_oauth_provider",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
