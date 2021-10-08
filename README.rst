@@ -7,7 +7,7 @@ GREGoR Dynamic Oauth Client Proof of Concept
      :target: https://github.com/ambv/black
      :alt: Black code style
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
-       :target: https://lbesson.mit-license.org/     
+       :target: https://lbesson.mit-license.org/
 .. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter
      :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
@@ -64,9 +64,7 @@ The following details how to deploy this application in dev to try third party o
 * python manage.py createsuperuser
 * python manage.py runserver_plus
 * visit <site url>/admin - login as super user
-* add 'Social Application' enter github client id and secret, select site_id 1 
+* add 'Social Application' enter github client id and secret, select site_id 1
 * sign out as super user
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
-
-
