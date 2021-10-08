@@ -57,5 +57,4 @@ The following details how to deploy this application in dev:
 * Clone repository
 * python manage.py migrate
 * python manage.py createsuperuser
-* 
-
+*
