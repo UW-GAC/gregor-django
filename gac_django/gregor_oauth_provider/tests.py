@@ -1,4 +1,3 @@
-from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
 
@@ -20,4 +19,3 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             "last_name": "Master"
         }""",
         )
-
