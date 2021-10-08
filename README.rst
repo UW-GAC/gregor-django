@@ -53,14 +53,14 @@ Deployment
 ----------
 
 The following details how to deploy this application in dev to try third party oauth
-$ Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
-$ Clone repository
-$ python manage.py migrate
-$ python manage.py createsuperuser
-$ python manage.py runserver_plus
-$ visit <site url>/admin - login as super user
-$ add 'Social Application' enter github client id and secret, select site_id 1 
-$ sign out as super user
-$ visit <site_url>, select 'Sign In'
-$ choose sign in via github
+    $ Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
+    $ Clone repository
+    $ python manage.py migrate
+    $ python manage.py createsuperuser
+    $ python manage.py runserver_plus
+    $ visit <site url>/admin - login as super user
+    $ add 'Social Application' enter github client id and secret, select site_id 1 
+    $ sign out as super user
+    $ visit <site_url>, select 'Sign In'
+    $ choose sign in via github, follow instructions to creat oauth account
 
