@@ -52,7 +52,7 @@ Running tests with py.test
 Deployment
 ----------
 
-The following details how to deploy this application in dev to try third party oauth
+The following details how to deploy this application in dev to try third party oauth::
     $ Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
     $ Clone repository
     $ python manage.py migrate
