@@ -1,6 +1,6 @@
 from django.urls import path
 
-from gac_django.users.views import (
+from gregor_django.users.views import (
     user_detail_view,
     user_redirect_view,
     user_update_view,

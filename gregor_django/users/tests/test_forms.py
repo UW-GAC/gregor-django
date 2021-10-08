@@ -4,8 +4,8 @@ Module for all Form Tests.
 import pytest
 from django.utils.translation import gettext_lazy as _
 
-from gac_django.users.forms import UserCreationForm
-from gac_django.users.models import User
+from gregor_django.users.forms import UserCreationForm
+from gregor_django.users.models import User
 
 pytestmark = pytest.mark.django_db
 

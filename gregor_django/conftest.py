@@ -1,7 +1,7 @@
 import pytest
 
-from gac_django.users.models import User
-from gac_django.users.tests.factories import UserFactory
+from gregor_django.users.models import User
+from gregor_django.users.tests.factories import UserFactory
 
 
 @pytest.fixture(autouse=True)

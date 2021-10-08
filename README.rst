@@ -31,7 +31,7 @@ Running type checks with mypy:
 
 ::
 
-  $ mypy gac_django
+  $ mypy gregor_django
 
 Test coverage
 ^^^^^^^^^^^^^
@@ -53,3 +53,9 @@ Deployment
 ----------
 
 The following details how to deploy this application in dev:
+* Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
+* Clone repository
+* python manage.py migrate
+* python manage.py createsuperuser
+* 
+

@@ -8,10 +8,10 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 from django.urls import reverse
 
-from gac_django.users.forms import UserChangeForm
-from gac_django.users.models import User
-from gac_django.users.tests.factories import UserFactory
-from gac_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
+from gregor_django.users.forms import UserChangeForm
+from gregor_django.users.models import User
+from gregor_django.users.tests.factories import UserFactory
+from gregor_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 

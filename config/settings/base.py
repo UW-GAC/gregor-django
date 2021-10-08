@@ -6,8 +6,8 @@ from pathlib import Path
 import environ
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
-# gac_django/
-APPS_DIR = ROOT_DIR / "gac_django"
+# gregor_django/
+APPS_DIR = ROOT_DIR / "gregor_django"
 env = environ.Env()
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
@@ -49,7 +49,7 @@ DATABASES = {
 }
 
 # DATABASES = {
-#     "default": env.db("DATABASE_URL", default="postgres:///gac_django"),
+#     "default": env.db("DATABASE_URL", default="postgres:///gregor_django"),
 # }
 # DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
@@ -82,9 +82,9 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "gac_django.users.apps.UsersConfig",
+    "gregor_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "gac_django.gregor_oauth_provider",
+    "gregor_django.gregor_oauth_provider",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -93,7 +93,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # MIGRATIONS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#migration-modules
-MIGRATION_MODULES = {"sites": "gac_django.contrib.sites.migrations"}
+MIGRATION_MODULES = {"sites": "gregor_django.contrib.sites.migrations"}
 
 # AUTHENTICATION
 # ------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
-                "gac_django.utils.context_processors.settings_context",
+                "gregor_django.utils.context_processors.settings_context",
             ],
         },
     }
@@ -274,9 +274,9 @@ ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_ADAPTER = "gac_django.users.adapters.AccountAdapter"
+ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-SOCIALACCOUNT_ADAPTER = "gac_django.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 
 
 # GREGOR

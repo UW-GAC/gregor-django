@@ -10,7 +10,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=_source
 set BUILDDIR=_build
-set APP=..\gac_django
+set APP=..\gregor_django
 
 if "%1" == "" goto help
 
