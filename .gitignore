@@ -274,3 +274,6 @@ gregor_django/media/
 
 .pytest_cache/
 
+gregor_django.db
+
+
