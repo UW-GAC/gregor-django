@@ -56,7 +56,6 @@ Deployment
 
 The following details how to deploy this application in dev to try third party oauth::
 
-
 * Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
 * Clone repository
 * python -m pip install -r requirements/local.txt
@@ -71,6 +70,8 @@ The following details how to deploy this application in dev to try third party o
 
 Want to contribute
 ----------
+
+Basic steps::
 
 * pre-commit install (add git pre-commit hooks for black, flake8, etc)
 * git checkout -b <feature_branch_name> (Create and switch to feature branch)
