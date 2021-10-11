@@ -79,6 +79,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
+    "login_required",
 ]
 
 LOCAL_APPS = [
@@ -280,9 +281,14 @@ ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-# django-login-required-middleware
+# django-login-required-middleware login note required views
 LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "account_login",
+    "github_login",
+    "github_callback",
+    "gregor_oauth_provider_login",
+    "gregor_oauth_provider_callback",
+    "admin",
 ]
 
 # GREGOR
