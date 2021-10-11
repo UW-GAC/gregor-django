@@ -68,3 +68,18 @@ The following details how to deploy this application in dev to try third party o
 * sign out as super user
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
+
+Want to contribute::
+
+* pre-commit install (add git pre-commit hooks for black, flake8, etc)
+* git checkout -b <feature_branch_name> (Create and switch to feature branch)
+* make changes
+* tests: pytest
+* test coverage: (see above)
+* type checks: mypy gregor_django
+* manually run pre-commit if you did not install or if you just want to check
+* git add your changes
+* git commit your changes
+* git push origin <feature_branch_name>
+* review or request review of changes in github
+* submit push request
