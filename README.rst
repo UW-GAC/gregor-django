@@ -56,7 +56,6 @@ Deployment
 
 The following details how to deploy this application in dev to try third party oauth::
 
-
 * Create virtualenv (python 3.8 or greater required), recommend python -m venv venv
 * Clone repository
 * python -m pip install -r requirements/local.txt
@@ -65,6 +64,24 @@ The following details how to deploy this application in dev to try third party o
 * python manage.py runserver_plus
 * visit <site url>/admin - login as super user
 * add 'Social Application' enter github client id and secret, select site_id 1
-* sign out as super user
+* sign out as super user or use a diffeent browser or private session
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
+
+Want to contribute
+----------
+
+Basic steps::
+
+* pre-commit install (add git pre-commit hooks for black, flake8, etc)
+* git checkout -b <feature_branch_name> (Create and switch to feature branch)
+* make changes
+* tests: pytest
+* test coverage: (see above)
+* type checks: mypy gregor_django
+* manually run pre-commit if you did not install or if you just want to check
+* git add your changes
+* git commit your changes
+* git push origin <feature_branch_name>
+* review or request review of changes in github
+* submit push request
