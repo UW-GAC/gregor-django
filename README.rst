@@ -69,7 +69,8 @@ The following details how to deploy this application in dev to try third party o
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
 
-Want to contribute::
+Want to contribute
+----------
 
 * pre-commit install (add git pre-commit hooks for black, flake8, etc)
 * git checkout -b <feature_branch_name> (Create and switch to feature branch)
