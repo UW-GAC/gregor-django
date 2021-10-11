@@ -140,6 +140,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "login_required.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -277,7 +278,12 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 
+# django-login-required-middleware
+LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
+    "account_login",
+]
 
 # GREGOR
 # ------------------------------------------------------------------------------

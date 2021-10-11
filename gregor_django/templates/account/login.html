@@ -4,18 +4,21 @@
 {% load account socialaccount %}
 {% load crispy_forms_tags %}
 
-{% block head_title %}{% translate "Sign In" %}{% endblock %}
+{% block head_title %}{% translate "Please Sign In" %}{% endblock %}
 
 {% block inner %}
 
-<h1>{% translate "Sign In" %}</h1>
+<h1>{% translate "Please Sign In" %}</h1>
+<p class='alert alert-secondary'><i class="bi-shield-lock-fill"></i> This Django site configured with all views protected. Sign in to view stub pages.</p>
 
 {% get_providers as socialaccount_providers %}
 
 {% if socialaccount_providers %}
-<p>{% blocktranslate with site.name as site_name %}Please sign in with one
-of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
-for a {{ site_name }} account and sign in below:{% endblocktranslate %}</p>
+<p>{% blocktranslate with site.name as site_name %}Please sign in or sign up using one
+of your existing third party accounts. {% endblocktranslate %}</p>
+
+{% comment %} Or, <a href="{{ signup_url }}">sign up</a>
+for a {{ site_name }} account and sign in below: {% endcomment %}
 
 <div class="socialaccount_ballot">
 
@@ -23,7 +26,7 @@ for a {{ site_name }} account and sign in below:{% endblocktranslate %}</p>
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
 
-  <div class="login-or">{% translate 'or' %}</div>
+  {% comment %} <div class="login-or">{% translate 'or' %}</div> {% endcomment %}
 
 </div>
 
@@ -33,7 +36,7 @@ for a {{ site_name }} account and sign in below:{% endblocktranslate %}</p>
 <p>{% blocktranslate %}If you have not created an account yet, then please
 <a href="{{ signup_url }}">sign up</a> first.{% endblocktranslate %}</p>
 {% endif %}
-
+{% if allow_local_accounts %}
 <form class="login" method="POST" action="{% url 'account_login' %}">
   {% csrf_token %}
   {{ form|crispy }}
@@ -43,5 +46,6 @@ for a {{ site_name }} account and sign in below:{% endblocktranslate %}</p>
   <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% translate "Forgot Password?" %}</a>
   <button class="primaryAction btn btn-primary" type="submit">{% translate "Sign In" %}</button>
 </form>
+{% endif %}
 
 {% endblock %}
