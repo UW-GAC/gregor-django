@@ -289,7 +289,8 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "gregor_oauth_provider_login",
     "gregor_oauth_provider_callback",
     "socialaccount_signup",
-    "admin",
+    "admin:index",
+    "admin:login",
 ]
 
 # GREGOR
