@@ -64,6 +64,7 @@ The following details how to deploy this application in dev to try third party o
 * python manage.py runserver_plus
 * visit <site url>/admin - login as super user
 * add 'Social Application' enter github client id and secret, select site_id 1
+* Instructions on how to get a github client id and secret are here: https://django-allauth.readthedocs.io/en/latest/providers.html#github
 * sign out as super user or use a diffeent browser or private session
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
