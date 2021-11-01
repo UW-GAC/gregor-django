@@ -68,6 +68,11 @@ The following details how to deploy this application in dev to try third party o
 * visit <site_url>, select 'Sign In'
 * choose sign in via github, follow instructions to creat oauth account
 
+Troubleshooting
+^^^^^^^^^^^^^^^
+
+To get the GitHub OAuth to work, you may have to use http://localhost:8000/accounts/github/login/callback/ instead of http://127.0.0.1:8000/accounts/github/login/callback/ for the development callback URL. This may only be necessary if you are running your development server with localhost:8000 instead of 127.0.0.1:8000.
+
 Want to contribute
 ----------
 
