@@ -12,10 +12,8 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             200,
             """
         {
-            "username": "testmaster",
+            "name": "testmaster",
             "email": "test@testmaster.net",
-            "id": 20122,
-            "first_name":"Test",
-            "last_name": "Master"
+            "sub": 20122
         }""",
         )

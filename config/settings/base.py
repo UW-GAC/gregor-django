@@ -295,4 +295,5 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 
 # GREGOR
 # ------------------------------------------------------------------------------
-GREGOR_OAUTH_SERVER_BASEURL = "http://127.0.0.1:8001"
+GREGOR_OAUTH_SERVER_BASEURL = "https://dev.gregorconsortium.org"
+GREGOR_OAUTH_REQUESTED_SCOPES = ["oauth_django_access"]
