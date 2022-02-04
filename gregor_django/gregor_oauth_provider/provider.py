@@ -1,9 +1,10 @@
 import logging
 
-from allauth.socialaccount import providers
+from allauth.account.models import EmailAddress
+from allauth.socialaccount import app_settings, providers
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
-from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +28,68 @@ class CustomProvider(OAuth2Provider):
             email=data["email"],
         )
 
+    def extract_email_addresses(self, data):
+        ret = []
+        email = data.get("email")
+        verified = data.get("email_verified")
+        if isinstance(verified, str):
+            verified = verified == "True"
+        if email:
+            ret.append(
+                EmailAddress(
+                    email=email,
+                    verified=verified,
+                    primary=True,
+                )
+            )
+        return ret
+
+    def get_provider_scope_config(self):
+        provider_settings = app_settings.PROVIDERS.get(self.id, {})
+        gregor_oauth_scopes = provider_settings.get("SCOPES")
+
+        if not gregor_oauth_scopes:
+            raise ImproperlyConfigured(
+                f"[get_provider_scope_config] missing provider setting SCOPES {provider_settings}"
+            )
+
+        if not isinstance(gregor_oauth_scopes, list):
+            raise ImproperlyConfigured(
+                "[get_provider_scope_config] provider setting SCOPES should be a list"
+            )
+
+        return gregor_oauth_scopes
+
+    def get_provider_managed_scope_status(self, scopes_granted):
+        provider_managed_django_group_status = {}
+
+        gregor_oauth_scopes = self.get_provider_scope_config()
+
+        for scope_settings in gregor_oauth_scopes:
+            drupal_scope_name = scope_settings.get("drupal_machine_name")
+            django_group_name = scope_settings.get("django_group_name")
+            has_scope = False
+
+            if not drupal_scope_name and django_group_name:
+                raise ImproperlyConfigured(
+                    f"[get_provider_managed_group_status] GREGOR_OAUTH_SCOPE entry {scope_settings} misconfigured"
+                )
+
+            if drupal_scope_name in scopes_granted:
+                has_scope = True
+
+            provider_managed_django_group_status[django_group_name] = has_scope
+
+        return provider_managed_django_group_status
+
     def get_default_scope(self):
-        scope = []
-        if hasattr(settings, "GREGOR_OAUTH_REQUESTED_SCOPES"):
-            scope = settings.GREGOR_OAUTH_REQUESTED_SCOPES
-        return scope
+        requested_scopes = []
+        gregor_oauth_scopes = self.get_provider_scope_config()
+        for scope_settings in gregor_oauth_scopes:
+            if scope_settings.get("request_scope", False):
+                requested_scopes.append(scope_settings.get("drupal_machine_name"))
+
+        return requested_scopes
 
 
 providers.registry.register(CustomProvider)
