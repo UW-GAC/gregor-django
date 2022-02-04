@@ -60,7 +60,7 @@ class CustomProvider(OAuth2Provider):
 
         return gregor_oauth_scopes
 
-    def get_provider_managed_scope_status(self, scopes_granted):
+    def get_provider_managed_scope_status(self, scopes_granted=[]):
         provider_managed_django_group_status = {}
 
         gregor_oauth_scopes = self.get_provider_scope_config()

@@ -74,7 +74,7 @@ class CustomAdapter(OAuth2Adapter):
     def get_scopes_from_token(self, id_token, headers):
         allowed_audience = self.get_client_id()
         public_key = self.get_public_key(headers)
-        scopes = []
+        scopes = None
 
         try:
             unverified_header = jwt.get_unverified_header(id_token.token)

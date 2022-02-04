@@ -13,6 +13,7 @@ def custom_user_logged_in_processing(sender, **kwargs):
     # If the user logged in with the gregor oauth provider
     # update additional user info
     sociallogin = kwargs.get("sociallogin")
-    user_provider_id = sociallogin.account.provider
-    if user_provider_id == GregorProvider.id:
-        get_adapter().update_gregor_user_data(sociallogin)
+    if sociallogin:
+        user_provider_id = sociallogin.account.provider
+        if user_provider_id == GregorProvider.id:
+            get_adapter().update_gregor_user_data(sociallogin)
