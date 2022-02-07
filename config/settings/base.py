@@ -281,7 +281,7 @@ ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-# django-login-required-middleware login note required views
+# django-login-required-middleware login not required views
 LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "account_login",
     "github_login",
@@ -295,5 +295,28 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 
 # GREGOR
 # ------------------------------------------------------------------------------
-GREGOR_OAUTH_SERVER_BASEURL = "https://dev.gregorconsortium.org"
-GREGOR_OAUTH_REQUESTED_SCOPES = ["oauth_django_access"]
+# Allauth
+# SCOPES are the set of drupal roles/django groups managed by the gregor drupal oauth provider.
+# Scopes that are requested "request_scope=True" will be returned by the oauth server
+# if the user has that drupal role.
+# ** Note: Requested drupal scopes that do not exist will cause a drupal server error
+# The scopes 'oauth_client_user' and 'authenticated' automatically to anyone who logs in
+# via oauth (as configured in the drupal consumer) and will be returned even if we do not request
+# them but are not currently mapped to django groups.
+SOCIALACCOUNT_PROVIDERS = {
+    "gregor_oauth_provider": {
+        "API_URL": "https://dev.gregorconsortium.org",
+        "SCOPES": [
+            {
+                "drupal_machine_name": "oauth_django_access",
+                "request_scope": False,
+                "django_group_name": "test_django_access",
+            },
+            {
+                "drupal_machine_name": "gregor_anvil_admin",
+                "request_scope": True,
+                "django_group_name": "gregor_anvil_admin",
+            },
+        ],
+    }
+}
