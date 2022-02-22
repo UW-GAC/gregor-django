@@ -1,0 +1,32 @@
+:root {
+  /* Theme Colors */
+  --primary: #dc5431;
+  --light: #edede8;
+  --bold-color: #222222;
+  --body-bg: #f4f4ef;
+  --block-bg: #e4e4dd;
+  --border: #dedede;
+}
+
+/* Body text color. */
+body {
+  color: #676767;
+}
+/* Header background */
+.header {
+  background: #ffffff;
+}
+/* Footer background color. */
+#footer {
+  background: #e4dcd3 url(../images/footer-bg.png);
+}
+
+/* Social icons color */
+.header-top-left i,
+ul.social-icons li a {
+  background: #c4bdb5;
+}
+/* Main menu links */
+ul.main-menu > li a {
+  color: #212121;
+}

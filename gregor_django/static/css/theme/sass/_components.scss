@@ -1,0 +1,106 @@
+/* Status message
+-------------------------------------- */
+.message,
+.message-success,
+.message-info,
+.message-error,
+.message-warning,
+.message-announcement,
+.message-notice {
+  position: relative;
+  color: #ffffff;
+  text-shadow: none;
+  margin: 20px 0;
+  padding: 14px 14px 14px 64px;
+}
+.message em,
+.message-success em,
+.message-info em,
+.message-error em,
+.message-warning em,
+.message-announcement em,
+.message-notice em {
+  color: #fff;
+  font-style: italic;
+  border-bottom: 1px dotted #fff;
+}
+.message p,
+.message-success p,
+.message-info p,
+.message-error p,
+.message-warning p,
+.message-announcement p,
+.message-notice p {
+  margin: 0;
+}
+.message a,
+.message-success a,
+.message-info a,
+.message-error a,
+.message-warning a,
+.message-announcement a,
+.message-notice a {
+  color: #ffffff;
+  text-decoration: none;
+}
+.message-status,
+.message-success {
+  background: #89ad32;
+}
+.message-status::before,
+.message-success::before {
+  content: "\f046";
+  background-color: #759625;
+}
+.message-error {
+  background: #c94d1c;
+}
+.message-error::before {
+  content: '\f06a';
+  background-color: #b3461b;
+}
+.message-warning {
+  background: #cd5a0a;
+}
+.message-warning::before {
+  content: "\f071";
+  background-color: #a44707;
+}
+.message-info {
+  background: #5a82a1;
+}
+.message-info::before {
+  content: "\f05a";
+  background-color: #3e6584;
+}
+.message-announcement {
+  background: #46c280;
+}
+.message-announcement::before {
+  content: "\f0a1";
+  background-color: #34a268;
+}
+.message-notice {
+  background: #afa82e;
+}
+.message-notice::before {
+  content: "\f0a2";
+  background-color: #9b941b;
+}
+.message-status::before,
+.message-success::before,
+.message-error::before,
+.message-warning::before,
+.message-info::before,
+.message-announcement::before,
+.message-notice::before {
+  font-family: "FontAwesome";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 53px;
+  text-align: center;
+  height: 100%;
+  line-height: 53px;
+  font-size: 30px;
+}

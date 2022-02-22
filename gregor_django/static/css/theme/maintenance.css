@@ -1,0 +1,11 @@
+/* Maintenance page
+-------------------------------------- */
+#maintenance {
+  padding-top: 60px;
+  text-align: center;
+}
+#maintenance i {
+  margin: 20px 0;
+  font-size: 4em;
+  color: var(--primary);
+}

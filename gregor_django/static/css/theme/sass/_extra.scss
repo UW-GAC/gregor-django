@@ -1,0 +1,73 @@
+/* Clearing
+-------------------------------------------- */
+.clear {
+  clear: both;
+  width: 100%;
+}
+#breadcrumb::before,
+#highlighted::before,
+.container::before,
+#last-section::before {
+  content: "";
+  display: table;
+  clear: both;
+}
+#breadcrumb::after,
+#highlighted::after,
+.container::after,
+#last-section::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+#main-wrapper::before,
+#homepage-content-wrapper::before,
+#main-wrapper::after,
+#homepage-content-wrapper::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.welcome-message::before,
+.projects::before,
+.welcome-message::after,
+.projects::after,
+.homepage-content .block::before,
+.homepage-content .block::after,
+.node-content::before,
+.node-content::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.node-taxonomy-container::before,
+.node-taxonomy-container::after,
+.node-links-container::before,
+.node-links-container::after,
+nav.pager::before,
+nav.pager::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+#node-comment::before,
+#node-comment::after,
+#content-top::before,
+#content-top::after,
+#content-bottom::before,
+#content-bottom::after,
+#content-top .block::before,
+#content-top .block::after,
+#content-bottom .block::before,
+#content-bottom .block::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+/* Content */
+.page-title-wrap::before,
+.page-title-wrap::after {
+  content: "";
+  display: block;
+  clear: both;
+}

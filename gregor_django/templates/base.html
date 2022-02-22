@@ -13,16 +13,16 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
 
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+    <link rel="icon" href="{% static 'images/favicons/gregor_favicon.jpg' %}">
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"> -->
 
     <!-- Your stuff: Third-party CSS libraries go here -->
     <!-- This file stores project-specific CSS -->
-    <link href="{% static 'css/project.css' %}" rel="stylesheet">
+    <link href="{% static 'css/gregor.css' %}" rel="stylesheet">
     {% endblock %}
     <!-- Le javascript
     ================================================== -->
@@ -42,46 +42,90 @@
 
   <body>
 
-    <div class="mb-1">
-      <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="{% url 'home' %}">GREGoR Django</a>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
-            </li>
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% translate "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
-              </li>
-            {% else %}
-              {% comment %} <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-              </li> {% endcomment %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In/Sign Up" %}</a>
-              </li>
-            {% endif %}
-          </ul>
+    <div class="header-top">
+      <div class="container">
+        <div class="header-top-container">
+          <div class="header-top-left header-top-block">
+            <div class="block-region region-header-top">
+              <nav role="navigation" aria-labelledby="block-useraccountmenu-2-menu" id="block-useraccountmenu-2">
+                <ul>
+                  {% if request.user.is_authenticated %}
+                      <li class="main-menu-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% translate "My Profile" %}</a>
+                      </li>
+                      <li class="main-menu-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+                      </li>
+                      {% else %}
+                      {% comment %} <li class="nav-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+                      </li> {% endcomment %}
+                      <li class="nav-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In/Sign Up" %}</a>
+                      </li>
+                      {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          <!--/.header-top-left -->
         </div>
-      </nav>
-
+        <!--/.header-top-container -->
+      </div>
+      <!--/.container -->
     </div>
-
+    <header class="header">
+      <div class="container">
+        <div class="header-container">
+          <div class="site-branding">
+            <div class="block-region region-site-branding">
+              <div id="block-gregortarapro-branding" class="block">
+                <div class="block-content">
+                  <div class="site-brand">
+                    <div class="site-logo">
+                      <a href="{% url 'home' %}" title="Home" rel="home">
+                        <img src="{% static 'images/GREGoR_logo.jpg' %}" alt="GREGoR Django">
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--/.block-content -->
+            </div>
+          </div>
+          <div class="header-right">
+            <!-- Start: primary menu region -->
+            <div class="mobile-menu">
+              <i class="fa fa-bars" aria-hidden="true"></i>
+            </div>
+            <div class="primary-menu-wrapper">
+              <div class="menu-wrap">
+                <div class="close-mobile-menu">X</div>
+                <div class="block-region region-primary-menu">
+                  <nav role="navigation" aria-labelledby="block-gregortarapro-main-menu-menu"
+                    id="block-gregortarapro-main-menu">
+                    <ul class="main-menu">
+                      <li class="main-menu-item">
+                        <a href="{% url 'about' %}">About</a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+            <!-- End: primary menu region -->
+          </div>
+          <!--/.header-right -->
+        </div>
+        <!--/.header-container -->
+      </div>
+      <!--/.container -->
+    </header>
+    
     <div class="container">
 
       {% if messages %}

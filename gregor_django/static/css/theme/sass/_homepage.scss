@@ -1,0 +1,119 @@
+/* Custom Homepage
+--------------------------------------*/
+/* Custom Homepage -> homepage blocks. */
+.section,
+.homepage-content {
+  position: relative;
+  z-index: 2;
+}
+.homepage-content-block .block {
+  margin-bottom: 70px;
+}
+.block-title,
+.title {
+  position: relative;
+}
+.homepage-content h3.block-title,
+.title {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  text-align: center;
+}
+.homepage-content h3.block-title::after,
+.title::after {
+  position: absolute;
+  content: "";
+  bottom: 0;
+  left: 50%;
+  width: 50px;
+  height: 2px;
+  margin-left: -25px;
+  background: var(--primary);
+}
+.welcome-message {
+  text-align: center;
+}
+
+/* Custom Homepage -> services. */
+.services,
+.projects {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.service {
+  position: relative;
+  flex: 1 0 300px;
+  padding: 1rem;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.service i {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  font-size: 3em;
+  background: var(--light);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  transition: all 0.8s ease;
+  text-align: center;
+}
+.service:hover i {
+  background: var(--primary);
+  color: #fff;
+}
+.service h3 {
+  margin: 0.8em 0;
+}
+
+/* Custom Homepage -> Projects */
+.project {
+  position: relative;
+  display: block;
+  float: left;
+  width: 33.3%;
+  height: auto;
+  margin: 0 0 20px 0;
+  padding: 0 10px;
+}
+.project img {
+  position: relative;
+}
+.project-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 40% 10%;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0;
+}
+.project:hover .project-content {
+  -webkit-animation: slideUp 0.8s ease;
+  -moz-animation: slideUp 0.8s ease;
+  -o-animation: slideUp 0.8s ease;
+  animation: slideUp 0.8s ease;
+  opacity: 1;
+}
+.project-content h1,
+.project-content h2,
+.project-content h3,
+.project-content h4,
+.project-content h5 {
+  color: #fff;
+}
+.project-content a,
+.project-content a:hover {
+  color: #fff;
+}

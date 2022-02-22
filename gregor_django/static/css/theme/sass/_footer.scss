@@ -1,0 +1,75 @@
+/* Footer
+-------------------------------------- */
+#last-section {
+  position: relative;
+  visibility: hidden;
+  width: 100%;
+  min-height: 1px;
+  z-index: 12;
+}
+#footer {
+  position: relative;
+  background: #cdc8c3 url(../images/footer-bg.png);
+  border-top: 4px solid #fff;
+  z-index: 2;
+}
+.footer {
+  position: relative;
+}
+
+/* Footer -> Footer top. */
+#footer-top {
+  position: relative;
+  width: 100%;
+  padding: 1em 0;
+}
+/* Footer -> Footer four block. */
+.footer-blocks {
+  position: relative;
+  display: flex;
+  padding: 1em 0;
+  flex-wrap: wrap;
+}
+.footer-block {
+  flex: 1 1 25%;
+  padding-right: 1%
+}
+.footer-block-last {
+  padding: 0;
+}
+.footer .block-title {
+  position: relative;
+  padding-left: 8px;
+  border-left: 2px solid var(--primary);
+}
+.footer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  list-style-type: none;
+}
+.footer li {
+  padding: 4px 0;
+  border-bottom: 1px solid #bbb0a1;
+  transition: padding 0.5s ease;
+}
+.footer li:last-child {
+  border-bottom: 0;
+}
+.footer li:hover {
+  padding: 4px 0 4px 6px;
+}
+
+/* Footer -> Footer Bottom Middle */
+.footer-bottom-middle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 3px double #bbb0a1;
+  padding: 1em 0;
+}
+/* Footer -> Footer Bottom last*/
+.footer-bottom {
+  position: relative;
+  padding: 1em 0;
+}

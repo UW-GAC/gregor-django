@@ -1,0 +1,61 @@
+/* Page layout.
+-------------------------------------- */
+.page-wrapper {
+  position: relative;
+}
+/* Page layout -> content container. */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 1170px;
+  height: auto;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+/* Page layout -> content warpper including main and sidebar */
+.main-wrapper {
+  position: relative;
+  width: 100%;
+  padding: 20px 0 50px 0;
+  background: var(--body-bg);
+  z-index: 2;
+}
+.main-container {
+  position: relative;
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+/* Page layout -> homepage content warp */
+#homepage-content-wrapper {
+  position: relative;
+  padding: 20px 0 50px 0;
+  background: var(--body-bg);
+  z-index: 2;
+}
+.no-sidebar .main-container {
+  grid-template-columns: 100%;
+}
+.sidebar-left .main-container {
+  grid-template-columns: 25% 75%;
+}
+.sidebar-right .main-container {
+  grid-template-columns: 75% 25%;
+}
+.two-sidebar .main-container {
+  grid-template-columns: 25% 50% 25%;
+}
+
+#sidebar-left {
+  order: 1;
+}
+#main {
+  background: var(--body-bg);
+  order: 2;
+  z-index: 2;
+}
+#sidebar-right {
+  order: 3;
+}
