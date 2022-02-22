@@ -68,7 +68,7 @@
  color: white;
 }
 
-.homepage-content .node-taxonomy-container, 
+.homepage-content .node-taxonomy-container,
 .display-none{
  display:none;
 }
@@ -203,8 +203,6 @@ figcaption{
 .animated-panel-from-right{
  z-index: 4000;
 }
- 
-
 
 .sliding-sidebar h2{
  position: relative;
@@ -326,19 +324,19 @@ ul{
  padding: 0px;
 }
 
-.user_page .field-item:not(li), 
+.user_page .field-item:not(li),
 #block-views-block-assistants-block-1 .field-item {
     margin-left: 20px;
 }
 
-.page-type-committee-or-working-group aside.sidebar-right table, 
+.page-type-committee-or-working-group aside.sidebar-right table,
 .page-type-research-center aside.sidebar-right table {
     display: block;
     max-height: 400px;
     overflow-y: scroll;
 }
 
-.page-type-committee-or-working-group aside.sidebar-right td, 
+.page-type-committee-or-working-group aside.sidebar-right td,
 .page-type-research-center aside.sidebar-right td {
     padding: 0px 3px 0px 1em;
     border: none;
@@ -350,7 +348,7 @@ ul{
 }
 
 
-.page-type-committee-or-working-group .sidebar .block, 
+.page-type-committee-or-working-group .sidebar .block,
 .page-type-research-center .sidebar .block {
     padding: 0px;
     border: none;
@@ -376,7 +374,7 @@ th{
 
 #block-useraccountmenu ul:not(.contextual-links) li{
  display: inline;
- padding: .5em; 
+ padding: .5em;
  background-color: var(--primary);
  margin-left: .25em;
 }
@@ -404,7 +402,7 @@ th{
  margin-left: .25em;
  float: left;
  font-weight: bold;
- font-size: .8em; 
+ font-size: .8em;
 }
 .header-top-container{
  float: right;
@@ -440,7 +438,7 @@ th{
  text-shadow: none;
  margin: 20px 0;
  padding: 1px 14px 14px 64px;
-} 
+}
 
 .nid-55 .text-box{
  padding: 15px;
