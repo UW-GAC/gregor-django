@@ -1,21 +1,71 @@
-
-
-
-
 // project specific CSS goes here
 
-////////////////////////////////
-		//Variables//
-////////////////////////////////
+// import override bootstrap variables
+@import "./custom_bootstrap_vars";
 
-// Alert colors
+// import required bootstrap
+@import "../bootstrap/scss/bootstrap";
 
-$white: #fff;
-$mint-green: #d6e9c6;
-$black: #000;
-$pink: #f2dede;
-$dark-pink: #eed3d7;
-$red: #b94a48;
+// Custom Gregor theme
+h1, h2, h3, h4, h5, h6 {
+  color: $dark;
+}
+
+.col {
+  padding: 1rem;
+}
+
+a {
+  color: $teal;
+  &:hover, &:focus {
+    background-color: $light;
+    color: $teal;
+  }
+}
+
+#top-nav {
+  margin: 0;
+  padding: .2rem;
+  background: $top-nav-bg;
+  box-shadow: inset 0 -2px 2px $top-nav-box-shadow;
+  font-size: .8em;
+
+  .nav-link {
+    font-weight: bold;
+  }
+
+  a:hover,
+  a:focus {
+  background-color: $light;
+  color: unset;
+  }
+}
+
+a.navbar-brand:hover {
+  background-color: unset;
+}
+
+.nav-link {
+  color: $dark;
+}
+
+li.nav-item a:hover,
+li.nav-item a:focus {
+  background-color: $dark;
+  color: $white;
+}
+
+.btn-primary {
+  background: $primary;
+  color: $white;
+  border-color: unset;
+
+  &:hover, &:focus {
+    background-color: $primary !important;
+    border-color: $primary;
+  }
+}
+
 
 ////////////////////////////////
 		//Alerts//
