@@ -20,11 +20,11 @@ This code assumes it is in a relative directory to the wsgi script.
 """
 exec(open("../venv/bin/activate_this.py").read())
 
-import os
-import sys
-from pathlib import Path
+import os  # noqa: E402
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
 
-from django.core.wsgi import get_wsgi_application
+from django.core.wsgi import get_wsgi_application  # noqa: E402
 
 # This allows easy placement of apps within the interior
 # gregor_django directory.
