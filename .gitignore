@@ -62,7 +62,8 @@ target/
 # pyenv
 .python-version
 
-
+# django config env
+.env
 
 # Environments
 .venv
