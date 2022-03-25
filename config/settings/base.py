@@ -78,7 +78,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "allauth.socialaccount.providers.github",
+    # "allauth.socialaccount.providers.github",
     "login_required",
 ]
 
