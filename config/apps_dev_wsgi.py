@@ -18,7 +18,9 @@ framework.
 Activate the virtualenv. Must happen before any imports.
 This code assumes it is in a relative directory to the wsgi script.
 """
-exec(open("../venv/bin/activate_this.py").read())
+
+activate_file = "/var/www/django/apps_dev/venv/bin/activate_this.py"
+exec(open(activate_file).read(), {"__file__": activate_file})
 
 import os  # noqa: E402
 import sys  # noqa: E402
@@ -26,10 +28,14 @@ from pathlib import Path  # noqa: E402
 
 from django.core.wsgi import get_wsgi_application  # noqa: E402
 
+ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
+
 # This allows easy placement of apps within the interior
 # gregor_django directory.
-ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
+
 sys.path.append(str(ROOT_DIR / "gregor_django"))
+sys.path.append(str(ROOT_DIR))
+
 # We defer to a DJANGO_SETTINGS_MODULE already in the environment. This breaks
 # if running multiple sites in the same mod_wsgi process. To fix this, use
 # mod_wsgi daemon mode with each site in its own daemon process, or use
