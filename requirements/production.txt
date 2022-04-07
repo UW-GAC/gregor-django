@@ -7,4 +7,4 @@ mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
 
 # Django
 # ------------------------------------------------------------------------------
-django-anymail==8.4  # https://github.com/anymail/django-anymail
+django-anymail==8.5  # https://github.com/anymail/django-anymail
