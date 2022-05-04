@@ -50,7 +50,7 @@ $ touch config/test_site_wsgi.py
 > ## How does this work?
 > The apache mod_wsgi process is set up to load a particular wsgi file for a particular virtual host, in this case test_site_wsgi.py
 >
-> The wsgi file contains code to 1) activate the virtual environment using the venv/bin/activate_this.py file and 
+> The wsgi file contains code to 1) activate the virtual environment using the venv/bin/activate_this.py file and
 > 2) set the DJANGO_SETTINGS_MODULE
 
 ## Applying Updates
@@ -78,8 +78,3 @@ $ venv/bin/python manage.py check -deploy
 $ touch config/test_site_wsgi.py
 ```
 - Take out of maintenance mode (TBD)
-
-
-
-
-
