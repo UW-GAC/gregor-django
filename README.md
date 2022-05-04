@@ -114,6 +114,11 @@ Running tests with pytest and unittest
 7.  manually run pre-commit if you did not install
 8.  git commit your changes
 9.  repeat steps 3-8
+10. merge in any changes to main
+    1. git checkout main
+    2. git pull
+    3. git checkout \<feature_branch_name\>
+    4. git rebase main
 10. git push origin \<feature_branch_name\>
 11. review or request review of changes in github
 12. submit pull request in github

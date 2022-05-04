@@ -71,7 +71,7 @@ $ venv/bin/python manage.py migrate
 ```
 - Check for deployment issues
 ```
-$ venv/bin/python manage.py check -deploy
+$ DJANGO_SETTINGS_MODULE=config.settings.production venv/bin/python manage.py check --deploy
 ```
 - Restart site by touching wsgi file
 ```
