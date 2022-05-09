@@ -79,7 +79,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    # "allauth.socialaccount.providers.github",
+    "maintenance_mode",
     "login_required",
 ]
 
@@ -146,6 +146,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "maintenance_mode.middleware.MaintenanceModeMiddleware",
 ]
 
 # STATIC
@@ -266,6 +267,9 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
+# django-maintenance-mode
+MAINTENANCE_MODE_IGNORE_SUPERUSER = True
+MAINTENANCE_MODE_IGNORE_TESTS = True
 
 # django-allauth
 # ------------------------------------------------------------------------------
