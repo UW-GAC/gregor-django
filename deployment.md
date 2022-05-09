@@ -34,20 +34,25 @@ $ sudo -u gregorweb venv/bin/pip install -r requirements/production.txt
 ```
 - Fixup permissions (skip for shared deployment user)
 ```
-$ chmod -R g+w /var/www/django/test_site
+$ XXXXXXXXXXXX chmod -R g+w /var/www/django/test_site
 ```
 - Set up .env file at the root of your site /var/www/django/test_site/.env
     - Required .env settings should be maintained in .env.dist file in github
 
 - Check your installation
 ```
-$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.production venv/bin/python manage.py check –deploy
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py check –deploy
 System check identified no issues (0 silenced).
 ```
 - Apply migrations
 ```
-$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.production /venv/bin/python manage.py migrate
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site /venv/bin/python manage.py migrate
 ```
+- Collect static files
+```
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site /venv/bin/python manage.py collecstatic
+```
+
 - Touch site wsgi file to restart mod wsgi
 ```
 $ sudo -u gregorweb touch config/test_site_wsgi.py
@@ -75,12 +80,12 @@ $ sudo -u gregorweb venv/bin/pip install -r requirements/production.txt
 - Apply any django migrations
 ```
 $ venv/bin/python manage.py migrate
-$ sudo -u gregorweb venv/bin/python manage.py migrate
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py migrate
 ```
 - Check for deployment issues
 ```
-$ DJANGO_SETTINGS_MODULE=config.settings.production venv/bin/python manage.py check --deploy
-$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.production venv/bin/python manage.py check --deploy
+$ DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py check --deploy
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py check --deploy
 ```
 - Restart site by touching wsgi file
 ```
