@@ -1,5 +1,9 @@
+import os
+
+# default to using dotenv files for all production environements
+os.environ["DJANGO_READ_DOT_ENV_FILE"] = "True"
 from .base import *  # noqa
-from .base import env
+from .base import env  # noqa
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -92,7 +96,7 @@ SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
-    default="[gac-django]",
+    default="[GREGOR] ",
 )
 
 # ADMIN
@@ -103,7 +107,7 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # Anymail
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-INSTALLED_APPS += ["anymail"]  # noqa F405
+# INSTALLED_APPS += ["anymail"]  # noqa F405
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps
@@ -114,7 +118,7 @@ EMAIL_HOST_USER = env("DJANGO_EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("DJANGO_EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = env("DJANGO_EMAIL_USE_TLS", default=True)
 
-ANYMAIL = {}
+# ANYMAIL = {}
 
 
 # LOGGING
@@ -125,6 +129,7 @@ ANYMAIL = {}
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -156,7 +161,7 @@ LOGGING = {
         },
         "django.security.DisallowedHost": {
             "level": "ERROR",
-            "handlers": ["console", "mail_admins"],
+            "handlers": ["console"],
             "propagate": True,
         },
     },
