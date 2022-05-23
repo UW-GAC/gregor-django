@@ -64,27 +64,29 @@ $ sudo -u gregorweb touch config/test_site_wsgi.py
 > 2) set the DJANGO_SETTINGS_MODULE
 
 ## Applying Updates
-- Put site in maintenance mode (TBD)
+
 - Move to site directory
 `$ cd /var/www/django/test_site`
+- Put site in maintenance mode (Note you may need a different config setting as the gregorweb user cannot log to the same location as www-data)
+```
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site_stream python maintenance_mode on
+```
 - Update code
 ```
-$ (umask g+w && git pull) # FOR MULTI USER we use the umask temporarily here to be sure we don't cause permissions issues
 $ sudo -u gregorweb git pull # FOR SHARED USER
+$ (umask g+w && git pull) # FOR MULTI USER we use the umask temporarily here to be sure we don't cause permissions issues
 ```
 - Apply any pip updates
 ```
-$ (umask g+w && venv/bin/pip install -r requirements/production.txt)
 $ sudo -u gregorweb venv/bin/pip install -r requirements/production.txt
+$ (umask g+w && venv/bin/pip install -r requirements/production.txt)
 ```
 - Apply any django migrations
 ```
-$ venv/bin/python manage.py migrate
 $ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py migrate
 ```
 - Check for deployment issues
 ```
-$ DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py check --deploy
 $ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site venv/bin/python manage.py check --deploy
 ```
 - Restart site by touching wsgi file
@@ -95,4 +97,7 @@ $ sudo -u gregorweb touch config/test_site_wsgi.py
 ```
 $ sudo systemctl reload apache2
 ```
-- Take out of maintenance mode (TBD)
+- Take site out of maintenance mode
+```
+$ sudo -u gregorweb DJANGO_SETTINGS_MODULE=config.settings.test_site_stream python maintenance_mode on
+```

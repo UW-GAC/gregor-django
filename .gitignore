@@ -159,6 +159,7 @@ typings/
 !.vscode/extensions.json
 *.code-workspace
 *.vs
+.vscode
 
 # Local History for Visual Studio Code
 .history/
