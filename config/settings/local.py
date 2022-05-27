@@ -56,5 +56,12 @@ INTERNAL_IPS = ["127.0.0.1", "10.0.2.2"]
 # https://django-extensions.readthedocs.io/en/latest/installation_instructions.html#configuration
 INSTALLED_APPS += ["django_extensions"]  # noqa F405
 
+# django-login-required-middleware login not required views
+# allow debug panel viewing for non-logged in users in dev
+LOGIN_REQUIRED_IGNORE_VIEW_NAMES += [  # noqa F405
+    "djdt:template_source",
+    "djdt:render_panel",
+]
+
 # Your stuff...
 # ------------------------------------------------------------------------------

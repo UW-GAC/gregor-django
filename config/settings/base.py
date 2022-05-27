@@ -288,10 +288,9 @@ SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # django-login-required-middleware login not required views
+# limited set of views we allow a non-logged in user to access
 LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "account_login",
-    "github_login",
-    "github_callback",
     "gregor_oauth_provider_login",
     "gregor_oauth_provider_callback",
     "socialaccount_signup",

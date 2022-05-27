@@ -16,7 +16,7 @@ class CustomAccount(ProviderAccount):
 class CustomProvider(OAuth2Provider):
 
     id = "gregor_oauth_provider"
-    name = "Gregor Drupal OAuth2 Provider"
+    name = "Gregor Consortium Site Login"
     account_class = CustomAccount
 
     def extract_uid(self, data):
