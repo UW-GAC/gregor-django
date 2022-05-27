@@ -51,7 +51,11 @@
           </li>
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
-            <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+            <form method="post" style="display:none" action="{% url 'account_logout' %}" id="logout-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-warning">Sign Out</button>
+            </form>
+            <a class="nav-link" title="Sign Out" href="#" onclick="document.getElementById('logout-form').submit()">{% translate "Sign Out" %}</a>
           </li>
           {% else %}
           {% comment %} <li class="nav-item">

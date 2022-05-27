@@ -85,3 +85,9 @@ li.nav-item a:focus {
   border-color: $dark-pink;
   color: $red;
 }
+
+/* allauth */
+
+.socialaccount_providers {
+  list-style-type: none;
+}

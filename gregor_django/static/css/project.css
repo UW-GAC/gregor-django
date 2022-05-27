@@ -12029,4 +12029,9 @@ li.nav-item a:focus {
   border-color: #eed3d7;
   color: #b94a48;
 }
+
+/* allauth */
+.socialaccount_providers {
+  list-style-type: none;
+}
 /*# sourceMappingURL=project.css.map */
