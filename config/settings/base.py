@@ -88,6 +88,7 @@ LOCAL_APPS = [
     "gregor_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
     "gregor_django.gregor_oauth_provider",
+    "gregor_django.anvil_access",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
