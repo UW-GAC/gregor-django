@@ -1,8 +1,8 @@
+from anvil_consortium_manager.tests import factories as acm_factories
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from anvil_consortium_manager.tests import factories as acm_factories
 from .. import models
 from . import factories
 
@@ -12,7 +12,9 @@ class ConsentGroupTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        instance = models.ConsentGroup(code=models.ConsentGroup.GRU, data_use_limitations="test limitations")
+        instance = models.ConsentGroup(
+            code=models.ConsentGroup.GRU, data_use_limitations="test limitations"
+        )
         instance.save()
         self.assertIsInstance(instance, models.ConsentGroup)
 
@@ -30,17 +32,23 @@ class ConsentGroupTest(TestCase):
 
     def test_unique_code(self):
         """Saving a model with a duplicate code fails."""
-        instance1 = models.ConsentGroup(code=models.ConsentGroup.GRU, data_use_limitations="test limitations 1")
-        instance1.save()
-        instance2 = models.ConsentGroup(code=models.ConsentGroup.GRU, data_use_limitations="test limitations 2")
+        instance_1 = models.ConsentGroup(
+            code=models.ConsentGroup.GRU, data_use_limitations="test limitations 1"
+        )
+        instance_1.save()
+        instance_2 = models.ConsentGroup(
+            code=models.ConsentGroup.GRU, data_use_limitations="test limitations 2"
+        )
         with self.assertRaises(ValidationError):
-            instance2.full_clean()
+            instance_2.full_clean()
         with self.assertRaises(IntegrityError):
-            instance2.save()
+            instance_2.save()
 
     def test_invalid_code(self):
         """Cleaning a model with an invalid code fails."""
-        instance = models.ConsentGroup(code="FOO", data_use_limitations="test limitations")
+        instance = models.ConsentGroup(
+            code="FOO", data_use_limitations="test limitations"
+        )
         with self.assertRaises(ValidationError):
             instance.full_clean()
 
@@ -68,7 +76,7 @@ class ResearchCenterTest(TestCase):
 
     def test_unique_short_name(self):
         """Saving a model with a duplicate short name fails."""
-        instance1 = factories.ResearchCenterFactory.create(short_name="FOO")
+        factories.ResearchCenterFactory.create(short_name="FOO")
         instance2 = models.ResearchCenter(short_name="FOO", full_name="full name")
         with self.assertRaises(ValidationError):
             instance2.full_clean()
@@ -84,7 +92,12 @@ class WorkspaceDataTest(TestCase):
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         workspace = acm_factories.WorkspaceFactory.create()
-        instance = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace, version=1)
+        instance = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=1,
+        )
         instance.save()
         self.assertIsInstance(instance, models.WorkspaceData)
 
@@ -101,9 +114,19 @@ class WorkspaceDataTest(TestCase):
         consent_group = factories.ConsentGroupFactory.create()
         workspace_1 = acm_factories.WorkspaceFactory.create(name="ws-1")
         workspace_2 = acm_factories.WorkspaceFactory.create(name="ws-2")
-        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_1, version=1)
+        instance_1 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace_1,
+            version=1,
+        )
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_2, version=1)
+        instance_2 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace_2,
+            version=1,
+        )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
@@ -116,9 +139,19 @@ class WorkspaceDataTest(TestCase):
         consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_1, workspace=workspace_1, version=1)
+        instance_1 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group_1,
+            workspace=workspace_1,
+            version=1,
+        )
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_2, workspace=workspace_2, version=1)
+        instance_2 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group_2,
+            workspace=workspace_2,
+            version=1,
+        )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.WorkspaceData.objects.count(), 2)
@@ -130,9 +163,19 @@ class WorkspaceDataTest(TestCase):
         research_center_2 = factories.ResearchCenterFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group, workspace=workspace_1, version=1)
+        instance_1 = models.WorkspaceData(
+            research_center=research_center_1,
+            consent_group=consent_group,
+            workspace=workspace_1,
+            version=1,
+        )
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group, workspace=workspace_2, version=1)
+        instance_2 = models.WorkspaceData(
+            research_center=research_center_2,
+            consent_group=consent_group,
+            workspace=workspace_2,
+            version=1,
+        )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.WorkspaceData.objects.count(), 2)
@@ -143,9 +186,19 @@ class WorkspaceDataTest(TestCase):
         research_center = factories.ResearchCenterFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_1, version=1)
+        instance_1 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace_1,
+            version=1,
+        )
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_2, version=2)
+        instance_2 = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace_2,
+            version=2,
+        )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.WorkspaceData.objects.count(), 2)
@@ -157,9 +210,19 @@ class WorkspaceDataTest(TestCase):
         consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
         research_center_1 = factories.ResearchCenterFactory.create()
         research_center_2 = factories.ResearchCenterFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group_1, workspace=workspace, version=1)
+        instance_1 = models.WorkspaceData(
+            research_center=research_center_1,
+            consent_group=consent_group_1,
+            workspace=workspace,
+            version=1,
+        )
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group_2, workspace=workspace, version=1)
+        instance_2 = models.WorkspaceData(
+            research_center=research_center_2,
+            consent_group=consent_group_2,
+            workspace=workspace,
+            version=1,
+        )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):

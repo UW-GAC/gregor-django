@@ -1,6 +1,5 @@
-from django.db import models
-
 from anvil_consortium_manager import models as acm_models
+from django.db import models
 
 
 # Create your models here.
@@ -65,7 +64,10 @@ class WorkspaceData(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(name="unique_workspace_data", fields=["research_center", "consent_group", "version"])
+            models.UniqueConstraint(
+                name="unique_workspace_data",
+                fields=["research_center", "consent_group", "version"],
+            )
         ]
 
     def __str__(self):
