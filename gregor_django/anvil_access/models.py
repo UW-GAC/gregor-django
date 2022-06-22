@@ -1,5 +1,6 @@
 from anvil_consortium_manager import models as acm_models
 from django.db import models
+from django.template.defaultfilters import truncatechars  # or truncatewords
 
 
 # Create your models here.
@@ -27,6 +28,15 @@ class ConsentGroup(models.Model):
             A string showing the short consent code of the object.
         """
         return self.code
+
+    @property
+    def short_data_use_limitations(self):
+        """Return a truncated version of the data_use_limitations.
+
+        Returns:
+            str: The truncated data_use_limitations
+        """
+        return truncatechars(self.data_use_limitations, 100)
 
 
 class ResearchCenter(models.Model):

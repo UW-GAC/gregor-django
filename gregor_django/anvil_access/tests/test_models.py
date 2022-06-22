@@ -52,6 +52,23 @@ class ConsentGroupTest(TestCase):
         with self.assertRaises(ValidationError):
             instance.full_clean()
 
+    def test_short_data_use_limitations_long(self):
+        """The truncated_data_use_limitations method works as expected with long data use limitations."""
+        instance = factories.ConsentGroupFactory(
+            data_use_limitations="a very long description with many character, actually over 100 of them so this can be truncated at the length provided in the function"  # noqa: E501
+        )
+        self.assertEqual(
+            instance.short_data_use_limitations,
+            "a very long description with many character, actually over 100 of them so this can be truncated at …",
+        )
+
+    def test_short_data_use_limitations_short(self):
+        """The truncated_data_use_limitations method works as expected with short data use limitations."""
+        instance = factories.ConsentGroupFactory(
+            data_use_limitations="short limitations"
+        )
+        self.assertEqual(instance.short_data_use_limitations, "short limitations")
+
 
 class ResearchCenterTest(TestCase):
     """Tests for the ResearchCenter model."""
