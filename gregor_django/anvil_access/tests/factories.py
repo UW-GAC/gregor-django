@@ -1,6 +1,7 @@
 from factory import Faker, fuzzy, SubFactory
 from factory.django import DjangoModelFactory
 
+from anvil_consortium_manager.tests import factories as acm_factories
 from .. import models
 
 
@@ -24,3 +25,15 @@ class ResearchCenterFactory(DjangoModelFactory):
     class Meta:
         model = models.ResearchCenter
         django_get_or_create = ["short_name"]
+
+
+class WorkspaceDataFactory(DjangoModelFactory):
+    """A factory for the WorkspaceData model."""
+
+    research_center = SubFactory(ResearchCenterFactory)
+    consent_group = SubFactory(ConsentGroupFactory)
+    workspace = SubFactory(acm_factories.WorkspaceFactory)
+
+    class Meta:
+        model = models.WorkspaceData
+        django_get_or_create = ["research_center", "consent_group"]

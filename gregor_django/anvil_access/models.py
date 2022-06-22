@@ -1,5 +1,8 @@
 from django.db import models
 
+from anvil_consortium_manager import models as acm_models
+
+
 # Create your models here.
 class ConsentGroup(models.Model):
     """A model to track consent groups."""
@@ -42,3 +45,29 @@ class ResearchCenter(models.Model):
             A string showing the short name of the object.
         """
         return self.short_name
+
+
+class WorkspaceData(models.Model):
+    """A model to track additional data about a Workspace."""
+
+    research_center = models.ForeignKey(ResearchCenter, on_delete=models.PROTECT)
+    """The ResearchCenter providing data for this Workspace."""
+
+    consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
+    """The ConsentGroup associated with this workspace."""
+
+    workspace = models.OneToOneField(acm_models.Workspace, on_delete=models.CASCADE)
+    """The AnVIL workspace."""
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(name="unique_workspace_data", fields=["research_center", "consent_group"])
+        ]
+
+    def __str__(self):
+        """String method.
+
+        Returns:
+            A string showing the workspace name of the object.
+        """
+        return self.workspace.__str__()

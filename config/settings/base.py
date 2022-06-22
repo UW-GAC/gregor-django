@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "maintenance_mode",
     "login_required",
+    "anvil_consortium_manager",
 ]
 
 LOCAL_APPS = [
