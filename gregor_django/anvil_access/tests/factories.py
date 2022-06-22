@@ -9,6 +9,7 @@ class ConsentGroupFactory(DjangoModelFactory):
     """A factory for the ConsentGroup model."""
 
     code = models.ConsentGroup.GRU
+    # code = fuzzy.FuzzyChoice(models.ConsentGroup.CODE_CHOICES, getter=lambda c: c[0])
     data_use_limitations = Faker("paragraph")
 
     class Meta:
@@ -32,6 +33,7 @@ class WorkspaceDataFactory(DjangoModelFactory):
 
     research_center = SubFactory(ResearchCenterFactory)
     consent_group = SubFactory(ConsentGroupFactory)
+    version = Faker("random_int", min=1, max=10)
     workspace = SubFactory(acm_factories.WorkspaceFactory)
 
     class Meta:

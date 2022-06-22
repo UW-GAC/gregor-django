@@ -29,6 +29,7 @@ class ConsentGroup(models.Model):
         """
         return self.code
 
+
 class ResearchCenter(models.Model):
     """A model to track Research Centers."""
 
@@ -54,14 +55,17 @@ class WorkspaceData(models.Model):
     """The ResearchCenter providing data for this Workspace."""
 
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
-    """The ConsentGroup associated with this workspace."""
+    """The ConsentGroup associated with this Workspace."""
+
+    version = models.IntegerField()
+    """The version associated with this Workspace."""
 
     workspace = models.OneToOneField(acm_models.Workspace, on_delete=models.CASCADE)
     """The AnVIL workspace."""
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(name="unique_workspace_data", fields=["research_center", "consent_group"])
+            models.UniqueConstraint(name="unique_workspace_data", fields=["research_center", "consent_group", "version"])
         ]
 
     def __str__(self):

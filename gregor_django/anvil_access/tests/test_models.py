@@ -84,7 +84,7 @@ class WorkspaceDataTest(TestCase):
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         workspace = acm_factories.WorkspaceFactory.create()
-        instance = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace)
+        instance = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace, version=1)
         instance.save()
         self.assertIsInstance(instance, models.WorkspaceData)
 
@@ -96,14 +96,14 @@ class WorkspaceDataTest(TestCase):
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
 
     def test_unique_constraint(self):
-        """Cannot save two instances with the same ResearchCenter and ConsentGroup."""
+        """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         workspace_1 = acm_factories.WorkspaceFactory.create(name="ws-1")
         workspace_2 = acm_factories.WorkspaceFactory.create(name="ws-2")
-        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_1)
+        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_1, version=1)
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_2)
+        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_2, version=1)
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
@@ -116,9 +116,9 @@ class WorkspaceDataTest(TestCase):
         consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_1, workspace=workspace_1)
+        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_1, workspace=workspace_1, version=1)
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_2, workspace=workspace_2)
+        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group_2, workspace=workspace_2, version=1)
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.WorkspaceData.objects.count(), 2)
@@ -130,9 +130,22 @@ class WorkspaceDataTest(TestCase):
         research_center_2 = factories.ResearchCenterFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group, workspace=workspace_1)
+        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group, workspace=workspace_1, version=1)
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group, workspace=workspace_2)
+        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group, workspace=workspace_2, version=1)
+        instance_2.full_clean()
+        instance_2.save()
+        self.assertEqual(models.WorkspaceData.objects.count(), 2)
+
+    def test_same_version(self):
+        """Can save multiple WorkspaceData models with the same version."""
+        consent_group = factories.ConsentGroupFactory(code=models.ConsentGroup.GRU)
+        research_center = factories.ResearchCenterFactory()
+        workspace_1 = acm_factories.WorkspaceFactory.create()
+        workspace_2 = acm_factories.WorkspaceFactory.create()
+        instance_1 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_1, version=1)
+        instance_1.save()
+        instance_2 = models.WorkspaceData(research_center=research_center, consent_group=consent_group, workspace=workspace_2, version=2)
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.WorkspaceData.objects.count(), 2)
@@ -144,9 +157,9 @@ class WorkspaceDataTest(TestCase):
         consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
         research_center_1 = factories.ResearchCenterFactory.create()
         research_center_2 = factories.ResearchCenterFactory.create()
-        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group_1, workspace=workspace)
+        instance_1 = models.WorkspaceData(research_center=research_center_1, consent_group=consent_group_1, workspace=workspace, version=1)
         instance_1.save()
-        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group_2, workspace=workspace)
+        instance_2 = models.WorkspaceData(research_center=research_center_2, consent_group=consent_group_2, workspace=workspace, version=1)
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
