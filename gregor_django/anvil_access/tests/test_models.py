@@ -25,10 +25,10 @@ class ConsentGroupTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "test")
 
-    # def test_get_absolute_url(self):
-    #     """The get_absolute_url() method works."""
-    #     instance = factories.ConsentGroupFactory()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.ConsentGroupFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
     def test_unique_code(self):
         """Saving a model with a duplicate code fails."""
@@ -146,6 +146,11 @@ class WorkspaceDataTest(TestCase):
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.WorkspaceDataFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""

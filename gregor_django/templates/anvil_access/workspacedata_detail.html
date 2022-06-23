@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ object.short_name }}{% endblock %}
+
+{% block content %}
+<h1>Workspace: {{ object.workspace }}</h1>
+<ul>
+  <li>Research Center: <a href="{{ object.research_center.get_absolute_url }}">{{ object.research_center }}</a></li>
+  <li>Consent Group: <a href="{{ object.consent_group.get_absolute_url }}">{{ object.consent_group }}</a></li>
+  <li>Version: {{ object.version }}</li>
+</ul>
+
+
+
+{% endblock content %}

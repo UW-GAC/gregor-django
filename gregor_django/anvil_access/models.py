@@ -99,3 +99,11 @@ class WorkspaceData(models.Model):
             A string showing the workspace name of the object.
         """
         return self.workspace.__str__()
+
+    def get_absolute_url(self):
+        """Get the absolute url for this object.
+
+        Returns:
+            str: The absolute url for the object.
+        """
+        return reverse("anvil_access:workspaces:detail", args=[self.pk])

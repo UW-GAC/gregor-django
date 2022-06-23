@@ -20,8 +20,18 @@ consent_group_patterns = (
     ],
     "consent_groups",
 )
+
+workspace_patterns = (
+    [
+        path("<int:pk>", views.WorkspaceDataDetail.as_view(), name="detail"),
+        path("", views.WorkspaceDataList.as_view(), name="list"),
+    ],
+    "workspaces",
+)
+
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
+    path("workspaces/", include(workspace_patterns)),
 ]

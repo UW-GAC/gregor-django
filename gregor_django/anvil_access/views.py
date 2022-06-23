@@ -29,3 +29,16 @@ class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.ConsentGroup
     table_class = tables.ConsentGroupTable
+
+
+class WorkspaceDataDetail(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show details about a `ConsentGroups`."""
+
+    model = models.WorkspaceData
+
+
+class WorkspaceDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `WorkspaceData` objects."""
+
+    model = models.WorkspaceData
+    table_class = tables.WorkspaceDataTable
