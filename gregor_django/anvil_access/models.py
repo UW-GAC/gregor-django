@@ -1,6 +1,7 @@
 from anvil_consortium_manager import models as acm_models
 from django.db import models
 from django.template.defaultfilters import truncatechars  # or truncatewords
+from django.urls import reverse
 
 
 # Create your models here.
@@ -55,6 +56,14 @@ class ResearchCenter(models.Model):
             A string showing the short name of the object.
         """
         return self.short_name
+
+    def get_absolute_url(self):
+        """Get the absolute url for this object.
+
+        Returns:
+            str: The absolute url for the object.
+        """
+        return reverse("anvil_access:research_centers:detail", args=[self.pk])
 
 
 class WorkspaceData(models.Model):
