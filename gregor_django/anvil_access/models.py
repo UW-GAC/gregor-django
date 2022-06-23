@@ -30,6 +30,14 @@ class ConsentGroup(models.Model):
         """
         return self.code
 
+    def get_absolute_url(self):
+        """Get the absolute url for this object.
+
+        Returns:
+            str: The absolute url for the object.
+        """
+        return reverse("anvil_access:consent_groups:detail", args=[self.pk])
+
     @property
     def short_data_use_limitations(self):
         """Return a truncated version of the data_use_limitations.

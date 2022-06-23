@@ -5,7 +5,6 @@ from django_tables2 import SingleTableView
 from . import models, tables
 
 
-# Create your views here.
 class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show details about a `ResearchCenter`."""
 
@@ -17,3 +16,16 @@ class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.ResearchCenter
     table_class = tables.ResearchCenterTable
+
+
+class ConsentGroupDetail(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show details about a `ConsentGroups`."""
+
+    model = models.ConsentGroup
+
+
+class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `ConsentGroups`."""
+
+    model = models.ConsentGroup
+    table_class = tables.ConsentGroupTable
