@@ -1,7 +1,16 @@
 from anvil_consortium_manager import models as acm_models
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import truncatechars  # or truncatewords
 from django.urls import reverse
+
+
+def validate_gt_0(value):
+    if value <= 0:
+        raise ValidationError(
+            "%(value)s must be greater than 0.",
+            params={"value": value},
+        )
 
 
 # Create your models here.
@@ -80,7 +89,7 @@ class WorkspaceData(models.Model):
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint.
-    version = models.PositiveIntegerField()
+    version = models.PositiveIntegerField(validators=[validate_gt_0])
     """The version associated with this Workspace."""
 
     workspace = models.OneToOneField(acm_models.Workspace, on_delete=models.CASCADE)

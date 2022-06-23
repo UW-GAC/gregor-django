@@ -284,8 +284,8 @@ class WorkspaceDataTest(TestCase):
             version=-1,
         )
         # No validation error with CheckConstraints.
-        # with self.assertRaises(ValidationError):
-        #     instance.full_clean()
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -301,7 +301,7 @@ class WorkspaceDataTest(TestCase):
             version=-0,
         )
         # No validation error with CheckConstraints.
-        # with self.assertRaises(ValidationError):
-        #     instance.full_clean()
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
         with self.assertRaises(IntegrityError):
             instance.save()
