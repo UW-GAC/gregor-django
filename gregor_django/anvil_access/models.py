@@ -8,16 +8,11 @@ from django.urls import reverse
 class ConsentGroup(models.Model):
     """A model to track consent groups."""
 
-    GRU = "GRU"
-    HMB = "HMB"
+    code = models.CharField(max_length=20, unique=True)
+    """The short consent code for this ConsentGroup (e.g., GRU)."""
 
-    CODE_CHOICES = [
-        (GRU, "General Research Use"),
-        (HMB, "Health/Medical/Biomedical"),
-    ]
-
-    code = models.CharField(max_length=20, choices=CODE_CHOICES, unique=True)
-    """The short consent code for this ConsentGroup."""
+    consent = models.CharField(max_length=255, unique=True)
+    """The consent description for this group (e.g., General Research Use)."""
 
     data_use_limitations = models.TextField()
     """The full data use limitations for this ConsentGroup."""

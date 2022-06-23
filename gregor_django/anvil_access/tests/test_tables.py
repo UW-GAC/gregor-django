@@ -40,7 +40,6 @@ class ConsentGroupTableTest(TestCase):
 
     def test_row_count_with_two_objects(self):
         # These values are coded into the model, so need to create separately.
-        self.model_factory.create(code=self.model.GRU)
-        self.model_factory.create(code=self.model.HMB)
+        self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)

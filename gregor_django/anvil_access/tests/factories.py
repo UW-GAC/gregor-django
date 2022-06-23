@@ -1,16 +1,16 @@
-from factory import Faker, fuzzy, SubFactory
+from anvil_consortium_manager.tests import factories as acm_factories
+from factory import Faker, SubFactory
 from factory.django import DjangoModelFactory
 
-from anvil_consortium_manager.tests import factories as acm_factories
 from .. import models
 
 
 class ConsentGroupFactory(DjangoModelFactory):
     """A factory for the ConsentGroup model."""
 
-    code = models.ConsentGroup.GRU
-    # code = fuzzy.FuzzyChoice(models.ConsentGroup.CODE_CHOICES, getter=lambda c: c[0])
-    data_use_limitations = Faker("paragraph")
+    code = Faker("word")
+    consent = Faker("catch_phrase")
+    data_use_limitations = Faker("paragraph", nb_sentences=10)
 
     class Meta:
         model = models.ConsentGroup

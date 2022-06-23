@@ -13,17 +13,17 @@ class ConsentGroupTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         instance = models.ConsentGroup(
-            code=models.ConsentGroup.GRU, data_use_limitations="test limitations"
+            code="TEST", consent="test consent", data_use_limitations="test limitations"
         )
         instance.save()
         self.assertIsInstance(instance, models.ConsentGroup)
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.ConsentGroupFactory.create(code=models.ConsentGroup.GRU)
+        instance = factories.ConsentGroupFactory.create(code="test")
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), models.ConsentGroup.GRU)
+        self.assertEqual(instance.__str__(), "test")
 
     # def test_get_absolute_url(self):
     #     """The get_absolute_url() method works."""
@@ -33,11 +33,33 @@ class ConsentGroupTest(TestCase):
     def test_unique_code(self):
         """Saving a model with a duplicate code fails."""
         instance_1 = models.ConsentGroup(
-            code=models.ConsentGroup.GRU, data_use_limitations="test limitations 1"
+            code="TEST",
+            consent="test consent 1",
+            data_use_limitations="test limitations 1",
         )
         instance_1.save()
         instance_2 = models.ConsentGroup(
-            code=models.ConsentGroup.GRU, data_use_limitations="test limitations 2"
+            code="TEST",
+            consent="test consent 2",
+            data_use_limitations="test limitations 1",
+        )
+        with self.assertRaises(ValidationError):
+            instance_2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+    def test_unique_consent(self):
+        """Saving a model with a duplicate consent fails."""
+        instance_1 = models.ConsentGroup(
+            code="TEST1",
+            consent="test consent 1",
+            data_use_limitations="test limitations",
+        )
+        instance_1.save()
+        instance_2 = models.ConsentGroup(
+            code="TEST2",
+            consent="test consent 1",
+            data_use_limitations="test limitations",
         )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
@@ -152,8 +174,8 @@ class WorkspaceDataTest(TestCase):
     def test_same_research_center(self):
         """Can save multiple WorkspaceData models with the same ResearchCenter."""
         research_center = factories.ResearchCenterFactory()
-        consent_group_1 = factories.ConsentGroupFactory(code=models.ConsentGroup.GRU)
-        consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
+        consent_group_1 = factories.ConsentGroupFactory()
+        consent_group_2 = factories.ConsentGroupFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
         instance_1 = models.WorkspaceData(
@@ -175,7 +197,7 @@ class WorkspaceDataTest(TestCase):
 
     def test_same_consent_group(self):
         """Can save multiple WorkspaceData models with the same ConsentGroup."""
-        consent_group = factories.ConsentGroupFactory(code=models.ConsentGroup.GRU)
+        consent_group = factories.ConsentGroupFactory()
         research_center_1 = factories.ResearchCenterFactory()
         research_center_2 = factories.ResearchCenterFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
@@ -199,7 +221,7 @@ class WorkspaceDataTest(TestCase):
 
     def test_same_version(self):
         """Can save multiple WorkspaceData models with the same version."""
-        consent_group = factories.ConsentGroupFactory(code=models.ConsentGroup.GRU)
+        consent_group = factories.ConsentGroupFactory()
         research_center = factories.ResearchCenterFactory()
         workspace_1 = acm_factories.WorkspaceFactory.create()
         workspace_2 = acm_factories.WorkspaceFactory.create()
@@ -223,8 +245,8 @@ class WorkspaceDataTest(TestCase):
     def test_duplicated_workspace(self):
         """One workspace cannot be associated with two WorkspaceData models."""
         workspace = acm_factories.WorkspaceFactory.create()
-        consent_group_1 = factories.ConsentGroupFactory(code=models.ConsentGroup.GRU)
-        consent_group_2 = factories.ConsentGroupFactory(code=models.ConsentGroup.HMB)
+        consent_group_1 = factories.ConsentGroupFactory()
+        consent_group_2 = factories.ConsentGroupFactory()
         research_center_1 = factories.ResearchCenterFactory.create()
         research_center_2 = factories.ResearchCenterFactory.create()
         instance_1 = models.WorkspaceData(

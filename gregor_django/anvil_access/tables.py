@@ -23,4 +23,7 @@ class ConsentGroupTable(tables.Table):
 
     class Meta:
         model = models.ConsentGroup
-        fields = ("code",)
+        fields = (
+            "code",
+            "consent",
+        )

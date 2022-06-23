@@ -9,13 +9,18 @@ class ConsentGroupAdmin(admin.ModelAdmin):
 
     list_display = (
         "code",
+        "consent",
         "short_data_use_limitations",
     )
     search_fields = (
         "code",
+        "consent",
         "data_use_limitations",
     )
-    sortable_by = "code"
+    sortable_by = (
+        "code",
+        "consent",
+    )
 
 
 @admin.register(models.ResearchCenter)
