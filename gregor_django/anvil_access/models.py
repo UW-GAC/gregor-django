@@ -78,7 +78,9 @@ class WorkspaceData(models.Model):
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
     """The ConsentGroup associated with this Workspace."""
 
-    version = models.IntegerField()
+    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
+    # We'll need to add a separate constraint.
+    version = models.PositiveIntegerField()
     """The version associated with this Workspace."""
 
     workspace = models.OneToOneField(acm_models.Workspace, on_delete=models.CASCADE)
@@ -86,10 +88,16 @@ class WorkspaceData(models.Model):
 
     class Meta:
         constraints = [
+            # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_workspace_data",
                 fields=["research_center", "consent_group", "version"],
-            )
+            ),
+            # Version must be positive and *not* zero.
+            models.CheckConstraint(
+                name="positive_version",
+                check=models.Q(version__gt=0),
+            ),
         ]
 
     def __str__(self):

@@ -271,3 +271,37 @@ class WorkspaceDataTest(TestCase):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+    def test_constraint_positive_version_not_negative(self):
+        """Version cannot be negative."""
+        research_center = factories.ResearchCenterFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = acm_factories.WorkspaceFactory.create(name="ws")
+        instance = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=-1,
+        )
+        # No validation error with CheckConstraints.
+        # with self.assertRaises(ValidationError):
+        #     instance.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_constraint_positive_version_not_zero(self):
+        """Version cannot be 0."""
+        research_center = factories.ResearchCenterFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = acm_factories.WorkspaceFactory.create(name="ws")
+        instance = models.WorkspaceData(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=-0,
+        )
+        # No validation error with CheckConstraints.
+        # with self.assertRaises(ValidationError):
+        #     instance.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance.save()
