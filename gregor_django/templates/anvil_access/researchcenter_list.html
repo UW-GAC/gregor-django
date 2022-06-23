@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Research Center List{% endblock %}
+
+{% block content %}
+<h1>Research Centers</h1>
+
+<ul>
+  {% for obj in researchcenter_list %}
+  <li>{{obj.short_name}}</li>
+  {% endfor %}
+</ul>
+
+{% endblock content %}

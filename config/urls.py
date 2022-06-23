@@ -16,6 +16,9 @@ urlpatterns = [
     path("users/", include("gregor_django.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path(
+        "anvil/", include("gregor_django.anvil_access.urls", namespace="anvil_access")
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
