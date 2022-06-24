@@ -1,8 +1,16 @@
-from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
-from django.views.generic import DetailView
+from anvil_consortium_manager import anvil_api
+from anvil_consortium_manager.auth import (
+    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerViewRequired,
+)
+from anvil_consortium_manager.viewmixins import (
+    SuccessMessageMixin,
+    WorkspaceImportMixin,
+)
+from django.views.generic import CreateView, DetailView
 from django_tables2 import SingleTableView
 
-from . import models, tables
+from . import forms, models, tables
 
 
 class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -42,3 +50,43 @@ class WorkspaceDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.WorkspaceData
     table_class = tables.WorkspaceDataTable
+
+
+class WorkspaceDataImport(
+    AnVILConsortiumManagerEditRequired,
+    SuccessMessageMixin,
+    WorkspaceImportMixin,
+    CreateView,
+):
+    """Import a `Workspace` from AnVIL and create a related `WorkspaceData` object."""
+
+    model = models.WorkspaceData
+    form_class = forms.WorkspaceDataImportForm
+    template_name = "anvil_access/workspacedata_import.html"
+    success_msg = "Successfully imported Workspace from AnVIL."
+    """Message to display if the Workspace was successfully imported."""
+
+    def get_form_kwargs(self):
+        """Initializes a form by setting workspace_choices to the list of workspaces available for import."""
+        kwargs = super().get_form_kwargs()
+        kwargs["workspace_choices"] = self.get_workspace_choices()
+        return kwargs
+
+    def form_valid(self, form):
+        # Separate the billing project and workspace name.
+        billing_project_name, workspace_name = form.cleaned_data["workspace"].split("/")
+
+        # Import the workspace.
+        try:
+            self.import_workspace(billing_project_name, workspace_name)
+        except anvil_api.AnVILAPIError:
+            return self.render_to_response(self.get_context_data(form=form))
+        # Now link the imported workspace to the object and save the new object.
+        form.instance.workspace = self.workspace
+        # object = form.save(commit=False)
+        # object.workspace = self.workspace
+        # object.save()
+        return super().form_valid(form)
+
+    # def get_success_url(self):
+    #     return reverse(self.object.get_absolute_url())

@@ -334,3 +334,8 @@ SOCIALACCOUNT_PROVIDERS = {
 # ------------------------------------------------------------------------------
 # https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
+
+
+# django-anvil-consortium-manager
+# ------------------------------------------------------------------------------
+ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")

@@ -25,6 +25,7 @@ workspace_patterns = (
     [
         path("<int:pk>", views.WorkspaceDataDetail.as_view(), name="detail"),
         path("", views.WorkspaceDataList.as_view(), name="list"),
+        path("import", views.WorkspaceDataImport.as_view(), name="import"),
     ],
     "workspaces",
 )
