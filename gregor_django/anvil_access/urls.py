@@ -26,6 +26,8 @@ workspace_patterns = (
         path("<int:pk>", views.WorkspaceDataDetail.as_view(), name="detail"),
         path("", views.WorkspaceDataList.as_view(), name="list"),
         path("import", views.WorkspaceDataImport.as_view(), name="import"),
+        path("<int:pk>/delete", views.PageNotFound.as_view()),
+        path("new", views.PageNotFound.as_view()),
     ],
     "workspaces",
 )

@@ -7,10 +7,24 @@ from anvil_consortium_manager.viewmixins import (
     SuccessMessageMixin,
     WorkspaceImportMixin,
 )
-from django.views.generic import CreateView, DetailView
+from django.http import Http404
+from django.views import defaults as default_views
+from django.views.generic import CreateView, DetailView, View
 from django_tables2 import SingleTableView
 
 from . import forms, models, tables
+
+
+def page_not_found_extra(request, exception, *args, **kwargs):
+    """Extend the page_not_found function to accept additional arguments."""
+    return default_views.page_not_found(request, exception)
+
+
+class PageNotFound(View):
+    """Flexible way to display a 404."""
+
+    def dispatch(self, request, *args, **kwargs):
+        raise Http404
 
 
 class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):

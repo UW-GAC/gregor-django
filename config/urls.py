@@ -17,11 +17,12 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path(
-        "anvil/", include("gregor_django.anvil_access.urls", namespace="anvil_access")
+        # Some of the urls from anvil_consortium_manager are overridden here.
+        # Give it the same url path as the acm urls so they are properly overridden.
+        "anvil/",
+        include("gregor_django.anvil_access.urls", namespace="anvil_access"),
     ),
     path(
-        # Include the anvil_consortium_manager urls in the same path.
-        # This means that any url we define in the anvil_access app will take precedence.
         "anvil/",
         include("anvil_consortium_manager.urls", namespace="anvil"),
     ),

@@ -19,6 +19,41 @@ from . import factories
 User = get_user_model()
 
 
+class OverriddenURLsTest(TestCase):
+    """Tests to check that specific URLs provided by anvil_consortium_manager are overriden with a 404 page."""
+
+    def setUp(self):
+        """Set up test class."""
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def test_workspace_create(self):
+        """status code is 404 when accessing the workspace create url."""
+        url = reverse("anvil:workspaces:new")
+        self.client.force_login(self.user)
+        response = self.client.get(url)
+        # request.user = self.user
+        self.assertEqual(response.status_code, 404)
+
+    def test_workspace_delete(self):
+        """status code is 404 when accessing the workspace delete url."""
+        workspace = acm_factories.WorkspaceFactory.create()
+        url = reverse("anvil:workspaces:delete", args=[workspace.pk])
+        self.client.force_login(self.user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+
 class ResearchCenterDetailTest(TestCase):
     def setUp(self):
         """Set up test class."""
