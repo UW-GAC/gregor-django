@@ -19,6 +19,12 @@ urlpatterns = [
     path(
         "anvil/", include("gregor_django.anvil_access.urls", namespace="anvil_access")
     ),
+    path(
+        # Include the anvil_consortium_manager urls in the same path.
+        # This means that any url we define in the anvil_access app will take precedence.
+        "anvil/",
+        include("anvil_consortium_manager.urls", namespace="anvil"),
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
