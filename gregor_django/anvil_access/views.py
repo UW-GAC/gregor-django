@@ -1,4 +1,5 @@
 from anvil_consortium_manager import anvil_api
+from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
@@ -53,11 +54,11 @@ class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.ConsentGroupTable
 
 
-class WorkspaceDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
-    """View to show a list of `WorkspaceData` objects."""
+class WorkspaceList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `Workspace` objects with extra `WorkspaceData` information."""
 
-    model = models.WorkspaceData
-    table_class = tables.WorkspaceDataTable
+    model = acm_models.Workspace
+    table_class = tables.WorkspaceTable
 
 
 class WorkspaceDataImport(

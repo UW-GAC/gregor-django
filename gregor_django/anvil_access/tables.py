@@ -1,3 +1,4 @@
+import anvil_consortium_manager.tables as acm_tables
 import django_tables2 as tables
 
 from . import models
@@ -29,20 +30,20 @@ class ConsentGroupTable(tables.Table):
         )
 
 
-class WorkspaceDataTable(tables.Table):
-    """A table for `WorkspaceData` objects."""
+class WorkspaceTable(acm_tables.WorkspaceTable):
+    """A table extending the `WorkspaceTable` to add `WorkspaceData` information."""
 
-    workspace = tables.columns.Column(
-        linkify=("anvil_access:workspaces:detail", [tables.utils.A("pk")])
+    # Add columns from WorkspaceData.
+    research_center = tables.columns.Column(
+        accessor="workspacedata__research_center", linkify=True
     )
-    research_center = tables.Column(linkify=True)
-    consent_group = tables.Column(linkify=True)
+    consent_group = tables.columns.Column(
+        accessor="workspacedata__consent_group", linkify=True
+    )
+    version = tables.columns.Column(accessor="workspacedata__version")
 
     class Meta:
-        model = models.WorkspaceData
-        fields = (
-            "workspace",
-            "research_center",
-            "consent_group",
-            "version",
-        )
+        # Do not include billing_project, since it is already in the name.
+        exclude = ("billing_project",)
+        # Reorder columns.
+        sequence = ("name", "research_center", "consent_group", "version")

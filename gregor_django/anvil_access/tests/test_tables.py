@@ -1,3 +1,4 @@
+from anvil_consortium_manager import models as acm_models
 from django.test import TestCase
 
 from .. import models, tables
@@ -45,10 +46,11 @@ class ConsentGroupTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
 
-class WorkspaceDataTable(TestCase):
-    model = models.WorkspaceData
+class WorkspaceTableTest(TestCase):
+    model = acm_models.Workspace
+    # We want to create the associated WorkspaceData along with the workspace, so use that factory.
     model_factory = factories.WorkspaceDataFactory
-    table_class = tables.WorkspaceDataTable
+    table_class = tables.WorkspaceTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())

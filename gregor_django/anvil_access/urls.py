@@ -23,7 +23,7 @@ consent_group_patterns = (
 
 workspace_patterns = (
     [
-        path("", views.WorkspaceDataList.as_view(), name="list"),
+        path("", views.WorkspaceList.as_view(), name="list"),
         path("import", views.WorkspaceDataImport.as_view(), name="import"),
         path("<int:pk>/delete", views.PageNotFound.as_view()),
         path("new", views.PageNotFound.as_view()),

@@ -259,7 +259,7 @@ class ConsentGroupListTest(TestCase):
             self.get_view()(request)
 
 
-class WorkspaceDataListTest(TestCase):
+class WorkspaceListTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -278,7 +278,7 @@ class WorkspaceDataListTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.WorkspaceDataList.as_view()
+        return views.WorkspaceList.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
