@@ -23,7 +23,6 @@ consent_group_patterns = (
 
 workspace_patterns = (
     [
-        path("<int:pk>", views.WorkspaceDataDetail.as_view(), name="detail"),
         path("", views.WorkspaceDataList.as_view(), name="list"),
         path("import", views.WorkspaceDataImport.as_view(), name="import"),
         path("<int:pk>/delete", views.PageNotFound.as_view()),
@@ -33,7 +32,6 @@ workspace_patterns = (
 )
 
 urlpatterns = [
-    # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
     path("workspaces/", include(workspace_patterns)),

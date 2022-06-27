@@ -123,4 +123,4 @@ class WorkspaceData(models.Model):
         Returns:
             str: The absolute url for the object.
         """
-        return reverse("anvil_access:workspaces:detail", args=[self.pk])
+        return self.workspace.get_absolute_url()

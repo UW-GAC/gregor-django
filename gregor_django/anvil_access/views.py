@@ -53,12 +53,6 @@ class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.ConsentGroupTable
 
 
-class WorkspaceDataDetail(AnVILConsortiumManagerViewRequired, DetailView):
-    """View to show details about a `ConsentGroups`."""
-
-    model = models.WorkspaceData
-
-
 class WorkspaceDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `WorkspaceData` objects."""
 
@@ -102,5 +96,5 @@ class WorkspaceDataImport(
         # object.save()
         return super().form_valid(form)
 
-    # def get_success_url(self):
-    #     return reverse(self.object.get_absolute_url())
+    def get_success_url(self):
+        return self.object.workspace.get_absolute_url()
