@@ -70,6 +70,7 @@
         </ul>
       </div>
     </nav>
+
     <nav id="main-nav" class="navbar navbar-expand-md">
       <div class="container">
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
@@ -79,17 +80,22 @@
         </button>
         <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'images/GREGoR_Final_Logo-ai.png' %}" class="img-fluid" /></a>
 
+        {% block navbar_items %}
           <ul class="nav justify-content-end">
             <li class="nav-item active">
               <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="{% url 'anvil_consortium_manager:index' %}">Consortium Manager</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="{% url 'about' %}">About</a>
             </li>
           </ul>
+        {% endblock navbar_items %}
+
       </div>
     </nav>
-
 
     <div class="container">
 
