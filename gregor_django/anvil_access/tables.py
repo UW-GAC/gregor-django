@@ -44,6 +44,7 @@ class WorkspaceTable(acm_tables.WorkspaceTable):
 
     class Meta:
         # Do not include billing_project, since it is already in the name.
-        exclude = ("billing_project",)
+        # Do not include the number of authorization domains.
+        exclude = ("billing_project", "n_authorization_domains")
         # Reorder columns.
         sequence = ("name", "research_center", "consent_group", "version")
