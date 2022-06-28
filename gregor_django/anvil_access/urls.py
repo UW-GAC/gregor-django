@@ -7,7 +7,7 @@ app_name = "anvil_access"
 
 research_center_patterns = (
     [
-        path("<int:pk>", views.ResearchCenterDetail.as_view(), name="detail"),
+        path("<int:pk>/", views.ResearchCenterDetail.as_view(), name="detail"),
         path("", views.ResearchCenterList.as_view(), name="list"),
     ],
     "research_centers",
@@ -15,7 +15,7 @@ research_center_patterns = (
 
 consent_group_patterns = (
     [
-        path("<int:pk>", views.ConsentGroupDetail.as_view(), name="detail"),
+        path("<int:pk>/", views.ConsentGroupDetail.as_view(), name="detail"),
         path("", views.ConsentGroupList.as_view(), name="list"),
     ],
     "consent_groups",
@@ -24,9 +24,9 @@ consent_group_patterns = (
 workspace_patterns = (
     [
         path("", views.WorkspaceList.as_view(), name="list"),
-        path("import", views.WorkspaceDataImport.as_view(), name="import"),
-        path("<int:pk>/delete", views.PageNotFound.as_view()),
-        path("new", views.PageNotFound.as_view()),
+        path("import/", views.WorkspaceDataImport.as_view(), name="import"),
+        path("<int:pk>/delete/", views.PageNotFound.as_view(), name="delete"),
+        path("new/", views.PageNotFound.as_view(), name="new"),
     ],
     "workspaces",
 )
