@@ -86,6 +86,11 @@ class ResearchCenterTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "Test")
 
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.ResearchCenterFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_unique_short_name(self):
         """Saving a model with a duplicate short name fails."""
         factories.ResearchCenterFactory.create(short_name="FOO")

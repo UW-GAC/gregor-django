@@ -1,6 +1,7 @@
 from anvil_consortium_manager.models import Workspace
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
 
 
 def validate_gt_0(value):
@@ -47,6 +48,10 @@ class ResearchCenter(models.Model):
             A string showing the short name of the object.
         """
         return self.short_name
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:research_centers:detail", args=[self.pk])
 
 
 class UploadWorkspace(models.Model):
