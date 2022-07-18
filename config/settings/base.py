@@ -82,9 +82,16 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "maintenance_mode",
     "login_required",
+    # Tables
+    "django_tables2",
+    # Autocomplete.
+    # note these are supposed to come before django.contrib.admin.
+    "dal",
+    "dal_select2",
 ]
 
 LOCAL_APPS = [
+    "anvil_consortium_manager",
     "gregor_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
     "gregor_django.gregor_oauth_provider",
@@ -326,3 +333,10 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+
+# django-anvil-consortium-manager
+# ------------------------------------------------------------------------------
+# Specify the path to the service account to use for managing access on AnVIL.
+ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
+ANVIL_ADAPTER = "anvil_consortium_manager.adapter.DefaultWorkspaceAdapter"
