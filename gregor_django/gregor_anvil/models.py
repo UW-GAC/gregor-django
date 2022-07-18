@@ -1,4 +1,14 @@
+from anvil_consortium_manager.models import Workspace
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_gt_0(value):
+    if value <= 0:
+        raise ValidationError(
+            "%(value)s must be greater than 0.",
+            params={"value": value},
+        )
 
 
 class ConsentGroup(models.Model):
@@ -37,3 +47,42 @@ class ResearchCenter(models.Model):
             A string showing the short name of the object.
         """
         return self.short_name
+
+
+class UploadWorkspace(models.Model):
+    """A model to track additional data about an upload workspace."""
+
+    research_center = models.ForeignKey(ResearchCenter, on_delete=models.PROTECT)
+    """The ResearchCenter providing data for this Workspace."""
+
+    consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
+    """The ConsentGroup associated with this workspace."""
+
+    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
+    # We'll need to add a separate constraint.
+    version = models.PositiveIntegerField(validators=[validate_gt_0])
+    """The version associated with this Workspace."""
+
+    workspace = models.OneToOneField(Workspace, on_delete=models.CASCADE)
+    """The AnVIL workspace."""
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_workspace_data",
+                fields=["research_center", "consent_group", "version"],
+            ),
+            # Version must be positive and *not* zero.
+            models.CheckConstraint(
+                name="positive_version",
+                check=models.Q(version__gt=0),
+            ),
+        ]
+
+    def __str__(self):
+        """String method.
+        Returns:
+            A string showing the workspace name of the object.
+        """
+        return self.workspace.__str__()

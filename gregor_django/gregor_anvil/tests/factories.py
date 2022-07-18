@@ -1,4 +1,5 @@
-from factory import Faker
+from anvil_consortium_manager.tests import factories as acm_factories
+from factory import Faker, SubFactory
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -25,3 +26,16 @@ class ResearchCenterFactory(DjangoModelFactory):
     class Meta:
         model = models.ResearchCenter
         django_get_or_create = ["short_name"]
+
+
+class UploadWorkspaceFactory(DjangoModelFactory):
+    """A factory for the UploadWorkspace model."""
+
+    research_center = SubFactory(ResearchCenterFactory)
+    consent_group = SubFactory(ConsentGroupFactory)
+    version = Faker("random_int", min=1, max=10)
+    workspace = SubFactory(acm_factories.WorkspaceFactory)
+
+    class Meta:
+        model = models.UploadWorkspace
+        django_get_or_create = ["research_center", "consent_group"]
