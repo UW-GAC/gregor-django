@@ -1,4 +1,5 @@
 import django_tables2 as tables
+from anvil_consortium_manager.models import Workspace
 
 from . import models
 
@@ -23,4 +24,19 @@ class ConsentGroupTable(tables.Table):
         fields = (
             "code",
             "consent",
+        )
+
+
+class UploadWorkspaceTable(tables.Table):
+    """A table for Workspaces that includes fields from UploadWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "uploadworkspace__research_center",
+            "uploadworkspace__consent_group",
+            "uploadworkspace__version",
         )
