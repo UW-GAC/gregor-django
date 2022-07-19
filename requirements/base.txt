@@ -16,3 +16,7 @@ django-allauth==0.50.0  # https://github.com/pennersr/django-allauth
 django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 django-login-required-middleware==0.7.0 # https://github.com/CleitonDeLima/django-login-required-middleware
+
+# anvil_consortium_manager - installed from a specific branch for now.
+# TODO: Make sure to update this to a specific tag before merging.
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@feature/workspace-adapter
