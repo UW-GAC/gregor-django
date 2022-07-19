@@ -31,6 +31,10 @@ class ConsentGroup(models.Model):
         """
         return self.code
 
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:consent_groups:detail", args=[self.pk])
+
 
 class ResearchCenter(models.Model):
     """A model to track Research Centers."""
