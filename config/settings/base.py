@@ -334,6 +334,10 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# django-tables2
+# ------------------------------------------------------------------------------
+# https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
