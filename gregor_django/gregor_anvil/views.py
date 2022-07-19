@@ -1,7 +1,8 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
+from django_tables2 import SingleTableView
 
-from . import models
+from . import models, tables
 
 
 class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -10,7 +11,8 @@ class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):
     model = models.ResearchCenter
 
 
-class ResearchCenterList(AnVILConsortiumManagerViewRequired, ListView):
+class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `ResearchCenters`."""
 
     model = models.ResearchCenter
+    table_class = tables.ResearchCenterTable
