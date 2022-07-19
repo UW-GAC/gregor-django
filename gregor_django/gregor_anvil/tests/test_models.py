@@ -25,6 +25,11 @@ class ConsentGroupTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "test")
 
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.ConsentGroupFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_unique_code(self):
         """Saving a model with a duplicate code fails."""
         instance_1 = models.ConsentGroup(

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ object.short_name }}{% endblock %}
+
+{% block content %}
+<h1>Consent Group: {{ object.code }}</h1>
+<ul>
+  <li>Consent: {{ object.get_code_display }}</li>
+  <li>Data use limitations: {{ object.data_use_limitations }}</li>
+</ul>
+
+{% endblock content %}
