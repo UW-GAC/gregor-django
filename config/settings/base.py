@@ -95,7 +95,7 @@ LOCAL_APPS = [
     "gregor_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
     "gregor_django.gregor_oauth_provider",
-    "gregor_django.gregor_anvil",
+    "gregor_django.gregor_anvil.apps.GregorAnvilConfig",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -343,4 +343,4 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # ------------------------------------------------------------------------------
 # Specify the path to the service account to use for managing access on AnVIL.
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
-ANVIL_ADAPTER = "anvil_consortium_manager.adapter.DefaultWorkspaceAdapter"
+ANVIL_ADAPTER = "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter"
