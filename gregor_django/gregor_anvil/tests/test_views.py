@@ -386,9 +386,9 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             {
                 "billing_project": billing_project.pk,
                 "name": "test-workspace",
-                "research_center": research_center.pk,
-                "consent_group": consent_group.pk,
-                "version": 5,
+                "workspace_data_form-research_center": research_center.pk,
+                "workspace_data_form-consent_group": consent_group.pk,
+                "workspace_data_form-version": 5,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -490,9 +490,9 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             self.get_url(),
             {
                 "workspace": billing_project.name + "/" + workspace_name,
-                "research_center": research_center.pk,
-                "consent_group": consent_group.pk,
-                "version": 5,
+                "workspace_data_form-research_center": research_center.pk,
+                "workspace_data_form-consent_group": consent_group.pk,
+                "workspace_data_form-version": 5,
             },
         )
         self.assertEqual(response.status_code, 302)
