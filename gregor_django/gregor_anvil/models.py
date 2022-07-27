@@ -1,15 +1,7 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
-from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
-
-
-def validate_gt_0(value):
-    if value <= 0:
-        raise ValidationError(
-            "%(value)s must be greater than 0.",
-            params={"value": value},
-        )
 
 
 class ConsentGroup(models.Model):
@@ -69,7 +61,7 @@ class UploadWorkspace(BaseWorkspaceData):
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint.
-    version = models.PositiveIntegerField(validators=[validate_gt_0])
+    version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     """The version associated with this Workspace."""
 
     class Meta:
