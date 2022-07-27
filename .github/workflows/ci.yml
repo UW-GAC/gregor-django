@@ -82,6 +82,9 @@ jobs:
 
       - name: Test with pytest
         run:  pytest
+        env:
+          # We can set this to an empty string, since we'll never make an API call.
+          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
   # Below for future django specific tests
   build:
 
