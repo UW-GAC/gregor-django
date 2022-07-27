@@ -1,4 +1,4 @@
-from anvil_consortium_manager.models import Workspace
+from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -58,7 +58,7 @@ class ResearchCenter(models.Model):
         return reverse("gregor_anvil:research_centers:detail", args=[self.pk])
 
 
-class UploadWorkspace(models.Model):
+class UploadWorkspace(BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
 
     research_center = models.ForeignKey(ResearchCenter, on_delete=models.PROTECT)
@@ -71,9 +71,6 @@ class UploadWorkspace(models.Model):
     # We'll need to add a separate constraint.
     version = models.PositiveIntegerField(validators=[validate_gt_0])
     """The version associated with this Workspace."""
-
-    workspace = models.OneToOneField(Workspace, on_delete=models.CASCADE)
-    """The AnVIL workspace."""
 
     class Meta:
         constraints = [
