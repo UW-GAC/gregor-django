@@ -14,4 +14,5 @@ class UploadWorkspaceForm(forms.ModelForm):
             "research_center",
             "consent_group",
             "version",
+            "workspace",
         )
