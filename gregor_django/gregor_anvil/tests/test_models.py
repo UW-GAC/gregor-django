@@ -125,10 +125,12 @@ class UploadWorkspaceTest(TestCase):
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.UploadWorkspaceFactory.create()
+        instance = factories.UploadWorkspaceFactory.create(
+            research_center__short_name="TestRC", consent_group__code="GRU", version=1
+        )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+        self.assertEqual(instance.__str__(), "TestRC - GRU - v1")
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
