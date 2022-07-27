@@ -91,6 +91,6 @@ class UploadWorkspace(BaseWorkspaceData):
         Returns:
             A string showing the workspace name of the object.
         """
-        return "{} {} v{}".format(
+        return "{} - {} - v{}".format(
             self.research_center, self.consent_group, self.version
         )
