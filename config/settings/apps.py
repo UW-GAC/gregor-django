@@ -13,3 +13,17 @@ try:
     LOGGING["handlers"]["console"]["filename"] = "/var/log/django/gregor-apps.log"
 except ImportError:
     LOGGING["handlers"]["console"]["class"] = "logging.StreamHandler"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "drupal_oauth_provider": {
+        "OVERRIDE_NAME": "Gregor Consortium Site Login",
+        "API_URL": "https://gregorconsortium.org",
+        "SCOPES": [
+            {
+                "drupal_machine_name": "oauth_django_access",
+                "request_scope": False,
+                "django_group_name": "test_django_access",
+            },
+        ],
+    }
+}
