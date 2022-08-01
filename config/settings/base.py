@@ -87,7 +87,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "gregor_django.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "gregor_django.gregor_oauth_provider",
+    "gregor_django.drupal_oauth_provider",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -265,7 +265,7 @@ LOGGING = {
             "formatter": "verbose",
         }
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {"level": "DEBUG", "handlers": ["console"]},
 }
 
 # django-maintenance-mode
@@ -291,8 +291,8 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 # limited set of views we allow a non-logged in user to access
 LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "account_login",
-    "gregor_oauth_provider_login",
-    "gregor_oauth_provider_callback",
+    "drupal_oauth_provider_login",
+    "drupal_oauth_provider_callback",
     "socialaccount_signup",
     "admin:index",
     "admin:login",
@@ -309,8 +309,9 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 # via oauth (as configured in the drupal consumer) and will be returned even if we do not request
 # them but are not currently mapped to django groups.
 SOCIALACCOUNT_PROVIDERS = {
-    "gregor_oauth_provider": {
+    "drupal_oauth_provider": {
         "API_URL": "https://dev.gregorconsortium.org",
+        "OVERRIDE_NAME": "Gregor Consortium Site Login",
         "SCOPES": [
             {
                 "drupal_machine_name": "oauth_django_access",
