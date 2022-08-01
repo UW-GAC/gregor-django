@@ -2,8 +2,8 @@ from allauth.account.signals import user_logged_in
 from allauth.socialaccount.adapter import get_adapter
 from django.dispatch import receiver
 
-from gregor_django.gregor_oauth_provider.provider import (
-    CustomProvider as GregorProvider,
+from gregor_django.drupal_oauth_provider.provider import (
+    CustomProvider as DrupalProvider,
 )
 
 
@@ -15,5 +15,5 @@ def custom_user_logged_in_processing(sender, **kwargs):
     sociallogin = kwargs.get("sociallogin")
     if sociallogin:
         user_provider_id = sociallogin.account.provider
-        if user_provider_id == GregorProvider.id:
+        if user_provider_id == DrupalProvider.id:
             get_adapter().update_gregor_user_data(sociallogin)
