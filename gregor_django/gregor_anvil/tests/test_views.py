@@ -91,6 +91,8 @@ class HomeTest(TestCase):
 
 
 class ConsentGroupDetailTest(TestCase):
+    """Tests for the ConsentGroupDetail view."""
+
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -147,6 +149,8 @@ class ConsentGroupDetailTest(TestCase):
 
 
 class ConsentGroupListTest(TestCase):
+    """Tests for the ConsentGroupList view."""
+
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -227,6 +231,8 @@ class ConsentGroupListTest(TestCase):
 
 
 class ResearchCenterDetailTest(TestCase):
+    """Tests for the ResearchCenterDetail view."""
+
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -283,6 +289,8 @@ class ResearchCenterDetailTest(TestCase):
 
 
 class ResearchCenterListTest(TestCase):
+    """Tests for the ResearchCenterList view."""
+
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -329,6 +337,7 @@ class ResearchCenterListTest(TestCase):
             self.get_view()(request)
 
     def test_view_has_correct_table_class(self):
+        """View has the correct table class in the context."""
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
@@ -338,6 +347,7 @@ class ResearchCenterListTest(TestCase):
         )
 
     def test_view_with_no_objects(self):
+        """The table has no rows when there are no ResearchCenter objects."""
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
@@ -346,6 +356,7 @@ class ResearchCenterListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 0)
 
     def test_view_with_one_object(self):
+        """The table has one row when there is one ResearchCenter object."""
         self.model_factory.create()
         request = self.factory.get(self.get_url())
         request.user = self.user
@@ -355,6 +366,7 @@ class ResearchCenterListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 1)
 
     def test_view_with_two_objects(self):
+        """The table has two rows when there are two ResearchCenter objects."""
         self.model_factory.create_batch(2)
         request = self.factory.get(self.get_url())
         request.user = self.user
@@ -388,6 +400,7 @@ class UploadWorkspaceListTest(TestCase):
         return acm_views.WorkspaceListByType.as_view()
 
     def test_view_has_correct_table_class(self):
+        """The view has the correct table class in the context."""
         request = self.factory.get(self.get_url(self.workspace_type))
         request.user = self.user
         response = self.get_view()(request, workspace_type=self.workspace_type)
@@ -425,6 +438,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
     def get_api_url(self, billing_project_name, workspace_name):
+        """Return the Terra API url for a given billing project and workspace."""
         return (
             self.entry_point
             + "/api/workspaces/"
@@ -509,6 +523,7 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         return reverse("anvil_consortium_manager:workspaces:import", args=args)
 
     def get_api_url(self, billing_project_name, workspace_name):
+        """Return the Terra API url for a given billing project and workspace."""
         return (
             self.entry_point
             + "/api/workspaces/"

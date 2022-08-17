@@ -60,7 +60,7 @@ class UploadWorkspace(BaseWorkspaceData):
     """The ConsentGroup associated with this workspace."""
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
-    # We'll need to add a separate constraint.
+    # We'll need to add a separate constraint in addition to this validator.
     version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     """The version associated with this Workspace."""
 
