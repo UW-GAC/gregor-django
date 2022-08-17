@@ -20,6 +20,76 @@ from . import factories
 User = get_user_model()
 
 
+class HomeTest(TestCase):
+    """Tests for the home page related to anvil_consortium_manager content."""
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("home", args=args)
+
+    def test_acm_link_without_permission(self):
+        """ACM link does not show up if you do not have view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
+        self.assertNotIn(
+            reverse("anvil_consortium_manager:index"), response.rendered_content
+        )
+
+    def test_acm_link_with_view_permission(self):
+        """ACM link shows up if you have view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertIn("AnVIL Consortium Manager", response.rendered_content)
+        self.assertIn(
+            reverse("anvil_consortium_manager:index"), response.rendered_content
+        )
+
+    def test_acm_link_with_view_and_edit_permission(self):
+        """ACM link shows up if you have view and edit permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertIn("AnVIL Consortium Manager", response.rendered_content)
+        self.assertIn(
+            reverse("anvil_consortium_manager:index"), response.rendered_content
+        )
+
+    def test_acm_link_with_edit_but_not_view_permission(self):
+        """ACM link does not show up if you only have edit permission.
+
+        This is something that shouldn't happen but could if admin only gave EDIT but not VIEW permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
+        self.assertNotIn(
+            reverse("anvil_consortium_manager:index"), response.rendered_content
+        )
+
+
 class ConsentGroupDetailTest(TestCase):
     def setUp(self):
         """Set up test class."""
