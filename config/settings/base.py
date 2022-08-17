@@ -206,6 +206,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "gregor_django.utils.context_processors.settings_context",
+                "anvil_consortium_manager.context_processors.workspace_adapter",
             ],
         },
     }
@@ -343,4 +344,6 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # ------------------------------------------------------------------------------
 # Specify the path to the service account to use for managing access on AnVIL.
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
-ANVIL_ADAPTER = "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter"
+ANVIL_WORKSPACE_ADAPTERS = [
+    "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
+]
