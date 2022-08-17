@@ -307,6 +307,7 @@ class UploadWorkspaceListTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
+        self.workspace_type = "upload"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -314,12 +315,12 @@ class UploadWorkspaceListTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return acm_views.WorkspaceList.as_view()
+        return acm_views.WorkspaceListByType.as_view()
 
     def test_view_has_correct_table_class(self):
-        request = self.factory.get(self.get_url())
+        request = self.factory.get(self.get_url(self.workspace_type))
         request.user = self.user
-        response = self.get_view()(request)
+        response = self.get_view()(request, workspace_type=self.workspace_type)
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
             response.context_data["table"], tables.UploadWorkspaceTable
@@ -347,6 +348,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.workspace_type = "upload"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -382,7 +384,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(),
+            self.get_url(self.workspace_type),
             {
                 "billing_project": billing_project.pk,
                 "name": "test-workspace",
@@ -416,7 +418,6 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def setUp(self):
         """Set up test class."""
-        print(settings.ANVIL_ADAPTER)
         # The superclass uses the responses package to mock API responses.
         super().setUp()
         # Create a user with both view and edit permissions.
@@ -431,6 +432,7 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.workspace_type = "upload"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -492,7 +494,7 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(),
+            self.get_url(self.workspace_type),
             {
                 "workspace": billing_project.name + "/" + workspace_name,
                 # Workspace data form.
