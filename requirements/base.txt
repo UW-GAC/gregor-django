@@ -19,4 +19,4 @@ django-login-required-middleware==0.7.0 # https://github.com/CleitonDeLima/djang
 
 # anvil_consortium_manager - installed from a specific branch for now.
 # TODO: Make sure to update this to a specific tag before merging.
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@62765310da3918b567fc22816278e984fcb1edc9
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@5d3e256971e06c8eadc4645f437ec2c1433127d3
