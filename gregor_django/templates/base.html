@@ -83,9 +83,6 @@
         </button>
         <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'images/GREGoR_Final_Logo-ai.png' %}" class="img-fluid" /></a>
 
-        {% block navbar_items %}
-        {% endblock navbar_items %}
-
           <ul class="nav justify-content-end">
             <li class="nav-item active">
               <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
@@ -103,6 +100,8 @@
       </div>
     </nav>
 
+    {% block extra_navbar %}
+    {% endblock %}
 
     <div class="container">
 
