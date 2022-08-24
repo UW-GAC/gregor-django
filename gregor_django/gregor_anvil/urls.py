@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from . import views
 
-app_name = "anvil_access"
+app_name = "gregor_anvil"
 
 
 research_center_patterns = (

@@ -107,7 +107,7 @@ class ConsentGroupDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("anvil_access:consent_groups:detail", args=args)
+        return reverse("gregor_anvil:consent_groups:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -165,7 +165,7 @@ class ConsentGroupListTest(TestCase):
 
     def get_url(self):
         """Get the url for the view being tested."""
-        return reverse("anvil_access:consent_groups:list")
+        return reverse("gregor_anvil:consent_groups:list")
 
     def get_view(self):
         """Return the view being tested."""
@@ -247,7 +247,7 @@ class ResearchCenterDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("anvil_access:research_centers:detail", args=args)
+        return reverse("gregor_anvil:research_centers:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -305,7 +305,7 @@ class ResearchCenterListTest(TestCase):
 
     def get_url(self):
         """Get the url for the view being tested."""
-        return reverse("anvil_access:research_centers:list")
+        return reverse("gregor_anvil:research_centers:list")
 
     def get_view(self):
         """Return the view being tested."""
