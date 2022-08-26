@@ -34,7 +34,7 @@ class UploadWorkspaceFactory(DjangoModelFactory):
     research_center = SubFactory(ResearchCenterFactory)
     consent_group = SubFactory(ConsentGroupFactory)
     version = Faker("random_int", min=1, max=10)
-    workspace = SubFactory(acm_factories.WorkspaceFactory)
+    workspace = SubFactory(acm_factories.WorkspaceFactory, workspace_type="upload")
 
     class Meta:
         model = models.UploadWorkspace
