@@ -3,10 +3,31 @@
 {% block title %}{{ object.short_name }}{% endblock %}
 
 {% block content %}
-<h1>Consent Group: {{ object.code }}</h1>
-<ul>
-  <li>Consent: {{ object.get_code_display }}</li>
-  <li>Data use limitations: {{ object.data_use_limitations }}</li>
-</ul>
 
+<h1>Consent Group: {{ object.code }}</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>Code: {{ object.code }}</li>
+    <li>Consent: {{ object.consent }}</li>
+  </ul>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsDUL">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDUL">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDUL" aria-expanded="true" aria-controls="collapseDUL">
+          <span class="fa-solid fa-list-check mx-2"></span>
+          Full data use limitations
+        </button>
+      </h2>
+      <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
+        <div class="accordion-body">
+          {{ object.data_use_limitations }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock content %}
