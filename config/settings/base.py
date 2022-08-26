@@ -88,6 +88,7 @@ THIRD_PARTY_APPS = [
     # note these are supposed to come before django.contrib.admin.
     "dal",
     "dal_select2",
+    "fontawesomefree",
 ]
 
 LOCAL_APPS = [
