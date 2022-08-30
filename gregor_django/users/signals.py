@@ -16,4 +16,4 @@ def custom_user_logged_in_processing(sender, **kwargs):
     if sociallogin:
         user_provider_id = sociallogin.account.provider
         if user_provider_id == DrupalProvider.id:
-            get_adapter().update_gregor_user_data(sociallogin)
+            get_adapter().update_user_data(sociallogin)
