@@ -20,15 +20,23 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest, sociallogin: Any):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
-    def update_gregor_user_data(self, sociallogin: Any):
+    def update_user_data(self, sociallogin: Any):
 
         logger.debug(
-            f"[SocialAccountAdatpter:update_gregor_user_data] account: {sociallogin.account} "
+            f"[SocialAccountAdatpter:update_user_data] account: {sociallogin.account} "
             f"extra_data {sociallogin.account.extra_data} "
             f"provider: {sociallogin.account.provider}"
         )
 
         extra_data = sociallogin.account.extra_data
+        user = sociallogin.user
+
+        if not user.name:
+            first_name = extra_data.get("first_name")
+            last_name = extra_data.get("last_name")
+            full_name = " ".join(part for part in (first_name, last_name) if part)
+            user.name = full_name
+            user.save()
 
         managed_scope_status = extra_data.get("managed_scope_status")
         if managed_scope_status:
@@ -46,7 +54,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     )
                     if was_created:
                         logger.debug(
-                            f"[SocialAccountAdatpter:update_gregor_user_data] created mapped user group: {group_name}"
+                            f"[SocialAccountAdatpter:update_user_data] created mapped user group: {group_name}"
                         )
                     if user_has_group is True:
                         if user_group not in user.groups.all():
@@ -58,7 +66,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                             removed_groups.append(user_group.name)
             if added_groups or removed_groups:
                 logger.info(
-                    f"[SocialAccountAdatpter:update_gregor_user_data] user: {sociallogin.account} updated groups: "
+                    f"[SocialAccountAdatpter:update_user_data] user: {sociallogin.account} updated groups: "
                     f"added {added_groups} removed: {removed_groups} "
                     f"managed_scope_status: {managed_scope_status}"
                 )

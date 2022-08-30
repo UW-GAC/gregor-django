@@ -310,14 +310,14 @@ SOCIALACCOUNT_PROVIDERS = {
         "OVERRIDE_NAME": "Gregor Consortium Site Login",
         "SCOPES": [
             {
-                "drupal_machine_name": "oauth_django_access",
-                "request_scope": False,
-                "django_group_name": "test_django_access",
+                "drupal_machine_name": "dcc_staff",
+                "request_scope": True,
+                "django_group_name": "DCC Staff",
             },
             {
-                "drupal_machine_name": "gregor_anvil_admin",
+                "drupal_machine_name": "dcc_acm_admin",
                 "request_scope": True,
-                "django_group_name": "gregor_anvil_admin",
+                "django_group_name": "DCC ACM Admin",
             },
         ],
     }
