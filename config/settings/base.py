@@ -322,3 +322,5 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+PRODUCTION_SITE = False
