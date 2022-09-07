@@ -277,6 +277,11 @@ gregor_django/media/
 
 .pytest_cache/
 
+### test db
 gregor_django.db
+
+### dbbackups
+dbbackups/
+
 
 

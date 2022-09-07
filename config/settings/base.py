@@ -74,6 +74,7 @@ DJANGO_APPS = [
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
     "django.forms",
+    "dbbackup",  # django-dbbackup
 ]
 THIRD_PARTY_APPS = [
     "crispy_forms",
@@ -293,6 +294,10 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "admin:index",
     "admin:login",
 ]
+
+# django-dbbackup
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
 
 # GREGOR
 # ------------------------------------------------------------------------------
