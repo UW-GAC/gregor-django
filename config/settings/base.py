@@ -328,4 +328,6 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-PRODUCTION_SITE = False
+# Setting for whether the config represents the live production site (apps.gregorconsortium.org)
+# Initially used to style all non dev sites differently
+LIVE_SITE = False
