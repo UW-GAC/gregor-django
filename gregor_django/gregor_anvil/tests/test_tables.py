@@ -1,3 +1,4 @@
+from anvil_consortium_manager import models as acm_models
 from django.test import TestCase
 
 from .. import models, tables
@@ -46,7 +47,7 @@ class ConsentGroupTableTest(TestCase):
 
 
 class UploadWorkspaceTableTest(TestCase):
-    model = models.UploadWorkspace
+    model = acm_models.Workspace
     model_factory = factories.UploadWorkspaceFactory
     table_class = tables.UploadWorkspaceTable
 
