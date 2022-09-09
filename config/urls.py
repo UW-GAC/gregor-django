@@ -21,7 +21,8 @@ urlpatterns = [
         include("anvil_consortium_manager.urls", namespace="anvil_consortium_manager"),
     ),
     path(
-        "anvil/", include("gregor_django.gregor_anvil.urls", namespace="gregor_anvil")
+        "gregor_anvil/",
+        include("gregor_django.gregor_anvil.urls", namespace="gregor_anvil"),
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
