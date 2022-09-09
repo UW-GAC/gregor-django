@@ -74,6 +74,7 @@ DJANGO_APPS = [
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
     "django.forms",
+    "dbbackup",  # django-dbbackup
 ]
 THIRD_PARTY_APPS = [
     "crispy_forms",
@@ -304,6 +305,10 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "admin:login",
 ]
 
+# django-dbbackup
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
+
 # GREGOR
 # ------------------------------------------------------------------------------
 # Allauth
@@ -332,6 +337,10 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+# Setting for whether the config represents the live production site (apps.gregorconsortium.org)
+# Initially used to style all non dev sites differently
+LIVE_SITE = False
 
 # django-tables2
 # ------------------------------------------------------------------------------
