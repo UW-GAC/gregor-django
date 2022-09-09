@@ -1,0 +1,16 @@
+{% extends "anvil_consortium_manager/base.html" %}
+
+{% block title %}{{ object.short_name }}{% endblock %}
+
+{% block content %}
+
+<h1>Research Center: {{ object.short_name }}</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>Full name: {{ object.full_name }}</li>
+    <li>Short name: {{ object.short_name }}</li>
+  </ul>
+</div>
+
+{% endblock content %}

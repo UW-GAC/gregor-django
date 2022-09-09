@@ -17,3 +17,6 @@ django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-cri
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 django-login-required-middleware==0.8.0 # https://github.com/CleitonDeLima/django-login-required-middleware
 django-dbbackup==4.0.1 # https://github.com/jazzband/django-dbbackup
+
+# anvil_consortium_manager
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.1
