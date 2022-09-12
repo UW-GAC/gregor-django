@@ -7,11 +7,11 @@ env:
 
 on:
   pull_request:
-    branches: [ "master", "main" ]
+    branches: [ "master", "main", "deploy/**" ]
     paths-ignore: [ "docs/**" ]
 
   push:
-    branches: [ "master", "main" ]
+    branches: [ "master", "main", "deploy/**" ]
     paths-ignore: [ "docs/**" ]
 
 
@@ -31,7 +31,7 @@ jobs:
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
       # since the action is run on a branch in detached head state
-      - name: Install and Run Pre-commit 
+      - name: Install and Run Pre-commit
         uses: pre-commit/action@v2.0.3
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
@@ -82,6 +82,9 @@ jobs:
 
       - name: Test with pytest
         run:  pytest
+        env:
+          # We can set this to an empty string, since we'll never make an API call.
+          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
   # Below for future django specific tests
   build:
 
@@ -104,3 +107,6 @@ jobs:
     - name: Run Django Tests
       run: |
         python manage.py test
+      env:
+        # We can set this to an empty string, since we'll never make an API call.
+        ANVIL_API_SERVICE_ACCOUNT_FILE: foo
