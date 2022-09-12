@@ -354,3 +354,8 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
 ]
+
+# Specify the URL name that AccountLink and AccountLinkVerify redirect to.
+ANVIL_ACCOUNT_LINK_REDIRECT = "home"
+# Specify the subject for AnVIL account verification emails.
+ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
