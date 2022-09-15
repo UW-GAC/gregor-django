@@ -37,33 +37,35 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         # Get list of research centers in domain table
 
         research_center_or_site = extra_data.get("research_center_or_site")
-        if not isinstance(research_center_or_site, list):
-            raise ImproperlyConfigured(
-                "sociallogin.extra_data.research_center_or_site should be a list"
-            )
-        for rc_name in research_center_or_site:
-            try:
-                rc = ResearchCenter.objects.get(full_name=rc_name)
-            except ObjectDoesNotExist:
-                logger.debug(
-                    f"[SocialAccountAdatpter:update_user_research_centers] Ignoring drupal "
-                    f"research_center_or_site {rc_name} - not in ResearchCenter domain"
+        if research_center_or_site:
+            if not isinstance(research_center_or_site, list):
+                raise ImproperlyConfigured(
+                    "sociallogin.extra_data.research_center_or_site should be a list"
                 )
-                continue
-            else:
-                if not user.research_centers.filter(pk=rc.pk):
-                    user.research_centers.add(rc)
-                    logger.info(
-                        f"[SocialAccountAdatpter:update_user_research_centers] adding user "
-                        f"research_centers user: {user} rc: {rc}"
+            for rc_name in research_center_or_site:
+                try:
+                    rc = ResearchCenter.objects.get(full_name=rc_name)
+                except ObjectDoesNotExist:
+                    logger.debug(
+                        f"[SocialAccountAdatpter:update_user_research_centers] Ignoring drupal "
+                        f"research_center_or_site {rc_name} - not in ResearchCenter domain"
                     )
+                    continue
+                else:
+                    if not user.research_centers.filter(pk=rc.pk):
+                        user.research_centers.add(rc)
+                        logger.info(
+                            f"[SocialAccountAdatpter:update_user_research_centers] adding user "
+                            f"research_centers user: {user} rc: {rc}"
+                        )
 
-        for existing_rc in user.research_centers.all():
-            if existing_rc.full_name not in research_center_or_site:
-                user.research_centers.remove(existing_rc)
-                logger.info(
-                    f"[SocialAccountAdatpter:update_user_research_centers] removing rc {existing_rc} for user {user}"
-                )
+            for existing_rc in user.research_centers.all():
+                if existing_rc.full_name not in research_center_or_site:
+                    user.research_centers.remove(existing_rc)
+                    logger.info(
+                        "[SocialAccountAdatpter:update_user_research_centers] "
+                        f"removing rc {existing_rc} for user {user}"
+                    )
 
     def update_user_groups(self, user, extra_data: Dict):
         managed_scope_status = extra_data.get("managed_scope_status")
