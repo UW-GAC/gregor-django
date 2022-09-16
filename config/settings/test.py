@@ -31,3 +31,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # anvil_consortium_manager
 # Since we're not making any API calls in tests, we can set this to a dummy string.
 ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
+
+# template tests require debug to be set
+# get the last templates entry and set debug option
+TEMPLATES[-1]["OPTIONS"]["debug"] = True  # noqa
