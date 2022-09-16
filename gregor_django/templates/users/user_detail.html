@@ -6,29 +6,92 @@
 {% block content %}
 <div class="container">
 
-  <div class="row">
-    <div class="col-sm-12">
-
-      <h2>{{ object.username }}</h2>
-      {% if object.name %}
-        <p>{{ object.name }}</p>
-      {% endif %}
+  <div class="row row-cols-1 rows-cols-sm-2 row-cols-md-2 g-2 mt-3">
+    <div class="col">
+      <div class='card card-shadow-sm'>
+        <div class='card-header'>
+          <h3><i class="bi bi-person-circle"></i> {% if object == request.user %}My{% else %}User{% endif %} Profile</h3>
+        </div>
+        <div class='card-body'>
+          <ul class="list-group">
+            <li class='list-group-item'>
+            <h5>Username</h5>
+            <p>{{ object.username }}</p>
+            </li>
+            <li class='list-group-item'>
+            <h5>Name</h5>
+            {% if object.name %}
+              <p>{{ object.name|default:"Name not currently set" }}</p>
+            {% endif %}
+            </li>
+            <li class='list-group-item'>
+            <h5><i class="bi bi-envelope"></i> Email</h5>
+            <p>{{ object.email }}</p>
+            </li>
+            <li class='list-group-item'>
+              <h5><i class="bi bi-globe"></i> Research Center{% if object.research_centers.all.count > 1 %}(s){% endif %}</h5>
+              {% for rc in object.research_centers.all %}
+              <p>&bull; {{ rc.full_name }}</p>
+              {% empty %}
+              <p>Not set</p>
+              {% endfor %}
+              </li>
+            {% if object == request.user %}
+            <li class='list-group-item'>
+              <!-- Action buttons -->
+            <a class="btn btn-secondary" href="{% url 'users:update' %}" role="button">Update My Info</a>
+            <a class="btn btn-secondary" href="{% url 'account_email' %}" role="button">Update My E-Mail</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class='col'>
+      <div class='card card-shadow-sm'>
+        <div class='card-header'>
+          <h3><i class="bi bi-link-45deg"></i> {% if object == request.user %}My{% else %}User{% endif %} Anvil Account</h3>
+        </div>
+        <div class='card-body'>
+          {% if object.account %}
+            <p><i class="bi bi-check-circle-fill text-success"></i> Profile has a linked anvil account established</p>
+            <ul class='list-group'>
+              <li class='list-group-item'>
+                <h5>Account Email</h5>
+              {{ object.account.email }}
+              </li>
+              {% if object.account.verified_email_entry %}
+              <li class='list-group-item'>
+                <h5>Verified Date</h5>
+                {{ object.account.verified_email_entry.date_verified }}
+              </li>
+              {% endif %}
+            </ul>
+          {% elif object.useremailentry_set.all %}
+            <ul>
+            {% for uee in object.useremailentry_set.all %}
+              <li><i class="bi bi-hourglass-split"></i> Anvil account user email verification in progress for email: {{ uee.email }}
+                <ul>
+                  <li>Email sent: {{ uee.date_verification_email_sent }}</li>
+                  <li>Email verified: {{ uee.date_verified|default:"Not Yet Verified" }}
+                </ul>
+              </li>
+            {% endfor %}
+            </ul>
+            {% if object == request.user %}
+            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your anvil account now</a>
+            {% endif %}
+          {% else %}
+            <p><i class="bi bi-exclamation-circle-fill text-danger"></i>
+            Profile does not yet have a linked anvil account.</p>
+            {% if object == request.user %}
+            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your anvil account now</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
-
-{% if object == request.user %}
-<!-- Action buttons -->
-<div class="row">
-
-  <div class="col-sm-12">
-    <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
-    <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>
-    <!-- Your Stuff: Custom user template urls -->
-  </div>
-
-</div>
-<!-- End Action buttons -->
-{% endif %}
 
 </div>
 {% endblock content %}
