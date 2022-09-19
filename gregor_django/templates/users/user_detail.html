@@ -19,30 +19,24 @@
             <p>{{ object.username }}</p>
             </li>
             <li class='list-group-item'>
-            <h5>Name</h5>
+            <h5>Name <i class="bi bi-lock"></i></h5>
             {% if object.name %}
               <p>{{ object.name|default:"Name not currently set" }}</p>
             {% endif %}
             </li>
             <li class='list-group-item'>
             <h5><i class="bi bi-envelope"></i> Email</h5>
-            <p>{{ object.email }}</p>
+            <p>{{ object.email }} <a class="btn btn-sm btn-secondary" href="{% url 'account_email' %}" role="button">Edit E-Mail</a></p>
             </li>
             <li class='list-group-item'>
-              <h5><i class="bi bi-globe"></i> Research Center{% if object.research_centers.all.count > 1 %}(s){% endif %}</h5>
+              <h5><i class="bi bi-globe"></i> Research Center{% if object.research_centers.all.count > 1 %}(s){% endif %} <i class="bi bi-lock"></i></h5>
               {% for rc in object.research_centers.all %}
               <p>&bull; {{ rc.full_name }}</p>
               {% empty %}
               <p>Not set</p>
               {% endfor %}
               </li>
-            {% if object == request.user %}
-            <li class='list-group-item'>
-              <!-- Action buttons -->
-            <a class="btn btn-secondary" href="{% url 'users:update' %}" role="button">Update My Info</a>
-            <a class="btn btn-secondary" href="{% url 'account_email' %}" role="button">Update My E-Mail</a>
-            </li>
-            {% endif %}
+            <p class='alert alert-secondary alert-sm fs-7 mt-3'><i class="bi bi-lock"></i> Update name and research center on the <a href="{{ DRUPAL_SITE_URL }}">main GREGoR site</a></p>
           </ul>
         </div>
       </div>
@@ -50,11 +44,11 @@
     <div class='col'>
       <div class='card card-shadow-sm'>
         <div class='card-header'>
-          <h3><i class="bi bi-link-45deg"></i> {% if object == request.user %}My{% else %}User{% endif %} Anvil Account</h3>
+          <h3><i class="bi bi-link-45deg"></i> {% if object == request.user %}My{% else %}User{% endif %} AnVIL Account</h3>
         </div>
         <div class='card-body'>
           {% if object.account %}
-            <p><i class="bi bi-check-circle-fill text-success"></i> Profile has a linked anvil account established</p>
+            <p><i class="bi bi-check-circle-fill text-success"></i> Profile has a linked AnVIL account established</p>
             <ul class='list-group'>
               <li class='list-group-item'>
                 <h5>Account Email</h5>
@@ -70,7 +64,7 @@
           {% elif object.useremailentry_set.all %}
             <ul>
             {% for uee in object.useremailentry_set.all %}
-              <li><i class="bi bi-hourglass-split"></i> Anvil account user email verification in progress for email: {{ uee.email }}
+              <li><i class="bi bi-hourglass-split"></i> AnVIL account user email verification in progress for email: {{ uee.email }}
                 <ul>
                   <li>Email sent: {{ uee.date_verification_email_sent }}</li>
                   <li>Email verified: {{ uee.date_verified|default:"Not Yet Verified" }}
@@ -79,16 +73,17 @@
             {% endfor %}
             </ul>
             {% if object == request.user %}
-            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your anvil account now</a>
+            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your AnVIL account now</a>
             {% endif %}
           {% else %}
             <p><i class="bi bi-exclamation-circle-fill text-danger"></i>
-            Profile does not yet have a linked anvil account.</p>
+            Profile does not yet have a linked AnVIL account.</p>
             {% if object == request.user %}
-            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your anvil account now</a>
+            <a class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}"><i class="bi bi-link"></i> Link your AnVIL account now</a>
             {% endif %}
           {% endif %}
-        </div>
+          <p class='alert alert-secondary mt-3'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the DCC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
+        </div><i class="bi bi-c-square"></i>
       </div>
     </div>
   </div>
