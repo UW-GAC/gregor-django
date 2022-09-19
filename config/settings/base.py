@@ -319,9 +319,11 @@ DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
 # The scopes 'oauth_client_user' and 'authenticated' automatically to anyone who logs in
 # via oauth (as configured in the drupal consumer) and will be returned even if we do not request
 # them but are not currently mapped to django groups.
+DRUPAL_SITE_URL = "https://dev.gregorconsortium.org"
+
 SOCIALACCOUNT_PROVIDERS = {
     "drupal_oauth_provider": {
-        "API_URL": "https://dev.gregorconsortium.org",
+        "API_URL": DRUPAL_SITE_URL,
         "OVERRIDE_NAME": "Gregor Consortium Site Login",
         "SCOPES": [
             {
@@ -356,6 +358,8 @@ ANVIL_WORKSPACE_ADAPTERS = [
 ]
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
-ANVIL_ACCOUNT_LINK_REDIRECT = "home"
+ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
+# Help contact email
+DCC_CONTACT_EMAIL = "gregorconsortium@uw.org"
