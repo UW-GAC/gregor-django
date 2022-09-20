@@ -15,8 +15,7 @@ except ImportError:
     LOGGING["handlers"]["console"]["class"] = "logging.StreamHandler"
 
 # Update drupal oauth api url for production
-SOCIALACCOUNT_PROVIDERS["drupal_oauth_provider"][
-    "API_URL"
-] = "https://gregorconsortium.org"
+DRUPAL_SITE_URL = "https://gregorconsortium.org"
+SOCIALACCOUNT_PROVIDERS["drupal_oauth_provider"]["API_URL"] = DRUPAL_SITE_URL
 
 LIVE_SITE = True
