@@ -19,4 +19,4 @@ django-login-required-middleware==0.8.0 # https://github.com/CleitonDeLima/djang
 django-dbbackup==4.0.1 # https://github.com/jazzband/django-dbbackup
 
 # anvil_consortium_manager
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.2
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.3
