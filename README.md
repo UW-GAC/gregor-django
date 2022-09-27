@@ -50,7 +50,7 @@ Enable oauth login for github \^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^\^
 # Enable oauth login for drupal
 
 -   [Configuration and setup instructions for drupal simple_oauth
-    provider](gregor_django/gregor_oath_provider/docs/provider.md)
+    provider](gregor_django/drupal_oauth_provider/docs/provider.md)
 -   After configuring your site and creating a consumer, navigate to
     /admin
 -   Add a Social Application to your django site
