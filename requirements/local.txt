@@ -14,7 +14,7 @@ responses==0.21.0  # https://github.com/getsentry/responses - for mocking HTTP r
 
 # Documentation
 # ------------------------------------------------------------------------------
-sphinx==4.5.0  # https://github.com/sphinx-doc/sphinx
+sphinx==5.2.3  # https://github.com/sphinx-doc/sphinx
 sphinx-autobuild==2021.3.14 # https://github.com/GaretJax/sphinx-autobuild
 
 # Code quality
