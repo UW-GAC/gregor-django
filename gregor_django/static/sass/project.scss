@@ -22,7 +22,9 @@ a {
     color: $teal;
   }
 }
-
+main {
+  background-color: $body-bg;
+}
 #top-nav {
   margin: 0;
   padding: .2rem;
@@ -41,12 +43,28 @@ a {
   }
 }
 
+#main-nav {
+  background-color: $white;
+}
+
 a.navbar-brand:hover {
   background-color: unset;
 }
 
 .nav-link {
   color: $dark;
+}
+
+.navbar-light {
+  .navbar-nav {
+    .nav-link {
+      &:hover,
+      &:focus {
+        background-color: $dark;
+        color: $white;
+      }
+    }
+  }
 }
 
 li.nav-item a:hover,
@@ -66,6 +84,10 @@ li.nav-item a:focus {
   }
 }
 
+.footer {
+  border-top: 4px solid #fff;
+  background: #e4dcd3 url(/static/images/footer-bg.png);
+}
 
 ////////////////////////////////
 		//Alerts//
