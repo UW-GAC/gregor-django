@@ -2,9 +2,10 @@ from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django_extensions.db.models import TimeStampedModel
 
 
-class ConsentGroup(models.Model):
+class ConsentGroup(TimeStampedModel, models.Model):
     """A model to track consent groups."""
 
     code = models.CharField(max_length=20, unique=True)
@@ -28,7 +29,7 @@ class ConsentGroup(models.Model):
         return reverse("gregor_anvil:consent_groups:detail", args=[self.pk])
 
 
-class ResearchCenter(models.Model):
+class ResearchCenter(TimeStampedModel, models.Model):
     """A model to track Research Centers."""
 
     short_name = models.CharField(max_length=15, unique=True)
@@ -50,7 +51,7 @@ class ResearchCenter(models.Model):
         return reverse("gregor_anvil:research_centers:detail", args=[self.pk])
 
 
-class UploadWorkspace(BaseWorkspaceData):
+class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
 
     research_center = models.ForeignKey(ResearchCenter, on_delete=models.PROTECT)
