@@ -120,7 +120,12 @@ EMAIL_USE_TLS = env("DJANGO_EMAIL_USE_TLS", default=True)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+        "require_not_maintenance_mode_503": {
+            "()": "maintenance_mode.logging.RequireNotMaintenanceMode503",
+        },
+    },
     "formatters": {
         "verbose": {
             "format": "%(levelname)s %(asctime)s %(module)s "
@@ -130,7 +135,7 @@ LOGGING = {
     "handlers": {
         "mail_admins": {
             "level": "ERROR",
-            "filters": ["require_debug_false"],
+            "filters": ["require_debug_false", "require_not_maintenance_mode_503"],
             "class": "django.utils.log.AdminEmailHandler",
         },
         "console": {
@@ -141,7 +146,7 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
-        "django.request": {
+        "django": {
             "handlers": ["mail_admins"],
             "level": "ERROR",
             "propagate": True,
