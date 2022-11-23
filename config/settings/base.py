@@ -90,6 +90,7 @@ THIRD_PARTY_APPS = [
     "dal",
     "dal_select2",
     "fontawesomefree",
+    "simple_history",
 ]
 
 LOCAL_APPS = [
