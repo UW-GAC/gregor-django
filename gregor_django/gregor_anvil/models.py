@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
 
 
 class ConsentGroup(TimeStampedModel, models.Model):
@@ -16,6 +17,8 @@ class ConsentGroup(TimeStampedModel, models.Model):
 
     data_use_limitations = models.TextField()
     """The full data use limitations for this ConsentGroup."""
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """String method.
@@ -38,6 +41,8 @@ class ResearchCenter(TimeStampedModel, models.Model):
     full_name = models.CharField(max_length=255)
     """The full name of the Research Center."""
 
+    history = HistoricalRecords()
+
     def __str__(self):
         """String method.
 
@@ -59,6 +64,8 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
 
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
     """The ConsentGroup associated with this workspace."""
+
+    history = HistoricalRecords()
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint in addition to this validator.
