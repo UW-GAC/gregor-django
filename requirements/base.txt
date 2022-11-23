@@ -21,4 +21,4 @@ django-dbbackup==4.0.1 # https://github.com/jazzband/django-dbbackup
 django-extensions==3.2.1  # https://github.com/django-extensions/django-extensions
 
 # anvil_consortium_manager
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.3
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.5
