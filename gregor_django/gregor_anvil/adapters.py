@@ -11,3 +11,4 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = tables.UploadWorkspaceTable
     workspace_data_model = models.UploadWorkspace
     workspace_data_form_class = forms.UploadWorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
