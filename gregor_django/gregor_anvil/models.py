@@ -2,9 +2,11 @@ from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django_extensions.db.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
 
 
-class ConsentGroup(models.Model):
+class ConsentGroup(TimeStampedModel, models.Model):
     """A model to track consent groups."""
 
     code = models.CharField(max_length=20, unique=True)
@@ -15,6 +17,8 @@ class ConsentGroup(models.Model):
 
     data_use_limitations = models.TextField()
     """The full data use limitations for this ConsentGroup."""
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """String method.
@@ -28,7 +32,7 @@ class ConsentGroup(models.Model):
         return reverse("gregor_anvil:consent_groups:detail", args=[self.pk])
 
 
-class ResearchCenter(models.Model):
+class ResearchCenter(TimeStampedModel, models.Model):
     """A model to track Research Centers."""
 
     short_name = models.CharField(max_length=15, unique=True)
@@ -36,6 +40,8 @@ class ResearchCenter(models.Model):
 
     full_name = models.CharField(max_length=255)
     """The full name of the Research Center."""
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """String method.
@@ -50,7 +56,7 @@ class ResearchCenter(models.Model):
         return reverse("gregor_anvil:research_centers:detail", args=[self.pk])
 
 
-class UploadWorkspace(BaseWorkspaceData):
+class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
 
     research_center = models.ForeignKey(ResearchCenter, on_delete=models.PROTECT)
@@ -58,6 +64,8 @@ class UploadWorkspace(BaseWorkspaceData):
 
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
     """The ConsentGroup associated with this workspace."""
+
+    history = HistoricalRecords()
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint in addition to this validator.
