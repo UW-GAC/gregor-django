@@ -1,18 +1,15 @@
-{% extends "anvil_consortium_manager/base.html" %}
+{% extends "anvil_consortium_manager/__object_detail.html" %}
 
-{% block title %}{{ object.short_name }}{% endblock %}
+{% block title %}Consent group: {{ object.code }}{% endblock %}
 
-{% block content %}
-
-<h1>Consent Group: {{ object.code }}</h1>
-
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
+{% block panel %}
   <ul>
     <li>Code: {{ object.code }}</li>
     <li>Consent: {{ object.consent }}</li>
   </ul>
-</div>
+{% endblock panel %}
 
+{% block after_panel %}
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">
@@ -30,4 +27,4 @@
     </div>
   </div>
 </div>
-{% endblock content %}
+{% endblock after_panel %}
