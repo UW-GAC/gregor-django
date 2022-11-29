@@ -1,10 +1,11 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from . import models
 
 
 @admin.register(models.ConsentGroup)
-class ConsentGroupAdmin(admin.ModelAdmin):
+class ConsentGroupAdmin(SimpleHistoryAdmin):
     """Admin class for the ConsentGroup model."""
 
     list_display = (
@@ -23,7 +24,7 @@ class ConsentGroupAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ResearchCenter)
-class ResearchCenterAdmin(admin.ModelAdmin):
+class ResearchCenterAdmin(SimpleHistoryAdmin):
     """Admin class for the ResearchCenter model."""
 
     list_display = (
@@ -41,7 +42,7 @@ class ResearchCenterAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.UploadWorkspace)
-class UploadWorkspaceAdmin(admin.ModelAdmin):
+class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the UploadWorkspace model."""
 
     list_display = (

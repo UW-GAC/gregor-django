@@ -1,5 +1,5 @@
 {% load static i18n %}<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -46,7 +46,7 @@
 
   </head>
 
-  <body>
+  <body class="d-flex flex-column h-100">
     <nav id="top-nav">
       <div class="container">
 
@@ -61,7 +61,7 @@
 
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
-            <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% translate "My Profile" %}</a>
+            <a class="nav-link" href="{% url 'users:redirect' %}">{% translate "My Profile" %}</a>
           </li>
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
@@ -109,7 +109,7 @@
 
     {% block extra_navbar %}
     {% endblock %}
-
+    <main class="flex-shrink-0">
     <div class="container">
 
       {% if messages %}
@@ -129,11 +129,36 @@
       {% endblock content %}
 
     </div> <!-- /container -->
-
+    </main>
     {% block modal %}{% endblock modal %}
 
     {% block inline_javascript %}
     {# Script tags with only code, no src (defer by default) #}
     {% endblock inline_javascript %}
+
+    <footer class="footer mt-auto py-3 bg-light" id="footer">
+      <div class="container">
+        <div class="row mt-0">
+          <div class="col">
+          <span class="text-muted">Questions? Contact the <a href="{{ DRUPAL_SITE_URL }}/contact">GREGoR Coordinating Center</a></span>
+          </div>
+          <div class="col">
+            <a target="_blank" href="{{ DRUPAL_SITE_URL }}">Main GREGoR Website <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>
+          </div>
+        </div>
+        <div class="row mt-0">
+          <div class="col">
+            <p>
+              © 2001 - {% now 'Y' %} <a href="http://www.biostat.washington.edu" target="_blank" class="ext" data-extlink="" rel="noopener nofollow noreferrer">University of Washington Department of Biostatistics <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> -
+              <a href="http://www.washington.edu" target="_blank" class="ext" data-extlink="" rel="noopener nofollow noreferrer">University of Washington <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>, Seattle, WA
+            <br>
+              <a href="https://www.washington.edu/accessibility/" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Accessibility <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> |
+              <a href="http://www.washington.edu/online/terms" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Terms <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> |
+              <a href="http://www.washington.edu/online/privacy" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Privacy <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
