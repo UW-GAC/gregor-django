@@ -1,14 +1,16 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
-{% block workspace_data %}
 
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
+{% block workspace_data %}
+  <hr>
   <ul>
     <li>Research Center: <a href="{{ object.uploadworkspace.research_center.get_absolute_url }}">{{ object.uploadworkspace.research_center }}</a></li>
     <li>Consent group: <a href="{{ object.uploadworkspace.consent_group.get_absolute_url }}">{{ object.uploadworkspace.consent_group }}</a></li>
     <li>Version: {{ object.uploadworkspace.version }}</li>
+    <li>Note: {{ object.note }}</li>
   </ul>
-</div>
+{% endblock workspace_data %}
 
+{% block after_panel %}
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">
@@ -26,4 +28,6 @@
     </div>
   </div>
 </div>
-{% endblock workspace_data %}
+
+{{ block.super }}
+{% endblock after_panel %}
