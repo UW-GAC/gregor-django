@@ -347,7 +347,7 @@ SOCIALACCOUNT_PROVIDERS = {
 LIVE_SITE = False
 
 # Help contact email
-DCC_CONTACT_EMAIL = "gregorconsortium@uw.org"
+DCC_CONTACT_EMAIL = "gregorconsortium@uw.edu"
 
 # django-tables2
 # ------------------------------------------------------------------------------
