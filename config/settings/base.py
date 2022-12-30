@@ -346,6 +346,9 @@ SOCIALACCOUNT_PROVIDERS = {
 # Initially used to style all non dev sites differently
 LIVE_SITE = False
 
+# Help contact email
+DCC_CONTACT_EMAIL = "gregorconsortium@uw.org"
+
 # django-tables2
 # ------------------------------------------------------------------------------
 # https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
@@ -363,5 +366,4 @@ ANVIL_WORKSPACE_ADAPTERS = [
 ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
-# Help contact email
-DCC_CONTACT_EMAIL = "gregorconsortium@uw.org"
+ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "gregorconsortium@uw.edu"
