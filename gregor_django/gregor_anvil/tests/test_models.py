@@ -1,4 +1,4 @@
-from anvil_consortium_manager.tests import factories as acm_factories
+from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -113,7 +113,7 @@ class UploadWorkspaceTest(TestCase):
         """Creation using the model constructor and .save() works."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
-        workspace = acm_factories.WorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
         instance = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
@@ -136,8 +136,8 @@ class UploadWorkspaceTest(TestCase):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
-        workspace_1 = acm_factories.WorkspaceFactory.create(name="ws-1")
-        workspace_2 = acm_factories.WorkspaceFactory.create(name="ws-2")
+        workspace_1 = WorkspaceFactory.create(name="ws-1")
+        workspace_2 = WorkspaceFactory.create(name="ws-2")
         instance_1 = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
@@ -161,8 +161,8 @@ class UploadWorkspaceTest(TestCase):
         research_center = factories.ResearchCenterFactory()
         consent_group_1 = factories.ConsentGroupFactory()
         consent_group_2 = factories.ConsentGroupFactory()
-        workspace_1 = acm_factories.WorkspaceFactory.create()
-        workspace_2 = acm_factories.WorkspaceFactory.create()
+        workspace_1 = WorkspaceFactory.create()
+        workspace_2 = WorkspaceFactory.create()
         instance_1 = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group_1,
@@ -185,8 +185,8 @@ class UploadWorkspaceTest(TestCase):
         consent_group = factories.ConsentGroupFactory()
         research_center_1 = factories.ResearchCenterFactory()
         research_center_2 = factories.ResearchCenterFactory()
-        workspace_1 = acm_factories.WorkspaceFactory.create()
-        workspace_2 = acm_factories.WorkspaceFactory.create()
+        workspace_1 = WorkspaceFactory.create()
+        workspace_2 = WorkspaceFactory.create()
         instance_1 = models.UploadWorkspace(
             research_center=research_center_1,
             consent_group=consent_group,
@@ -208,8 +208,8 @@ class UploadWorkspaceTest(TestCase):
         """Can save multiple UploadWorkspace models with the same version."""
         consent_group = factories.ConsentGroupFactory()
         research_center = factories.ResearchCenterFactory()
-        workspace_1 = acm_factories.WorkspaceFactory.create()
-        workspace_2 = acm_factories.WorkspaceFactory.create()
+        workspace_1 = WorkspaceFactory.create()
+        workspace_2 = WorkspaceFactory.create()
         instance_1 = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
@@ -229,7 +229,7 @@ class UploadWorkspaceTest(TestCase):
 
     def test_duplicated_workspace(self):
         """One workspace cannot be associated with two UploadWorkspace models."""
-        workspace = acm_factories.WorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
         consent_group_1 = factories.ConsentGroupFactory()
         consent_group_2 = factories.ConsentGroupFactory()
         research_center_1 = factories.ResearchCenterFactory.create()
@@ -256,7 +256,7 @@ class UploadWorkspaceTest(TestCase):
         """Version cannot be negative."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
-        workspace = acm_factories.WorkspaceFactory.create(name="ws")
+        workspace = WorkspaceFactory.create(name="ws")
         instance = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
@@ -273,7 +273,7 @@ class UploadWorkspaceTest(TestCase):
         """Version cannot be 0."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
-        workspace = acm_factories.WorkspaceFactory.create(name="ws")
+        workspace = WorkspaceFactory.create(name="ws")
         instance = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
@@ -285,3 +285,22 @@ class UploadWorkspaceTest(TestCase):
             instance.full_clean()
         with self.assertRaises(IntegrityError):
             instance.save()
+
+
+class ExampleWorkspaceTest(TestCase):
+    """Tests for the ExampleWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        instance = models.ExampleWorkspace(workspace=workspace)
+        instance.save()
+        self.assertIsInstance(instance, models.ExampleWorkspace)
+
+    def test_str_method(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="test-bp", name="test-ws"
+        )
+        instance = factories.ExampleWorkspaceFactory.create(workspace=workspace)
+        self.assertIsInstance(str(instance), str)
+        self.assertEqual(str(instance), "test-bp/test-ws")
