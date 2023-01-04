@@ -94,3 +94,12 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         return "{} - {} - v{}".format(
             self.research_center, self.consent_group, self.version
         )
+
+
+class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track example workspaces."""
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.workspace.__str__()
