@@ -16,3 +16,11 @@ class UploadWorkspaceForm(forms.ModelForm):
             "version",
             "workspace",
         )
+
+
+class ExampleWorkspaceForm(forms.ModelForm):
+    """Form for a ExampleWorkspace object."""
+
+    class Meta:
+        model = models.ExampleWorkspace
+        fields = ("workspace",)
