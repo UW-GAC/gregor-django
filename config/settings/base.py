@@ -360,6 +360,7 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.ExampleWorkspaceAdapter",
 ]
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
