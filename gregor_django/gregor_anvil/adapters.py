@@ -24,3 +24,14 @@ class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.ExampleWorkspace
     workspace_data_form_class = forms.ExampleWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+
+
+class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for ExampleWorkspaces."""
+
+    type = "template"
+    name = "Template workspace"
+    list_table_class = tables.TemplateWorkspaceTable
+    workspace_data_model = models.TemplateWorkspace
+    workspace_data_form_class = forms.TemplateWorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/templateworkspace_detail.html"
