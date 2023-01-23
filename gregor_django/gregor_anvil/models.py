@@ -103,3 +103,14 @@ class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
 
     def __str__(self):
         return self.workspace.__str__()
+
+
+class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track template workspaces."""
+
+    intended_use = models.TextField()
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.workspace.__str__()
