@@ -40,3 +40,16 @@ class UploadWorkspaceTable(tables.Table):
             "uploadworkspace__consent_group",
             "uploadworkspace__version",
         )
+
+
+class TemplateWorkspaceTable(tables.Table):
+    """A table for Workspaces that includes fields from TemplateWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "templateworkspace__intended_use",
+        )
