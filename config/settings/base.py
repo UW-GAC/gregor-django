@@ -363,6 +363,9 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.ExampleWorkspaceAdapter",
 ]
+ANVIL_ACCOUNT_ADAPTER = (
+    "anvil_consortium_manager.adapters.default.DefaultAccountAdapter"
+)
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
 ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
