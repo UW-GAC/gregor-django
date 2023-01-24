@@ -1,7 +1,19 @@
 import django_tables2 as tables
-from anvil_consortium_manager.models import Workspace
+from anvil_consortium_manager.models import Account, Workspace
 
 from . import models
+
+
+class AccountTable(tables.Table):
+    """A custom table for `Accounts`."""
+
+    email = tables.Column(linkify=True)
+    user__name = tables.Column(linkify=lambda record: record.user.get_absolute_url())
+    is_service_account = tables.BooleanColumn(verbose_name="Service account?")
+
+    class Meta:
+        model = Account
+        fields = ("email", "user__name", "user__research_centers", "is_service_account")
 
 
 class ResearchCenterTable(tables.Table):
