@@ -24,3 +24,11 @@ class ExampleWorkspaceForm(forms.ModelForm):
     class Meta:
         model = models.ExampleWorkspace
         fields = ("workspace",)
+
+
+class TemplateWorkspaceForm(forms.ModelForm):
+    """Form for a TemplateWorkspace object."""
+
+    class Meta:
+        model = models.TemplateWorkspace
+        fields = ("workspace", "intended_use")

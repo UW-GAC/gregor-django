@@ -51,3 +51,16 @@ class ExampleWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.ExampleWorkspace
+
+
+class TemplateWorkspaceFactory(DjangoModelFactory):
+    """A factory for the TemplateWorkspace model."""
+
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="template",
+    )
+    intended_use = Faker("paragraph")
+
+    class Meta:
+        model = models.TemplateWorkspace
