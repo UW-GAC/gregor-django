@@ -97,14 +97,8 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
 class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
 
-    def __str__(self):
-        return self.workspace.__str__()
-
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""
 
     intended_use = models.TextField()
-
-    def __str__(self):
-        return self.workspace.__str__()
