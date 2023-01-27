@@ -10,6 +10,12 @@ class AccountTable(tables.Table):
     email = tables.Column(linkify=True)
     user__name = tables.Column(linkify=lambda record: record.user.get_absolute_url())
     is_service_account = tables.BooleanColumn(verbose_name="Service account?")
+    number_groups = tables.Column(
+        verbose_name="Number of groups",
+        empty_values=(),
+        orderable=False,
+        accessor="groupaccountmembership_set__count",
+    )
 
     class Meta:
         model = Account
