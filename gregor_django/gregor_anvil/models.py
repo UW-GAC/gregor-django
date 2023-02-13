@@ -102,3 +102,15 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""
 
     intended_use = models.TextField()
+
+
+class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track a workspace that has data combined from multiple upload workspaces."""
+
+    upload_workspaces = models.ManyToManyField(
+        UploadWorkspace, help_text="Upload workspaces"
+    )
+
+    # Do we want custom cleaning steps? e.g.:
+    # check that the version of the soruce workspaces are the same?
+    # check that the same data model was used in all of the source workspaces?
