@@ -1,6 +1,6 @@
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
+from django.db.utils import DataError, IntegrityError
 from django.test import TestCase
 
 from .. import models
@@ -266,7 +266,9 @@ class UploadWorkspaceTest(TestCase):
         # No validation error with CheckConstraints.
         with self.assertRaises(ValidationError):
             instance.full_clean()
-        with self.assertRaises(IntegrityError):
+        # mysql raises DataError, sqlite IntegrityError
+        # allow either
+        with self.assertRaises((DataError, IntegrityError)):
             instance.save()
 
     def test_constraint_positive_version_not_zero(self):
