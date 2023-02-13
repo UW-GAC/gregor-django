@@ -174,3 +174,90 @@ class TemplateWorkspaceFormTest(TestCase):
         self.assertIn("intended_use", form.errors)
         self.assertEqual(len(form.errors["intended_use"]), 1)
         self.assertIn("required", form.errors["intended_use"][0])
+
+
+class CombinedConsortiumDataWorkspaceForm(TestCase):
+    """Tests for the CombinedConsortiumDataWorkspaceForm class."""
+
+    form_class = forms.CombinedConsortiumDataWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory.create()
+
+    def test_valid_one_upload_workspace(self):
+        """Form is valid with necessary input."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_upload_workspaces(self):
+        """Form is valid with necessary input."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(version=1)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(version=1)
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing workspace."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        form_data = {
+            "upload_workspaces": [upload_workspace],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_upload_workspace(self):
+        """Form is invalid when missing upload_workspace."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
+        self.assertIn("required", form.errors["upload_workspaces"][0])
+
+    def test_invalid_blank_upload_workspace(self):
+        """Form is invalid when missing upload_workspace."""
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
+        self.assertIn("required", form.errors["upload_workspaces"][0])
+
+    def test_invalid_different_upload_workspace_versions(self):
+        """Form is invalid when upload workspaces have different versions."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(version=1)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(version=2)
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
+        self.assertIn(
+            form.ERROR_UPLOAD_VERSION_DOES_NOT_MATCH,
+            form.errors["upload_workspaces"][0],
+        )
