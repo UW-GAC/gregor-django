@@ -66,4 +66,6 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = WorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = (
+        "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
+    )
