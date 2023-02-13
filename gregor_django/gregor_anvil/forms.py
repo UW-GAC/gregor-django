@@ -1,5 +1,6 @@
 """Forms classes for the gregor_anvil app."""
 
+from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -46,6 +47,12 @@ class CombinedConsortiumDataWorkspaceForm(forms.ModelForm):
         help_texts = {
             "upload_workspaces": """Upload workspaces contributing to the combined workspace.
                                     All upload workspaces must have the same version."""
+        }
+        widgets = {
+            "upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:upload_workspaces:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
 
     def clean_upload_workspaces(self):
