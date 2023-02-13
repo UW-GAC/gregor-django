@@ -64,3 +64,15 @@ class TemplateWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.TemplateWorkspace
+
+
+class CombinedConsortiumDataWorkspaceFactory(DjangoModelFactory):
+    """A factory for the CombinedConsortiumDataWorkspace model."""
+
+    class Meta:
+        model = models.CombinedConsortiumDataWorkspace
+
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="combined_consortium",
+    )
