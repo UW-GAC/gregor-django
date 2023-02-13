@@ -1,3 +1,5 @@
+import json
+
 import responses
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager import views as acm_views
@@ -602,6 +604,123 @@ class UploadWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.research_center, research_center)
         self.assertEqual(new_workspace_data.consent_group, consent_group)
         self.assertEqual(new_workspace_data.version, 5)
+
+
+class UploadWorkspaceAutocompleteTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with the correct permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:upload_workspaces:autocomplete", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadWorkspaceAutocomplete.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_returns_all_objects(self):
+        """Queryset returns all objects when there is no query."""
+        workspaces = factories.UploadWorkspaceFactory.create_batch(10)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 10)
+        self.assertEqual(sorted(returned_ids), sorted([x.pk for x in workspaces]))
+
+    def test_returns_correct_object_match(self):
+        """Queryset returns the correct objects when query matches the name."""
+        factories.UploadWorkspaceFactory.create(workspace__name="other")
+        workspace = factories.UploadWorkspaceFactory.create(
+            workspace__name="test-workspace"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"q": "test-workspace"})
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], workspace.pk)
+
+    def test_returns_correct_object_starting_with_query(self):
+        """Queryset returns the correct objects when query matches the beginning of the name."""
+        factories.UploadWorkspaceFactory.create(workspace__name="other")
+        workspace = factories.UploadWorkspaceFactory.create(
+            workspace__name="test-workspace"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"q": "test"})
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], workspace.pk)
+
+    def test_returns_correct_object_containing_query(self):
+        """Queryset returns the correct objects when the name contains the query."""
+        factories.UploadWorkspaceFactory.create(workspace__name="other")
+        workspace = factories.UploadWorkspaceFactory.create(
+            workspace__name="test-workspace"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"q": "work"})
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], workspace.pk)
+
+    def test_returns_correct_object_case_insensitive(self):
+        """Queryset returns the correct objects when query matches the beginning of the name."""
+        factories.UploadWorkspaceFactory.create(workspace__name="other")
+        workspace = factories.UploadWorkspaceFactory.create(
+            workspace__name="test-workspace"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"q": "TEST-WORKSPACE"})
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], workspace.pk)
 
 
 class ExampleWorkspaceListTest(TestCase):
