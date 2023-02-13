@@ -1,4 +1,5 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from dal import autocomplete
 from django.views.generic import DetailView
 from django_tables2 import SingleTableView
 
@@ -29,3 +30,20 @@ class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.ResearchCenter
     table_class = tables.ResearchCenterTable
+
+
+class UploadWorkspaceAutocomplete(
+    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+):
+    """View to provide autocompletion for UploadWorkspaces."""
+
+    def get_queryset(self):
+        # Filter out unathorized users, or does the auth mixin do that?
+        qs = models.UploadWorkspace.objects.filter().order_by(
+            "workspace__billing_project__name", "workspace__name"
+        )
+
+        if self.q:
+            qs = qs.filter(workspace__name__icontains=self.q)
+
+        return qs

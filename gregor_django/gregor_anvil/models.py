@@ -84,15 +84,6 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
             ),
         ]
 
-    def __str__(self):
-        """String method.
-        Returns:
-            A string showing the workspace name of the object.
-        """
-        return "{} - {} - v{}".format(
-            self.research_center, self.consent_group, self.version
-        )
-
 
 class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
@@ -102,3 +93,11 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""
 
     intended_use = models.TextField()
+
+
+class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track a workspace that has data combined from multiple upload workspaces."""
+
+    upload_workspaces = models.ManyToManyField(
+        UploadWorkspace, help_text="Upload workspaces"
+    )
