@@ -7,13 +7,16 @@ env:
 
 on:
   pull_request:
-    branches: [ "master", "main", "deploy/**" ]
+    branches: [ "main" ]
     paths-ignore: [ "docs/**" ]
 
   push:
-    branches: [ "master", "main" ]
+    branches: [ "main" ]
     paths-ignore: [ "docs/**" ]
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   linter:
@@ -27,6 +30,10 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: 3.9
+          cache: pip
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
 
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
@@ -34,46 +41,42 @@ jobs:
       - name: Install and Run Pre-commit
         uses: pre-commit/action@v2.0.3
 
-  # With no caching at all the entire ci process takes 4m 30s to complete!
-  pytest:
+  pytest-mariadb:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        # While we are only running for a single version
+        # ahead of planned upgrades we can add versions as
+        # needed
+        python-version: [3.8]
+        mariadb-version: ["10.3"]
 
     services:
-      postgres:
-        image: postgres:12
+      mysql:
+        image: mariadb:${{ matrix.mariadb-version }}
         ports:
-          - 5432:5432
+          - 3306:3306
         env:
-          POSTGRES_PASSWORD: postgres
+          MYSQL_ROOT_PASSWORD: root
 
     env:
-      # postgres://user:password@host:port/database
-      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/postgres"
+      # mysql://user:password@host:port/database
+      DATABASE_URL: "mysql://root:root@127.0.0.1:3306/mysql"
 
     steps:
 
       - name: Checkout Code Repository
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.9
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
-          python-version: 3.9
-
-      - name: Get pip cache dir
-        id: pip-cache-location
-        run: |
-          echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Cache pip Project Dependencies
-        uses: actions/cache@v3.0.2
-        with:
-          # Get the location of pip cache dir
-          path: ${{ steps.pip-cache-location.outputs.dir }}
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/local.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
 
       - name: Install Dependencies
         run: |
@@ -85,28 +88,30 @@ jobs:
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-  # Below for future django specific tests
-  build:
-
+  
+  pytest-sqlite:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.8, 3.9]
-
+   
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements/local.txt
-    - name: Run Django Tests
-      run: |
-        python manage.py test
-      env:
-        # We can set this to an empty string, since we'll never make an API call.
-        ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+      - name: Checkout Code Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+          cache: pip
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/local.txt
+
+      - name: Test with pytest
+        run:  pytest
+        env:
+          # We can set this to an empty string, since we'll never make an API call.
+          ANVIL_API_SERVICE_ACCOUNT_FILE: foo

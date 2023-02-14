@@ -1,6 +1,6 @@
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
+from django.db.utils import DataError, IntegrityError
 from django.test import TestCase
 
 from .. import models
@@ -125,12 +125,10 @@ class UploadWorkspaceTest(TestCase):
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.UploadWorkspaceFactory.create(
-            research_center__short_name="TestRC", consent_group__code="GRU", version=1
-        )
+        instance = factories.UploadWorkspaceFactory.create()
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "TestRC - GRU - v1")
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
@@ -266,7 +264,9 @@ class UploadWorkspaceTest(TestCase):
         # No validation error with CheckConstraints.
         with self.assertRaises(ValidationError):
             instance.full_clean()
-        with self.assertRaises(IntegrityError):
+        # mysql raises DataError, sqlite IntegrityError
+        # allow either
+        with self.assertRaises((DataError, IntegrityError)):
             instance.save()
 
     def test_constraint_positive_version_not_zero(self):
@@ -323,3 +323,41 @@ class TemplateWorkspaceTest(TestCase):
         instance = factories.TemplateWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
+
+
+class CombinedConsortiumDataWorkspaceTest(TestCase):
+    """Tests for the CombinedConsortiumDataWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        instance = models.CombinedConsortiumDataWorkspace(workspace=workspace)
+        instance.save()
+        self.assertIsInstance(instance, models.CombinedConsortiumDataWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_one_upload_workspace(self):
+        """Can link one upload workspace."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        instance.save()
+        instance.upload_workspaces.add(upload_workspace)
+        self.assertEqual(instance.upload_workspaces.count(), 1)
+        self.assertIn(upload_workspace, instance.upload_workspaces.all())
+
+    def test_two_upload_workspaces(self):
+        """Can link two upload workspaces."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        instance.save()
+        instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
+        self.assertEqual(instance.upload_workspaces.count(), 2)
+        self.assertIn(upload_workspace_1, instance.upload_workspaces.all())
+        self.assertIn(upload_workspace_2, instance.upload_workspaces.all())

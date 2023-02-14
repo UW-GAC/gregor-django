@@ -21,8 +21,19 @@ consent_group_patterns = (
     "consent_groups",
 )
 
+upload_workspace_patterns = (
+    [
+        path(
+            "autocomplete/",
+            views.UploadWorkspaceAutocomplete.as_view(),
+            name="autocomplete",
+        ),
+    ],
+    "upload_workspaces",
+)
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
+    path("upload_workspaces/", include(upload_workspace_patterns)),
 ]
