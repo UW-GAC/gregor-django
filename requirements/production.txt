@@ -3,7 +3,6 @@
 -r base.txt
 
 gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
-mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
 
 # Django
 # ------------------------------------------------------------------------------

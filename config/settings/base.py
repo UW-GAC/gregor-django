@@ -43,15 +43,9 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "gregor_django.db",
-    }
+    "default": env.db("DATABASE_URL", default="sqlite:///gregor_django.db"),
 }
 
-# DATABASES = {
-#     "default": env.db("DATABASE_URL", default="postgres:///gregor_django"),
-# }
 # DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -359,9 +353,10 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # Specify the path to the service account to use for managing access on AnVIL.
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
+    "gregor_django.gregor_anvil.adapters.ExampleWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.ExampleWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.CombinedConsortiumDataWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "gregor_django.gregor_anvil.adapters.AccountAdapter"
 
