@@ -925,3 +925,47 @@ class TemplateWorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("not_yet_shared" in response.context_data)
         self.assertEqual(response.context_data["not_yet_shared"], 2)
+
+    def test_has_no_workspace_shared_with_consortium_in_context(self):
+        """Response includes no workspace shared with the consortium in context when workspace is not shared with the consortium"""
+        workspace = factories.WorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name="group1")
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace, group=group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("shared_with_consortium" in response.context_data)
+        self.assertEqual(len(response.context_data["shared_with_consortium"]), 0)
+
+    def test_has_one_workspace_shared_with_consortium_in_context(self):
+        """Response includes one workspace shared with the consortium in context"""
+        workspace = factories.WorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace, group=group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("shared_with_consortium" in response.context_data)
+        self.assertEqual(len(response.context_data["shared_with_consortium"]), 1)
+
+    def test_has_two_workspace_one_workspace_type_shared_with_consortium_in_context(self):
+        """Response includes two workspace with the same workspace type shared with the consortium in context"""
+        workspace_1 = factories.WorkspaceFactory.create(name="workspace_1", workspace_type="same_type")
+        workspace_2 = factories.WorkspaceFactory.create(name="workspace_2", workspace_type="same_type")
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace_1, group=group)
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace_2, group=group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("shared_with_consortium" in response.context_data)
+        self.assertEqual(len(response.context_data["shared_with_consortium"]), 1)
+
+    def test_has_two_workspace_two_workspace_types_shared_with_consortium_in_context(self):
+        """Response includes two workspace with the different workspace types shared with the consortium in context"""
+        workspace_1 = factories.WorkspaceFactory.create(name="workspace_1", workspace_type="type_1")
+        workspace_2 = factories.WorkspaceFactory.create(name="workspace_2", workspace_type="type_2")
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace_1, group=group)
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=workspace_2, group=group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("shared_with_consortium" in response.context_data)
+        self.assertEqual(len(response.context_data["shared_with_consortium"]), 2)

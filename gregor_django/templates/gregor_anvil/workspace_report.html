@@ -6,7 +6,13 @@
 <ul>
   <li>Workspaces not yet shared, upload only: {{ not_yet_shared }} </li>
   <li>Workspaces shared with consortium
-
+    <ul>
+    {% for ws in shared_with_consortium %}
+      <li>
+        {{ ws.workspace__workspace_type }}: {{ ws.total }}
+      </li>
+    </ul>
+    {% endfor %}
   </li>
   <li>Consortium members with access to any workspaces: </li>
 </ul>
