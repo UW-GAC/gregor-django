@@ -1,6 +1,8 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.models import WorkspaceGroupSharing
 from dal import autocomplete
-from django.views.generic import DetailView
+from django.db.models import Count
+from django.views.generic import DetailView, TemplateView
 from django_tables2 import SingleTableView
 
 from . import models, tables
@@ -47,3 +49,16 @@ class UploadWorkspaceAutocomplete(
             qs = qs.filter(workspace__name__icontains=self.q)
 
         return qs
+
+
+class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
+    """View to show report on workspaces"""
+
+    template_name = "gregor_anvil/workspace_report.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["not_yet_shared"] = models.UploadWorkspace.objects.all().count()
+
+
+        return context
