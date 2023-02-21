@@ -4,8 +4,10 @@
 
 {% block panel %}
 <ul>
-  <li>Workspaces not yet shared, upload only: </li>
-  <li>Workspaces shared with consortium: </li>
+  <li>Workspaces not yet shared, upload only: {{ not_yet_shared }} </li>
+  <li>Workspaces shared with consortium
+
+  </li>
   <li>Consortium members with access to any workspaces: </li>
 </ul>
 {% endblock panel %}
