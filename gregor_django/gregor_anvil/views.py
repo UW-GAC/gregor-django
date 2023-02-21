@@ -59,6 +59,10 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["not_yet_shared"] = models.UploadWorkspace.objects.all().count()
-
+        context["shared_with_consortium"] = (
+            WorkspaceGroupSharing.objects.values("workspace__workspace_type")
+            .filter(group__name="GREGOR_ALL")
+            .annotate(total=Count("workspace__workspace_type"))
+        )
 
         return context
