@@ -866,3 +866,62 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_use, "foo bar")
+
+
+class TemplateWorkspaceReportTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # self.model_factory = factories.ResearchCenterFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:workspace_report:report")
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.WorkspaceReport.as_view()
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_has_no_workspace_not_yet_shared_in_context(self):
+        """Response includes no workspace not yet shared in context"""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("not_yet_shared" in response.context_data)
+        self.assertEqual(response.context_data["not_yet_shared"], 0)
+
+    def test_has_one_workspace_not_yet_shared_in_context(self):
+        """Response includes one workspace not yet shared in context"""
+        factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("not_yet_shared" in response.context_data)
+        self.assertEqual(response.context_data["not_yet_shared"], 1)
+
+    def test_has_two_workspace_not_yet_shared_in_context(self):
+        """Response includes two workspace not yet shared in context"""
+        factories.UploadWorkspaceFactory.create_batch(2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("not_yet_shared" in response.context_data)
+        self.assertEqual(response.context_data["not_yet_shared"], 2)
