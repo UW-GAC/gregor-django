@@ -1012,17 +1012,23 @@ class TemplateWorkspaceReportTest(TestCase):
     def test_two_consortium_members_with_access_to_workspaces_in_context(self):
         """Response includes two consortium members with access to any workspaces in context"""
         acm_factories.AccountFactory.create(user=self.user, verified=True)
-        another_user = User.objects.create_user(username="another_user", password="another_user")
+        another_user = User.objects.create_user(
+            username="another_user", password="another_user"
+        )
         acm_factories.AccountFactory.create(user=another_user, verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("verified_linked_accounts" in response.context_data)
         self.assertEqual(response.context_data["verified_linked_accounts"], 2)
 
-    def test_correct_count_consortium_members_with_access_to_workspaces_in_context(self):
+    def test_correct_count_consortium_members_with_access_to_workspaces_in_context(
+        self,
+    ):
         """Response includes only verified linked account in context"""
         acm_factories.AccountFactory.create(user=self.user, verified=True)
-        another_user = User.objects.create_user(username="another_user", password="another_user")
+        another_user = User.objects.create_user(
+            username="another_user", password="another_user"
+        )
         acm_factories.AccountFactory.create(user=another_user, verified=False)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())

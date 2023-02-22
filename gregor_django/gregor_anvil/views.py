@@ -1,5 +1,5 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
-from anvil_consortium_manager.models import WorkspaceGroupSharing, Account
+from anvil_consortium_manager.models import Account, WorkspaceGroupSharing
 from dal import autocomplete
 from django.db.models import Count
 from django.views.generic import DetailView, TemplateView
@@ -64,6 +64,8 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
             .filter(group__name="GREGOR_ALL")
             .annotate(total=Count("workspace__workspace_type"))
         )
-        context["verified_linked_accounts"] = Account.objects.filter(verified_email_entry__date_verified__isnull=False).count()
+        context["verified_linked_accounts"] = Account.objects.filter(
+            verified_email_entry__date_verified__isnull=False
+        ).count()
 
         return context
