@@ -868,7 +868,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.intended_use, "foo bar")
 
 
-class TemplateWorkspaceReportTest(TestCase):
+class WorkspaceReportTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -883,7 +883,7 @@ class TemplateWorkspaceReportTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("gregor_anvil:workspace_report:report")
+        return reverse("gregor_anvil:reports:workspace")
 
     def get_view(self):
         """Return the view being tested."""
@@ -993,6 +993,19 @@ class TemplateWorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
         self.assertEqual(len(response.context_data["shared_with_consortium"]), 2)
+
+    def test_has_no_workspace_when_shared_with_different_group_in_context(self):
+        workspace = factories.WorkspaceFactory.create(
+            name="workspace", workspace_type="workspacetype"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="ANOTHER_GROUP")
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace, group=group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("shared_with_consortium" in response.context_data)
+        self.assertEqual(len(response.context_data["shared_with_consortium"]), 0)
 
     def test_no_consortium_members_with_access_to_workspaces_in_context(self):
         """Response includes no consortium members with access to any workspaces in context"""
