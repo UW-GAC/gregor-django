@@ -903,28 +903,28 @@ class WorkspaceReportTest(TestCase):
             response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
         )
 
-    def test_has_no_workspace_not_yet_shared_in_context(self):
+    def test_has_no_upload_workspaces__in_context(self):
         """Response includes no workspace not yet shared in context"""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        self.assertTrue("not_yet_shared" in response.context_data)
-        self.assertEqual(response.context_data["not_yet_shared"], 0)
+        self.assertTrue("number_upload_workspaces" in response.context_data)
+        self.assertEqual(response.context_data["number_upload_workspaces"], 0)
 
-    def test_has_one_workspace_not_yet_shared_in_context(self):
+    def test_has_one_upload_workspace_in_context(self):
         """Response includes one workspace not yet shared in context"""
         factories.UploadWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        self.assertTrue("not_yet_shared" in response.context_data)
-        self.assertEqual(response.context_data["not_yet_shared"], 1)
+        self.assertTrue("number_upload_workspaces" in response.context_data)
+        self.assertEqual(response.context_data["number_upload_workspaces"], 1)
 
-    def test_has_two_workspace_not_yet_shared_in_context(self):
+    def test_has_two_upload_workspaces_in_context(self):
         """Response includes two workspace not yet shared in context"""
         factories.UploadWorkspaceFactory.create_batch(2)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        self.assertTrue("not_yet_shared" in response.context_data)
-        self.assertEqual(response.context_data["not_yet_shared"], 2)
+        self.assertTrue("number_upload_workspaces" in response.context_data)
+        self.assertEqual(response.context_data["number_upload_workspaces"], 2)
 
     def test_has_no_workspace_shared_with_consortium_in_context(self):
         """Response includes no workspace shared with the consortium in context when workspace is not shared with the consortium"""  # noqa: E501

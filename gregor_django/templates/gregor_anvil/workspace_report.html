@@ -4,7 +4,7 @@
 
 {% block panel %}
 <ul>
-  <li>Workspaces not yet shared, upload only: {{ not_yet_shared }} </li>
+  <li>Number of upload workspaces: {{ number_upload_workspaces }} </li>
   <li>Workspaces shared with consortium
     <ul>
     {% for ws in shared_with_consortium %}
