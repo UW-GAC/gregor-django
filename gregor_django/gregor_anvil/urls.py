@@ -33,14 +33,14 @@ upload_workspace_patterns = (
 )
 workspace_report_patterns = (
     [
-        path("", views.WorkspaceReport.as_view(), name="report"),
+        path("workspaces/", views.WorkspaceReport.as_view(), name="workspace"),
     ],
-    "workspace_report",
+    "reports",
 )
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
     path("upload_workspaces/", include(upload_workspace_patterns)),
-    path("workspace_report/", include(workspace_report_patterns)),
+    path("reports/", include(workspace_report_patterns)),
 ]
