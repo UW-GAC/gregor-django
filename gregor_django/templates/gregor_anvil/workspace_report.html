@@ -9,7 +9,7 @@
     <ul>
     {% for workspace_type, data in shared_with_consortium.items %}
       <li>
-        {{ workspace_type }}: {{ data.count }}
+        {{ data.workspace_name }}s: {{ data.count }}
       </li>
     {% endfor %}
     </ul>
