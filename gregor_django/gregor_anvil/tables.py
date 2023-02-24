@@ -71,3 +71,17 @@ class TemplateWorkspaceTable(tables.Table):
             "name",
             "templateworkspace__intended_use",
         )
+
+
+class WorkspaceReportTable(tables.Table):
+    """Table to store aggregated workspace counts."""
+
+    workspace_type = tables.columns.Column(orderable=False)
+    n_total = tables.columns.Column(verbose_name="Total number", orderable=False)
+    n_shared = tables.columns.Column(
+        verbose_name="Number shared with consortium", orderable=False
+    )
+
+    class Meta:
+        model = Workspace
+        fields = ("workspace_type",)

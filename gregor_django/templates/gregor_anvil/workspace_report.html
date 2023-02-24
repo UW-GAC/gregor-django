@@ -1,19 +1,17 @@
 {% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load render_table from django_tables2 %}
 
 {% block title %}Workspace report{% endblock %}
 
 {% block panel %}
+
+<h2>Workspace counts</h2>
+{% render_table workspace_count_table %}
+
+<h2>Other metrics</h2>
+
 <ul>
-  <li>Number of upload workspaces: {{ number_upload_workspaces }} </li>
-  <li>Workspaces shared with consortium
-    <ul>
-    {% for workspace_type, data in shared_with_consortium.items %}
-      <li>
-        {{ data.workspace_name }}s: {{ data.count }}
-      </li>
-    {% endfor %}
-    </ul>
-  </li>
   <li>Consortium members with access to any workspaces: {{ verified_linked_accounts }}</li>
 </ul>
+
 {% endblock panel %}
