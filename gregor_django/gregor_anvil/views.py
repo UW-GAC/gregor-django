@@ -1,12 +1,11 @@
-from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
-from anvil_consortium_manager.models import Account, WorkspaceGroupSharing
+from anvil_consortium_manager.models import Account, Workspace
 from dal import autocomplete
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.views.generic import DetailView, TemplateView
 from django_tables2 import SingleTableView
 
-from . import models, reports, tables
+from . import models, tables
 
 
 class ConsentGroupDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -59,38 +58,15 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "number_upload_workspaces"
-        ] = models.UploadWorkspace.objects.all().count()
-        adapters = workspace_adapter_registry.get_registered_names()
-        qs = (
-            WorkspaceGroupSharing.objects.values("workspace__workspace_type")
-            .filter(group__name="GREGOR_ALL")
-            .annotate(total=Count("workspace__workspace_type"))
-        )
-        counts = {}
-        for workspace_type in adapters.keys():
-            this_type = [
-                x for x in qs if x["workspace__workspace_type"] == workspace_type
-            ]
-            if len(this_type) == 1:
-                workspace_type = this_type[0]["workspace__workspace_type"]
-                r = reports.SharedWorkspaceReport(
-                    workspace_type=workspace_type,
-                    workspace_name=adapters[workspace_type],
-                    count=this_type[0]["total"],
-                )
-            else:
-                r = reports.SharedWorkspaceReport(
-                    workspace_type=workspace_type,
-                    workspace_name=adapters[workspace_type],
-                    count=0,
-                )
-            counts[workspace_type] = r
-
-        context["shared_with_consortium"] = counts
         context["verified_linked_accounts"] = Account.objects.filter(
             verified_email_entry__date_verified__isnull=False
         ).count()
-
+        qs = Workspace.objects.values("workspace_type").annotate(
+            n_total=Count("workspace_type"),
+            n_shared=Count(
+                "workspacegroupsharing",
+                filter=Q(workspacegroupsharing__group__name="GREGOR_ALL"),
+            ),
+        )
+        context["workspace_count_table"] = tables.WorkspaceReportTable(qs)
         return context
