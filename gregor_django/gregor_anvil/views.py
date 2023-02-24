@@ -76,11 +76,15 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
             if len(this_type) == 1:
                 workspace_type = this_type[0]["workspace__workspace_type"]
                 r = reports.SharedWorkspaceReport(
-                    workspace_type=workspace_type, count=this_type[0]["total"]
+                    workspace_type=workspace_type,
+                    workspace_name=adapters[workspace_type],
+                    count=this_type[0]["total"],
                 )
             else:
                 r = reports.SharedWorkspaceReport(
-                    workspace_type=workspace_type, count=0
+                    workspace_type=workspace_type,
+                    workspace_name=adapters[workspace_type],
+                    count=0,
                 )
             counts[workspace_type] = r
 
