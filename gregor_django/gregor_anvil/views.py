@@ -5,7 +5,7 @@ from django.db.models import Count
 from django.views.generic import DetailView, TemplateView
 from django_tables2 import SingleTableView
 
-from . import models, tables
+from . import models, reports, tables
 
 
 class ConsentGroupDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -61,11 +61,19 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
         context[
             "number_upload_workspaces"
         ] = models.UploadWorkspace.objects.all().count()
-        context["shared_with_consortium"] = (
+        qs = (
             WorkspaceGroupSharing.objects.values("workspace__workspace_type")
             .filter(group__name="GREGOR_ALL")
             .annotate(total=Count("workspace__workspace_type"))
         )
+        counts = {}
+        for x in qs:
+            workspace_type = x["workspace__workspace_type"]
+            r = reports.SharedWorkspaceReport(
+                workspace_type=workspace_type, count=x["total"]
+            )
+            counts[workspace_type] = r
+        context["shared_with_consortium"] = counts
         context["verified_linked_accounts"] = Account.objects.filter(
             verified_email_entry__date_verified__isnull=False
         ).count()
