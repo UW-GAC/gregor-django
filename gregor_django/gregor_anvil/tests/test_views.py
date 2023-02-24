@@ -15,7 +15,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from .. import models, tables, views
+from .. import models, reports, tables, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -928,79 +928,109 @@ class WorkspaceReportTest(TestCase):
 
     def test_has_no_workspace_shared_with_consortium_in_context(self):
         """Response includes no workspace shared with the consortium in context when workspace is not shared with the consortium"""  # noqa: E501
-        workspace = factories.WorkspaceFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="group1")
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace, group=group
+            workspace=upload_workspace.workspace, group=group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
-        self.assertEqual(len(response.context_data["shared_with_consortium"]), 0)
+        shared_with_consortium = response.context_data["shared_with_consortium"]
+        self.assertEqual(len(shared_with_consortium), 0)
 
     def test_has_one_workspace_shared_with_consortium_in_context(self):
         """Response includes one workspace shared with the consortium in context"""
-        workspace = factories.WorkspaceFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace, group=group
+            workspace=upload_workspace.workspace, group=group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
-        self.assertEqual(len(response.context_data["shared_with_consortium"]), 1)
+        shared_with_consortium = response.context_data["shared_with_consortium"]
+        self.assertEqual(len(shared_with_consortium), 1)
+        self.assertIn("upload", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["upload"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["upload"].workspace_type, "upload")
+        self.assertEqual(shared_with_consortium["upload"].count, 1)
+        self.assertContains(response, "upload: 1")
 
     def test_has_two_workspace_one_workspace_type_shared_with_consortium_in_context(
         self,
     ):
         """Response includes two workspace with the same workspace type shared with the consortium in context"""
-        workspace_1 = factories.WorkspaceFactory.create(
-            name="workspace_1", workspace_type="same_type"
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            workspace__name="workspace_1"
         )
-        workspace_2 = factories.WorkspaceFactory.create(
-            name="workspace_2", workspace_type="same_type"
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            workspace__name="workspace_2"
         )
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace_1, group=group
+            workspace=upload_workspace_1.workspace, group=group
         )
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace_2, group=group
+            workspace=upload_workspace_2.workspace, group=group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
-        self.assertEqual(len(response.context_data["shared_with_consortium"]), 1)
+        shared_with_consortium = response.context_data["shared_with_consortium"]
+        self.assertEqual(len(shared_with_consortium), 1)
+        self.assertIn("upload", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["upload"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["upload"].workspace_type, "upload")
+        self.assertEqual(shared_with_consortium["upload"].count, 2)
+        self.assertContains(response, "upload: 2")
 
     def test_has_two_workspace_two_workspace_types_shared_with_consortium_in_context(
         self,
     ):
         """Response includes two workspace with the different workspace types shared with the consortium in context"""
-        workspace_1 = factories.WorkspaceFactory.create(
-            name="workspace_1", workspace_type="type_1"
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__name="workspace_1"
         )
-        workspace_2 = factories.WorkspaceFactory.create(
-            name="workspace_2", workspace_type="type_2"
+        template_workspace = factories.TemplateWorkspaceFactory.create(
+            workspace__name="workspace_2"
         )
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace_1, group=group
+            workspace=upload_workspace.workspace, group=group
         )
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace_2, group=group
+            workspace=template_workspace.workspace, group=group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
-        self.assertEqual(len(response.context_data["shared_with_consortium"]), 2)
+        shared_with_consortium = response.context_data["shared_with_consortium"]
+        self.assertEqual(len(shared_with_consortium), 2)
+        self.assertIn("upload", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["upload"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["upload"].workspace_type, "upload")
+        self.assertEqual(shared_with_consortium["upload"].count, 1)
+        self.assertContains(response, "upload: 1")
+        self.assertIn("template", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["template"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["template"].workspace_type, "template")
+        self.assertEqual(shared_with_consortium["template"].count, 1)
+        self.assertContains(response, "template: 1")
 
     def test_has_no_workspace_when_shared_with_different_group_in_context(self):
-        workspace = factories.WorkspaceFactory.create(
-            name="workspace", workspace_type="workspacetype"
-        )
+        upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="ANOTHER_GROUP")
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=workspace, group=group
+            workspace=upload_workspace.workspace, group=group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())

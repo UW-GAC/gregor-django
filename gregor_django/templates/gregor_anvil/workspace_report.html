@@ -7,9 +7,9 @@
   <li>Number of upload workspaces: {{ number_upload_workspaces }} </li>
   <li>Workspaces shared with consortium
     <ul>
-    {% for ws in shared_with_consortium %}
+    {% for workspace_type, data in shared_with_consortium.items %}
       <li>
-        {{ ws.workspace__workspace_type }}: {{ ws.total }}
+        {{ workspace_type }}: {{ data.count }}
       </li>
     {% endfor %}
     </ul>
