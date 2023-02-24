@@ -1,4 +1,5 @@
 import django_tables2 as tables
+from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.models import Account, Workspace
 
 from . import models
@@ -85,3 +86,7 @@ class WorkspaceReportTable(tables.Table):
     class Meta:
         model = Workspace
         fields = ("workspace_type",)
+
+    def render_workspace_type(self, value):
+        adapter_names = workspace_adapter_registry.get_registered_names()
+        return adapter_names[value] + "s"
