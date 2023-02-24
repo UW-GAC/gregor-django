@@ -937,7 +937,42 @@ class WorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
         shared_with_consortium = response.context_data["shared_with_consortium"]
-        self.assertEqual(len(shared_with_consortium), 0)
+        self.assertEqual(len(shared_with_consortium), 4)
+        # Upload workspaces.
+        self.assertIn("upload", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["upload"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["upload"].workspace_type, "upload")
+        self.assertEqual(shared_with_consortium["upload"].count, 0)
+        self.assertContains(response, "upload: 0")
+        # Template workspaces.
+        self.assertIn("template", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["template"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["template"].workspace_type, "template")
+        self.assertEqual(shared_with_consortium["template"].count, 0)
+        self.assertContains(response, "template: 0")
+        # Example workspaces.
+        self.assertIn("example", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["example"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(shared_with_consortium["example"].workspace_type, "example")
+        self.assertEqual(shared_with_consortium["example"].count, 0)
+        self.assertContains(response, "example: 0")
+        # Consortium combined data workspaces.
+        self.assertIn("combined_consortium", shared_with_consortium)
+        self.assertIsInstance(
+            shared_with_consortium["combined_consortium"], reports.SharedWorkspaceReport
+        )
+        self.assertEqual(
+            shared_with_consortium["combined_consortium"].workspace_type,
+            "combined_consortium",
+        )
+        self.assertEqual(shared_with_consortium["combined_consortium"].count, 0)
+        self.assertContains(response, "combined_consortium: 0")
 
     def test_has_one_workspace_shared_with_consortium_in_context(self):
         """Response includes one workspace shared with the consortium in context"""
@@ -950,7 +985,6 @@ class WorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
         shared_with_consortium = response.context_data["shared_with_consortium"]
-        self.assertEqual(len(shared_with_consortium), 1)
         self.assertIn("upload", shared_with_consortium)
         self.assertIsInstance(
             shared_with_consortium["upload"], reports.SharedWorkspaceReport
@@ -958,6 +992,10 @@ class WorkspaceReportTest(TestCase):
         self.assertEqual(shared_with_consortium["upload"].workspace_type, "upload")
         self.assertEqual(shared_with_consortium["upload"].count, 1)
         self.assertContains(response, "upload: 1")
+        # Other workspace types are zero.
+        self.assertEqual(shared_with_consortium["template"].count, 0)
+        self.assertEqual(shared_with_consortium["example"].count, 0)
+        self.assertEqual(shared_with_consortium["combined_consortium"].count, 0)
 
     def test_has_two_workspace_one_workspace_type_shared_with_consortium_in_context(
         self,
@@ -980,7 +1018,6 @@ class WorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
         shared_with_consortium = response.context_data["shared_with_consortium"]
-        self.assertEqual(len(shared_with_consortium), 1)
         self.assertIn("upload", shared_with_consortium)
         self.assertIsInstance(
             shared_with_consortium["upload"], reports.SharedWorkspaceReport
@@ -1010,7 +1047,6 @@ class WorkspaceReportTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
         shared_with_consortium = response.context_data["shared_with_consortium"]
-        self.assertEqual(len(shared_with_consortium), 2)
         self.assertIn("upload", shared_with_consortium)
         self.assertIsInstance(
             shared_with_consortium["upload"], reports.SharedWorkspaceReport
@@ -1035,7 +1071,11 @@ class WorkspaceReportTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("shared_with_consortium" in response.context_data)
-        self.assertEqual(len(response.context_data["shared_with_consortium"]), 0)
+        shared_with_consortium = response.context_data["shared_with_consortium"]
+        self.assertEqual(shared_with_consortium["upload"].count, 0)
+        self.assertEqual(shared_with_consortium["template"].count, 0)
+        self.assertEqual(shared_with_consortium["example"].count, 0)
+        self.assertEqual(shared_with_consortium["combined_consortium"].count, 0)
 
     def test_no_consortium_members_with_access_to_workspaces_in_context(self):
         """Response includes no consortium members with access to any workspaces in context"""
