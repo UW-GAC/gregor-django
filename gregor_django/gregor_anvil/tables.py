@@ -1,4 +1,5 @@
 import django_tables2 as tables
+from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.models import Account, Workspace
 
 from . import models
@@ -71,3 +72,21 @@ class TemplateWorkspaceTable(tables.Table):
             "name",
             "templateworkspace__intended_use",
         )
+
+
+class WorkspaceReportTable(tables.Table):
+    """Table to store aggregated workspace counts."""
+
+    workspace_type = tables.columns.Column(orderable=False)
+    n_total = tables.columns.Column(verbose_name="Total number", orderable=False)
+    n_shared = tables.columns.Column(
+        verbose_name="Number shared with consortium", orderable=False
+    )
+
+    class Meta:
+        model = Workspace
+        fields = ("workspace_type",)
+
+    def render_workspace_type(self, value):
+        adapter_names = workspace_adapter_registry.get_registered_names()
+        return adapter_names[value] + "s"
