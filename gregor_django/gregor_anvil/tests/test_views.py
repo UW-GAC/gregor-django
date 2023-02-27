@@ -452,16 +452,6 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         research_center = factories.ResearchCenterFactory.create()
@@ -652,16 +642,6 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = acm_factories.BillingProjectFactory.create(
@@ -786,16 +766,6 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
