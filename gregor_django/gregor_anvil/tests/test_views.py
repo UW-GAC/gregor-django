@@ -962,14 +962,14 @@ class WorkspaceReportTest(TestCase):
 
     def test_workspace_count_table_one_workspace_shared_twice(self):
         """Workspace table includes correct values for one workspace  that has been shared twice."""  # noqa: E501
-        upload_workspace = factories.UploadWorkspaceFactory.create()
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         # Create the sharing record with GREGOR_ALL.
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group__name="GREGOR_ALL"
+            workspace=upload_workspace_1.workspace, group__name="GREGOR_ALL"
         )
         # Create a sharing record with another group.
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace
+            workspace=upload_workspace_1.workspace
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
