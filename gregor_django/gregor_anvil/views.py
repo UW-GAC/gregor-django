@@ -62,7 +62,7 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
             verified_email_entry__date_verified__isnull=False
         ).count()
         qs = Workspace.objects.values("workspace_type").annotate(
-            n_total=Count("workspace_type"),
+            n_total=Count("workspace_type", distinct=True),
             n_shared=Count(
                 "workspacegroupsharing",
                 filter=Q(workspacegroupsharing__group__name="GREGOR_ALL"),
