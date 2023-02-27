@@ -24,10 +24,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.1.0
 
       - name: Set up Python 3.9
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
           cache: pip
@@ -39,7 +39,7 @@ jobs:
       # Getting only staged files can be tricky in case a new PR is opened
       # since the action is run on a branch in detached head state
       - name: Install and Run Pre-commit
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.0
 
   pytest-mariadb:
     runs-on: ubuntu-latest
@@ -67,10 +67,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.1.0
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -83,21 +83,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/local.txt
 
-      - name: Test with pytest
-        run:  pytest
+      - name: Run tests
+        run:  coverage run -p ./manage.py test --settings=config.settings.test
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+      
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-data
+          path: .coverage.*
   
   pytest-sqlite:
     runs-on: ubuntu-latest
    
     steps:
       - name: Checkout Code Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.1.0
 
       - name: Set up Python 3.8
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
           cache: pip
@@ -110,8 +116,47 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/local.txt
 
-      - name: Test with pytest
-        run:  pytest
+      - name: Run tests
+        run:  coverage run -p ./manage.py test --settings=config.settings.test
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+      
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-data
+          path: .coverage.*
+  
+  coverage:
+    needs:
+      - pytest-mariadb
+      - pytest-sqlite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3.1.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade coverage "django<4" django-coverage-plugin
+      - name: Download coverage data
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-data
+
+      - name: Combine coverage data
+        run: |
+          python -m coverage combine
+          python -m coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          

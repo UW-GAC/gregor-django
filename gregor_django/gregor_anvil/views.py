@@ -1,6 +1,8 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.models import Account, Workspace
 from dal import autocomplete
-from django.views.generic import DetailView
+from django.db.models import Count, Q
+from django.views.generic import DetailView, TemplateView
 from django_tables2 import SingleTableView
 
 from . import models, tables
@@ -47,3 +49,24 @@ class UploadWorkspaceAutocomplete(
             qs = qs.filter(workspace__name__icontains=self.q)
 
         return qs
+
+
+class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
+    """View to show report on workspaces"""
+
+    template_name = "gregor_anvil/workspace_report.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["verified_linked_accounts"] = Account.objects.filter(
+            verified_email_entry__date_verified__isnull=False
+        ).count()
+        qs = Workspace.objects.values("workspace_type").annotate(
+            n_total=Count("workspace_type"),
+            n_shared=Count(
+                "workspacegroupsharing",
+                filter=Q(workspacegroupsharing__group__name="GREGOR_ALL"),
+            ),
+        )
+        context["workspace_count_table"] = tables.WorkspaceReportTable(qs)
+        return context
