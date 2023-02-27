@@ -866,3 +866,169 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_use, "foo bar")
+
+
+class WorkspaceReportTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # self.model_factory = factories.ResearchCenterFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:reports:workspace")
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.WorkspaceReport.as_view()
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_workspace_count_table_no_workspaces(self):
+        """Workspace table has no rows when there are no workspaces."""  # noqa: E501
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # workspace table
+        self.assertIn("workspace_count_table", response.context_data)
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 0)
+
+    def test_workspace_count_table_one_workspace_type_not_shared_with_consortium(self):
+        """Response includes no workspace shared with the consortium in context when workspace is not shared with the consortium"""  # noqa: E501
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name="group1")
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # workspace table
+        self.assertIn("workspace_count_table", response.context_data)
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 1)
+        self.assertIn(
+            {"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data
+        )
+
+    def test_workspace_count_table_one_workspace_type_some_shared(self):
+        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        # Workspaces that won't be shared.
+        factories.UploadWorkspaceFactory.create_batch(2)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace, group=group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # workspace table
+        self.assertIn("workspace_count_table", response.context_data)
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 1)
+        self.assertIn(
+            {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
+        )
+
+    def test_workspace_count_table_two_workspace_types_some_shared(self):
+        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        factories.UploadWorkspaceFactory.create_batch(2)
+        example_workspace_1 = factories.ExampleWorkspaceFactory.create()
+        example_workspace_2 = factories.ExampleWorkspaceFactory.create()
+        factories.ExampleWorkspaceFactory.create_batch(3)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace, group=group
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=example_workspace_1.workspace, group=group
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=example_workspace_2.workspace, group=group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # workspace table
+        self.assertIn("workspace_count_table", response.context_data)
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 2)
+        self.assertIn(
+            {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
+        )
+        self.assertIn(
+            {"workspace_type": "example", "n_total": 5, "n_shared": 2}, table.data
+        )
+
+    def test_has_no_workspace_when_shared_with_different_group_in_context(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name="ANOTHER_GROUP")
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 1)
+        self.assertIn(
+            {"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data
+        )
+
+    def test_no_consortium_members_with_access_to_workspaces_in_context(self):
+        """Response includes no consortium members with access to any workspaces in context"""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("verified_linked_accounts" in response.context_data)
+        self.assertEqual(response.context_data["verified_linked_accounts"], 0)
+
+    def test_one_consortium_member_with_access_to_workspaces_in_context(self):
+        """Response includes one consortium member with access to any workspaces in context"""
+        acm_factories.AccountFactory.create(user=self.user, verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("verified_linked_accounts" in response.context_data)
+        self.assertEqual(response.context_data["verified_linked_accounts"], 1)
+
+    def test_two_consortium_members_with_access_to_workspaces_in_context(self):
+        """Response includes two consortium members with access to any workspaces in context"""
+        acm_factories.AccountFactory.create(user=self.user, verified=True)
+        another_user = User.objects.create_user(
+            username="another_user", password="another_user"
+        )
+        acm_factories.AccountFactory.create(user=another_user, verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("verified_linked_accounts" in response.context_data)
+        self.assertEqual(response.context_data["verified_linked_accounts"], 2)
+
+    def test_correct_count_consortium_members_with_access_to_workspaces_in_context(
+        self,
+    ):
+        """Response includes only verified linked account in context"""
+        acm_factories.AccountFactory.create(user=self.user, verified=True)
+        another_user = User.objects.create_user(
+            username="another_user", password="another_user"
+        )
+        acm_factories.AccountFactory.create(user=another_user, verified=False)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("verified_linked_accounts" in response.context_data)
+        self.assertEqual(response.context_data["verified_linked_accounts"], 1)
