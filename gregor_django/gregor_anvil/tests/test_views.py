@@ -2,7 +2,6 @@ import json
 
 import responses
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager import views as acm_views
 from anvil_consortium_manager.tables import WorkspaceTable
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
@@ -127,9 +126,8 @@ class ConsentGroupDetailTest(TestCase):
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
         obj = self.model_factory.create()
-        request = self.factory.get(self.get_url(obj.pk))
-        request.user = self.user
-        response = self.get_view()(request, pk=obj.pk)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -184,9 +182,8 @@ class ConsentGroupListTest(TestCase):
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -200,34 +197,30 @@ class ConsentGroupListTest(TestCase):
             self.get_view()(request)
 
     def test_view_has_correct_table_class(self):
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertIsInstance(response.context_data["table"], tables.ConsentGroupTable)
 
     def test_view_with_no_objects(self):
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 0)
 
     def test_view_with_one_object(self):
         self.model_factory.create()
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 1)
 
     def test_view_with_two_objects(self):
         self.model_factory.create_batch(2)
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
@@ -267,9 +260,8 @@ class ResearchCenterDetailTest(TestCase):
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
         obj = self.model_factory.create()
-        request = self.factory.get(self.get_url(obj.pk))
-        request.user = self.user
-        response = self.get_view()(request, pk=obj.pk)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -324,9 +316,8 @@ class ResearchCenterListTest(TestCase):
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -341,9 +332,8 @@ class ResearchCenterListTest(TestCase):
 
     def test_view_has_correct_table_class(self):
         """View has the correct table class in the context."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
             response.context_data["table"], tables.ResearchCenterTable
@@ -351,9 +341,8 @@ class ResearchCenterListTest(TestCase):
 
     def test_view_with_no_objects(self):
         """The table has no rows when there are no ResearchCenter objects."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 0)
@@ -361,9 +350,8 @@ class ResearchCenterListTest(TestCase):
     def test_view_with_one_object(self):
         """The table has one row when there is one ResearchCenter object."""
         self.model_factory.create()
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 1)
@@ -371,9 +359,8 @@ class ResearchCenterListTest(TestCase):
     def test_view_with_two_objects(self):
         """The table has two rows when there are two ResearchCenter objects."""
         self.model_factory.create_batch(2)
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
@@ -398,15 +385,10 @@ class UploadWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return acm_views.WorkspaceListByType.as_view()
-
     def test_view_has_correct_table_class(self):
         """The view has the correct table class in the context."""
-        request = self.factory.get(self.get_url(self.workspace_type))
-        request.user = self.user
-        response = self.get_view()(request, workspace_type=self.workspace_type)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
             response.context_data["table"], tables.UploadWorkspaceTable
@@ -513,34 +495,6 @@ class UploadWorkspaceAutocompleteTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("gregor_anvil:upload_workspaces:autocomplete", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return views.UploadWorkspaceAutocomplete.as_view()
-
-    def test_view_redirect_not_logged_in(self):
-        "View redirects to login view when user is not logged in."
-        # Need a client for redirects.
-        response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
-
-    def test_status_code_with_user_permission(self):
-        """Returns successful response code."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url())
-        self.assertEqual(response.status_code, 200)
-
-    def test_access_without_user_permission(self):
-        """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
-        request = self.factory.get(self.get_url())
-        request.user = user_no_perms
-        with self.assertRaises(PermissionDenied):
-            self.get_view()(request)
-
     def test_returns_all_objects(self):
         """Queryset returns all objects when there is no query."""
         workspaces = factories.UploadWorkspaceFactory.create_batch(10)
@@ -633,15 +587,10 @@ class ExampleWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return acm_views.WorkspaceListByType.as_view()
-
     def test_view_has_correct_table_class(self):
         """The view has the correct table class in the context."""
-        request = self.factory.get(self.get_url(self.workspace_type))
-        request.user = self.user
-        response = self.get_view()(request, workspace_type=self.workspace_type)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
         self.assertIsInstance(response.context_data["table"], WorkspaceTable)
 
@@ -741,10 +690,6 @@ class TemplateWorkspaceDetailTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:detail", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return acm_views.WorkspaceDetail.as_view()
-
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
@@ -775,15 +720,10 @@ class TemplateWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return acm_views.WorkspaceListByType.as_view()
-
     def test_view_has_correct_table_class(self):
         """The view has the correct table class in the context."""
-        request = self.factory.get(self.get_url(self.workspace_type))
-        request.user = self.user
-        response = self.get_view()(request, workspace_type=self.workspace_type)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
             response.context_data["table"], tables.TemplateWorkspaceTable
