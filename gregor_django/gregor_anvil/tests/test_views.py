@@ -875,6 +875,16 @@ class WorkspaceReportTest(TestCase):
             response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
         )
 
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
     def test_workspace_count_table_no_workspaces(self):
         """Workspace table has no rows when there are no workspaces."""  # noqa: E501
         self.client.force_login(self.user)
