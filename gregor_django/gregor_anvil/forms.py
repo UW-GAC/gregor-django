@@ -1,5 +1,6 @@
 """Forms classes for the gregor_anvil app."""
 
+from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
@@ -36,7 +37,7 @@ class TemplateWorkspaceForm(forms.ModelForm):
         fields = ("workspace", "intended_use")
 
 
-class CombinedConsortiumDataWorkspaceForm(forms.ModelForm):
+class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a CombinedConsortiumDataWorkspace object."""
 
     ERROR_UPLOAD_VERSION_DOES_NOT_MATCH = "Version of upload workspaces does not match."

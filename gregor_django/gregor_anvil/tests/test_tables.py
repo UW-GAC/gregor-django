@@ -1,8 +1,9 @@
-from anvil_consortium_manager import models as acm_models
+from anvil_consortium_manager.models import Account, Workspace
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
 )
+from django.db.models import Count, Q
 from django.test import TestCase
 
 from .. import models, tables
@@ -12,7 +13,7 @@ from . import factories
 class AccountTableTest(TestCase):
     """Tests for the AccountTable in this app."""
 
-    model = acm_models.Account
+    model = Account
     model_factory = AccountFactory
     table_class = tables.AccountTable
 
@@ -84,7 +85,7 @@ class ConsentGroupTableTest(TestCase):
 
 
 class UploadWorkspaceTableTest(TestCase):
-    model = acm_models.Workspace
+    model = Workspace
     model_factory = factories.UploadWorkspaceFactory
     table_class = tables.UploadWorkspaceTable
 
@@ -105,7 +106,7 @@ class UploadWorkspaceTableTest(TestCase):
 
 
 class TemplateWorkspaceTableTest(TestCase):
-    model = acm_models.Workspace
+    model = Workspace
     model_factory = factories.TemplateWorkspaceFactory
     table_class = tables.TemplateWorkspaceTable
 
@@ -122,4 +123,40 @@ class TemplateWorkspaceTableTest(TestCase):
         # These values are coded into the model, so need to create separately.
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+
+class WorkspaceReportTableTest(TestCase):
+    model = Workspace
+    model_factory = factories.TemplateWorkspaceFactory
+    table_class = tables.TemplateWorkspaceTable
+
+    def get_qs(self):
+        qs = Workspace.objects.values("workspace_type").annotate(
+            n_total=Count("workspace_type"),
+            n_shared=Count(
+                "workspacegroupsharing",
+                filter=Q(workspacegroupsharing__group__name="GREGOR_ALL"),
+            ),
+        )
+        return qs
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.get_qs())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_workspace_type_one_workspace(self):
+        factories.UploadWorkspaceFactory.create()
+        table = self.table_class(self.get_qs())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_one_workspace_type_two_workspaces(self):
+        factories.UploadWorkspaceFactory.create_batch(2)
+        table = self.table_class(self.get_qs())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_workspace_types(self):
+        factories.UploadWorkspaceFactory.create()
+        factories.ExampleWorkspaceFactory.create_batch(2)
+        table = self.table_class(self.get_qs())
         self.assertEqual(len(table.rows), 2)
