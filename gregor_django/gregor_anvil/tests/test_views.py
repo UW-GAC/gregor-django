@@ -960,6 +960,27 @@ class WorkspaceReportTest(TestCase):
             {"workspace_type": "example", "n_total": 5, "n_shared": 2}, table.data
         )
 
+    def test_workspace_count_table_one_workspace_shared_twice(self):
+        """Workspace table includes correct values for one workspace  that has been shared twice."""  # noqa: E501
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        # Create the sharing record with GREGOR_ALL.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace, group__name="GREGOR_ALL"
+        )
+        # Create a sharing record with another group.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # workspace table
+        self.assertIn("workspace_count_table", response.context_data)
+        table = response.context_data["workspace_count_table"]
+        self.assertEqual(len(table.data), 1)
+        self.assertIn(
+            {"workspace_type": "upload", "n_total": 1, "n_shared": 1}, table.data
+        )
+
     def test_has_no_workspace_when_shared_with_different_group_in_context(self):
         upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="ANOTHER_GROUP")
