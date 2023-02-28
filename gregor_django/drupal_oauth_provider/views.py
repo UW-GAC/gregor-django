@@ -51,12 +51,6 @@ class CustomAdapter(OAuth2Adapter):
 
     def get_public_key(self, headers):
 
-        provider_settings = app_settings.PROVIDERS.get(self.provider_id, {})
-
-        config_public_key = provider_settings.get("PUBLIC_KEY")
-        if False and config_public_key:
-            return config_public_key
-
         public_key_jwk = self._get_public_key_jwk(headers)
         try:
             public_key = jwt.algorithms.RSAAlgorithm.from_jwk(

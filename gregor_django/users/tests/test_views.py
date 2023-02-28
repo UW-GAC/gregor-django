@@ -1,6 +1,7 @@
 import pytest
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -9,11 +10,11 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 from gregor_django.users.forms import UserChangeForm
-from gregor_django.users.models import User
-from gregor_django.users.tests.factories import UserFactory
 from gregor_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
-pytestmark = pytest.mark.django_db
+pytestmark = pytest.mark.django_db(transaction=True)
+
+User = get_user_model()
 
 
 class TestUserUpdateView:
@@ -25,7 +26,7 @@ class TestUserUpdateView:
         https://github.com/pytest-dev/pytest-django/pull/258
     """
 
-    def dummy_get_response(self, request: HttpRequest):
+    def dummy_get_response(self, request: HttpRequest):  # pragma: no cover
         return None
 
     def test_get_success_url(self, user: User, rf: RequestFactory):
@@ -45,6 +46,14 @@ class TestUserUpdateView:
         view.request = request
 
         assert view.get_object() == user
+
+    def test_user_update_view(self, client, user: User, rf: RequestFactory):
+
+        client.force_login(user)
+        user_detail_url = reverse("users:update")
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
 
     def test_form_valid(self, user: User, rf: RequestFactory):
         view = UserUpdateView()
@@ -78,11 +87,11 @@ class TestUserRedirectView:
 
 
 class TestUserDetailView:
-    def test_authenticated(self, user: User, rf: RequestFactory):
-        request = rf.get("/fake-url/")
-        request.user = UserFactory()
+    def test_authenticated(self, client, user: User, rf: RequestFactory):
 
-        response = user_detail_view(request, username=user.username)
+        client.force_login(user)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
 
         assert response.status_code == 200
 
