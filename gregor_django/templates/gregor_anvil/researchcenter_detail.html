@@ -1,4 +1,5 @@
 {% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load render_table from django_tables2 %}
 
 {% block title %}Research Center: {{ object.short_name }}{% endblock %}
 
@@ -8,3 +9,9 @@
     <li>Short name: {{ object.short_name }}</li>
   </ul>
 {% endblock panel %}
+
+{% block after_panel %}
+  <h3>Research Center Users</h3>
+  {% render_table site_user_table %}
+  <p class='alert alert-warning'>Research center user list only contains those site users who have created an account on this website.</p>
+{% endblock after_panel %}
