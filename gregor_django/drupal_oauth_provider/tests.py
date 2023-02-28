@@ -5,6 +5,9 @@ import jwt
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.test import RequestFactory
 from django.test.utils import override_settings
 
 from .provider import CustomProvider
@@ -125,3 +128,45 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
         if with_refresh_token:
             response_data["refresh_token"] = "testrf"
         return json.dumps(response_data)
+
+
+class TestProviderConfig(TestCase):
+    def test_custom_provider_scope_config(self):
+        custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = None
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
+            with self.assertRaises(ImproperlyConfigured):
+                CustomProvider(request).get_provider_scope_config()
+
+    def test_custom_provider_scope_detail_config(self):
+        custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = [
+            {
+                "z_drupal_machine_name": "X",
+                "request_scope": True,
+                "django_group_name": "Z",
+            }
+        ]
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
+            with self.assertRaises(ImproperlyConfigured):
+                CustomProvider(request).get_provider_managed_scope_status()
+
+    def test_custom_provider_has_scope(self):
+        custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = [
+            {
+                "drupal_machine_name": "X",
+                "request_scope": True,
+                "django_group_name": "Z",
+            }
+        ]
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
+            CustomProvider(request).get_provider_managed_scope_status(
+                scopes_granted=["X"]
+            )
