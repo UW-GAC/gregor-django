@@ -84,7 +84,7 @@ jobs:
           pip install -r requirements/local.txt
 
       - name: Run tests
-        run:  coverage run -p ./manage.py test --settings=config.settings.test
+        run:  coverage run -p -m pytest
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
@@ -117,7 +117,7 @@ jobs:
           pip install -r requirements/local.txt
 
       - name: Run tests
-        run:  coverage run -p ./manage.py test --settings=config.settings.test
+        run:  coverage run -p -m pytest
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
