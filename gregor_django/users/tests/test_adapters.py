@@ -109,6 +109,14 @@ class TestsUserSocialLoginAdapter(object):
                 user, dict(research_center_or_site="FOO")
             )
 
+    def test_update_user_research_centers_uknown(self):
+        adapter = SocialAccountAdapter()
+        user = UserFactory()
+        adapter.update_user_research_centers(
+            user, dict(research_center_or_site=["UNKNOWN"])
+        )
+        assert user.research_centers.all().count() == 0
+
     def test_update_user_groups_add(self):
         adapter = SocialAccountAdapter()
         rc1 = GroupFactory(name="g1")
@@ -124,6 +132,22 @@ class TestsUserSocialLoginAdapter(object):
             user, extra_data=dict(managed_scope_status={rc1.name: True})
         )
         assert user.groups.filter(pk=rc1.pk).exists()
+        assert user.groups.all().count() == 1
+
+    def test_update_user_groups_create(self):
+        adapter = SocialAccountAdapter()
+
+        User = get_user_model()
+        user = User()
+        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
+        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
+
+        user.save()
+
+        adapter.update_user_groups(
+            user, extra_data=dict(managed_scope_status={"CREATE_GROUP": True})
+        )
+        assert user.groups.filter(name="CREATE_GROUP").exists()
         assert user.groups.all().count() == 1
 
     def test_update_user_groups_remove(self):

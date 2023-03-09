@@ -1,11 +1,16 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
 from anvil_consortium_manager.models import Account, Workspace
 from dal import autocomplete
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.views.generic import DetailView, TemplateView
-from django_tables2 import SingleTableView
+from django_tables2 import SingleTableMixin, SingleTableView
+
+from gregor_django.users.tables import UserTable
 
 from . import models, tables
+
+User = get_user_model()
 
 
 class ConsentGroupDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -21,10 +26,16 @@ class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.ConsentGroupTable
 
 
-class ResearchCenterDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class ResearchCenterDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
     """View to show details about a `ResearchCenter`."""
 
     model = models.ResearchCenter
+    context_table_name = "site_user_table"
+
+    def get_table(self):
+        return UserTable(User.objects.filter(research_centers=self.object))
 
 
 class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):

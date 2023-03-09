@@ -14,6 +14,8 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from gregor_django.users.tests.factories import UserFactory
+
 from .. import models, tables, views
 from . import factories
 
@@ -281,6 +283,22 @@ class ResearchCenterDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
+
+    def test_site_user_table(self):
+        """Contains a table of site users with the correct users."""
+        obj = self.model_factory.create()
+        site_user = UserFactory.create()
+        site_user.research_centers.set([obj])
+        non_site_user = UserFactory.create()
+
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("site_user_table", response.context_data)
+        table = response.context_data["site_user_table"]
+        self.assertEqual(len(table.rows), 1)
+
+        self.assertIn(site_user, table.data)
+        self.assertNotIn(non_site_user, table.data)
 
 
 class ResearchCenterListTest(TestCase):
