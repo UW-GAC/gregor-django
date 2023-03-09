@@ -68,14 +68,9 @@ class CustomProvider(OAuth2Provider):
         provider_settings = app_settings.PROVIDERS.get(self.id, {})
         gregor_oauth_scopes = provider_settings.get("SCOPES")
 
-        if not gregor_oauth_scopes:
+        if not gregor_oauth_scopes or not isinstance(gregor_oauth_scopes, list):
             raise ImproperlyConfigured(
-                f"[get_provider_scope_config] missing provider setting SCOPES {provider_settings}"
-            )
-
-        if not isinstance(gregor_oauth_scopes, list):
-            raise ImproperlyConfigured(
-                "[get_provider_scope_config] provider setting SCOPES should be a list"
+                f"[get_provider_scope_config] provider setting SCOPES {provider_settings} must be a list"
             )
 
         return gregor_oauth_scopes
