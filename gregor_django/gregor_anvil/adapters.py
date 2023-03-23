@@ -30,6 +30,7 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "upload"
     name = "Upload workspace"
+    description = "Workspaces that contain data uploaded by RCs in a given upload cycle"
     list_table_class = tables.UploadWorkspaceTable
     workspace_data_model = models.UploadWorkspace
     workspace_data_form_class = forms.UploadWorkspaceForm
@@ -41,6 +42,9 @@ class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "example"
     name = "Example workspace"
+    description = (
+        "Workspaces that contain examples of using AnVIL, working with data, etc."
+    )
     list_table_class = WorkspaceTable
     workspace_data_model = models.ExampleWorkspace
     workspace_data_form_class = forms.ExampleWorkspaceForm
@@ -52,6 +56,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "template"
     name = "Template workspace"
+    description = "Template workspaces that can be cloned to create other workspaces"
     list_table_class = tables.TemplateWorkspaceTable
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
@@ -63,6 +68,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "combined_consortium"
     name = "Combined consortium data workspace"
+    description = "Workspaces for internal consortium use that contain data tables combined across upload workspaces"
     list_table_class = WorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
