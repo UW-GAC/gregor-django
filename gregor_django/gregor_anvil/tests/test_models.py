@@ -374,7 +374,7 @@ class ReleaseWorkspaceTest(TestCase):
             workspace=workspace,
             full_data_use_limitations="foo",
             consent_group=consent_group,
-            version=1,
+            dbgap_version=1,
             dbgap_participant_set=1,
         )
         instance.save()
@@ -414,19 +414,19 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
 
     def test_unique_constraint(self):
-        """Cannot save two instances with the same ConsentGroup and version."""
+        """Cannot save two instances with the same ConsentGroup and dbgap_version."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace_1 = WorkspaceFactory.create(name="ws-1")
         factories.ReleaseWorkspaceFactory.create(
             workspace=workspace_1,
             consent_group=consent_group,
-            version=1,
+            dbgap_version=1,
         )
         workspace_2 = WorkspaceFactory.create(name="ws-2")
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
             consent_group=consent_group,
-            version=1,
+            dbgap_version=1,
         )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
@@ -434,71 +434,71 @@ class ReleaseWorkspaceTest(TestCase):
             instance_2.save()
 
     def test_same_consent_group(self):
-        """Can save multiple ReleaseWorkspace models with the same ConsentGroup and different version."""
+        """Can save multiple ReleaseWorkspace models with the same ConsentGroup and different dbgap_version."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace_1 = WorkspaceFactory.create(name="ws-1")
         factories.ReleaseWorkspaceFactory.create(
             workspace=workspace_1,
             consent_group=consent_group,
-            version=1,
+            dbgap_version=1,
         )
         workspace_2 = WorkspaceFactory.create(name="ws-2")
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
             consent_group=consent_group,
-            version=2,
+            dbgap_version=2,
         )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.ReleaseWorkspace.objects.count(), 2)
 
-    def test_same_version(self):
-        """Can save multiple ReleaseWorkspace models with the same version and different ConsentGroup."""
+    def test_same_dbgap_version(self):
+        """Can save multiple ReleaseWorkspace models with the same dbgap_version and different ConsentGroup."""
         consent_group_1 = factories.ConsentGroupFactory()
         consent_group_2 = factories.ConsentGroupFactory()
         factories.ReleaseWorkspaceFactory.create(
             consent_group=consent_group_1,
-            version=1,
+            dbgap_version=1,
         )
         workspace_2 = WorkspaceFactory.create(name="ws-2")
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
             consent_group=consent_group_2,
-            version=1,
+            dbgap_version=1,
         )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.ReleaseWorkspace.objects.count(), 2)
 
-    def test_positive_version_not_negative(self):
+    def test_positive_dbgap_version_not_negative(self):
         """Version cannot be negative."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
-            version=-1,
+            dbgap_version=-1,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.error_dict), 1)
-        self.assertIn("version", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["version"]), 1)
+        self.assertIn("dbgap_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
 
-    def test_positive_version_not_zero(self):
+    def test_positive_dbgap_version_not_zero(self):
         """Version cannot be 0."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
-            version=0,
+            dbgap_version=0,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.error_dict), 1)
-        self.assertIn("version", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["version"]), 1)
+        self.assertIn("dbgap_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
 
     def test_positive_dbgap_participant_set_not_negative(self):
         """dbgap_participant_set cannot be negative."""

@@ -283,7 +283,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -299,7 +299,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -316,7 +316,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -333,7 +333,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -359,9 +359,9 @@ class ReleaseWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("version", form.errors)
-        self.assertEqual(len(form.errors["version"]), 1)
-        self.assertIn("required", form.errors["version"][0])
+        self.assertIn("dbgap_version", form.errors)
+        self.assertEqual(len(form.errors["dbgap_version"]), 1)
+        self.assertIn("required", form.errors["dbgap_version"][0])
 
     def test_invalid_missing_dbgap_participant_set(self):
         """Form is invalid when missing research_center."""
@@ -374,7 +374,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -394,7 +394,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": release_workspace.consent_group,
-            "version": release_workspace.version,
+            "dbgap_version": release_workspace.dbgap_version,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -417,7 +417,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace_1, upload_workspace_2],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -437,7 +437,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace_1, upload_workspace_2],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group_1,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
@@ -461,7 +461,7 @@ class ReleaseWorkspaceFormTest(TestCase):
             "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": consent_group,
-            "version": 1,
+            "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
         form = self.form_class(data=form_data)
