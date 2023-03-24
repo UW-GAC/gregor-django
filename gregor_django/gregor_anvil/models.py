@@ -101,3 +101,46 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace, help_text="Upload workspaces"
     )
+
+
+class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track a workspace for release to the scientific community."""
+
+    phs = 3047
+    """dbGaP-assigned phs for the GREGoR study."""
+
+    full_data_use_limitations = models.TextField(
+        help_text="The full data use limitations for this workspace."
+    )
+    release_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date that this workspace was released to the scientific community.",
+    )
+    # Do we need to track consent group or can we infer it from the upload workspaces?
+    consent_group = models.ForeignKey(
+        ConsentGroup,
+        help_text="Consent group for the data in this workspace.",
+        on_delete=models.PROTECT,
+    )
+    upload_workspaces = models.ManyToManyField(
+        UploadWorkspace,
+        help_text="Upload workspaces contributing data to this workspace.",
+    )
+    version = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Version of the release (should be the same as dbGaP version).",
+    )
+    dbgap_participant_set = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="dbGaP participant set of the workspace",
+    )
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_release_workspace",
+                fields=["consent_group", "version"],
+            ),
+        ]
