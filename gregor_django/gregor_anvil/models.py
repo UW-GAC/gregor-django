@@ -109,15 +109,6 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
     phs = 3047
     """dbGaP-assigned phs for the GREGoR study."""
 
-    full_data_use_limitations = models.TextField(
-        help_text="The full data use limitations for this workspace."
-    )
-    release_date = models.DateField(
-        null=True,
-        blank=True,
-        help_text="Date that this workspace was released to the scientific community.",
-    )
-    # Do we need to track consent group or can we infer it from the upload workspaces?
     consent_group = models.ForeignKey(
         ConsentGroup,
         help_text="Consent group for the data in this workspace.",
@@ -127,6 +118,9 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         UploadWorkspace,
         help_text="Upload workspaces contributing data to this workspace.",
     )
+    full_data_use_limitations = models.TextField(
+        help_text="The full data use limitations for this workspace."
+    )
     dbgap_version = models.IntegerField(
         validators=[MinValueValidator(1)],
         help_text="Version of the release (should be the same as dbGaP version).",
@@ -134,6 +128,11 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
     dbgap_participant_set = models.IntegerField(
         validators=[MinValueValidator(1)],
         help_text="dbGaP participant set of the workspace",
+    )
+    release_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date that this workspace was released to the scientific community.",
     )
 
     class Meta:
