@@ -88,7 +88,7 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "consent_group",
             "upload_workspaces",
             "full_data_use_limitations",
-            "version",
+            "dbgap_version",
             "dbgap_participant_set",
             "release_date",
             "workspace",

@@ -86,7 +86,7 @@ class ReleaseWorkspaceFactory(DjangoModelFactory):
 
     full_data_use_limitations = Faker("paragraph")
     consent_group = SubFactory(ConsentGroupFactory)
-    version = Faker("random_int", min=1, max=10)
+    dbgap_version = Faker("random_int", min=1, max=10)
     dbgap_participant_set = Faker("random_int", min=1, max=10)
 
     workspace = SubFactory(

@@ -127,7 +127,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         UploadWorkspace,
         help_text="Upload workspaces contributing data to this workspace.",
     )
-    version = models.IntegerField(
+    dbgap_version = models.IntegerField(
         validators=[MinValueValidator(1)],
         help_text="Version of the release (should be the same as dbGaP version).",
     )
@@ -141,6 +141,6 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_release_workspace",
-                fields=["consent_group", "version"],
+                fields=["consent_group", "dbgap_version"],
             ),
         ]
