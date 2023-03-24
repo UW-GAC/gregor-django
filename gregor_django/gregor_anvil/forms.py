@@ -85,13 +85,13 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     class Meta:
         model = models.ReleaseWorkspace
         fields = (
-            "workspace",
+            "consent_group",
             "upload_workspaces",
             "full_data_use_limitations",
-            "consent_group",
             "version",
             "dbgap_participant_set",
             "release_date",
+            "workspace",
         )
         help_texts = {
             "upload_workspaces": """Upload workspaces contributing to this Release Workspace.
