@@ -95,9 +95,14 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         )
         help_texts = {
             "upload_workspaces": """Upload workspaces contributing to this Release Workspace.
-                                    All upload workspaces must have the same consent group."""
+                                    All upload workspaces must have the same consent group.""",
+            "release_date": """Do not select a date for this field unless the workspace has been
+                               released to the scientific community.""",
         }
         widgets = {
+            # We considered checkboxes for workspaces with default all checked.
+            # Unfortunately we need to select only those with a given consent, not all workspaces.
+            # So go back to the ModelSelect2Multiple widget.
             "upload_workspaces": autocomplete.ModelSelect2Multiple(
                 url="gregor_anvil:upload_workspaces:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
