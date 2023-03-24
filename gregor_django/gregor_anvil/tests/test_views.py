@@ -858,6 +858,38 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class ReleaseWorkspaceDetailTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceDetail view using the ReleaseWorkspaceAdapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.object = factories.ReleaseWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:detail", args=args)
+
+    def test_status_code(self):
+        """Response has a status code of 200."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.object.upload_workspaces.add(upload_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+
 class WorkspaceReportTest(TestCase):
     def setUp(self):
         """Set up test class."""
