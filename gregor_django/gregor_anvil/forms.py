@@ -90,13 +90,13 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "full_data_use_limitations",
             "dbgap_version",
             "dbgap_participant_set",
-            "release_date",
+            "date_released",
             "workspace",
         )
         help_texts = {
             "upload_workspaces": """Upload workspaces contributing to this Release Workspace.
                                     All upload workspaces must have the same consent group.""",
-            "release_date": """Do not select a date for this field unless the workspace has been
+            "date_released": """Do not select a date for this field unless the workspace has been
                                released to the scientific community.""",
         }
         widgets = {
@@ -108,10 +108,10 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 attrs={"data-theme": "bootstrap-5"},
                 forward=["consent_group"],
             ),
-            # "release_date": forms.SelectDateInput(),
-            # "release_date": forms.DateInput(),
-            # "release_date": AdminDateWidget(),
-            "release_date": CustomDateInput(),
+            # "date_released": forms.SelectDateInput(),
+            # "date_released": forms.DateInput(),
+            # "date_released": AdminDateWidget(),
+            "date_released": CustomDateInput(),
         }
 
     def clean_upload_workspaces(self):
