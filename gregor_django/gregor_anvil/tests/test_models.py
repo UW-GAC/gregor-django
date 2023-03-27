@@ -529,3 +529,10 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertEqual(len(e.exception.error_dict), 1)
         self.assertIn("dbgap_participant_set", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["dbgap_participant_set"]), 1)
+
+    def test_get_dbgap_accession(self):
+        """get_dbgap_accession works as expected."""
+        instance = factories.ReleaseWorkspaceFactory.create(
+            dbgap_version=1, dbgap_participant_set=2
+        )
+        self.assertEqual(instance.get_dbgap_accession(), "phs003047.v1.p2")
