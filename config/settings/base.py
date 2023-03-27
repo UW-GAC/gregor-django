@@ -200,7 +200,6 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "gregor_django.utils.context_processors.settings_context",
-                "anvil_consortium_manager.context_processors.workspace_adapter",
             ],
         },
     }
@@ -357,6 +356,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.CombinedConsortiumDataWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.ReleaseWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "gregor_django.gregor_anvil.adapters.AccountAdapter"
 

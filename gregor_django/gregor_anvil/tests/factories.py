@@ -76,3 +76,20 @@ class CombinedConsortiumDataWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type="combined_consortium",
     )
+
+
+class ReleaseWorkspaceFactory(DjangoModelFactory):
+    """A factory for the ReleaseWorkspace model."""
+
+    class Meta:
+        model = models.ReleaseWorkspace
+
+    full_data_use_limitations = Faker("paragraph")
+    consent_group = SubFactory(ConsentGroupFactory)
+    dbgap_version = Faker("random_int", min=1, max=10)
+    dbgap_participant_set = Faker("random_int", min=1, max=10)
+
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="release",
+    )
