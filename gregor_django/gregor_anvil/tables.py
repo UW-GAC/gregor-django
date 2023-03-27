@@ -90,3 +90,28 @@ class WorkspaceReportTable(tables.Table):
     def render_workspace_type(self, value):
         adapter_names = workspace_adapter_registry.get_registered_names()
         return adapter_names[value] + "s"
+
+
+class ReleaseWorkspaceTable(tables.Table):
+    """A table for Workspaces that includes fields from ReleaseWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    number_workspaces = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Number of workspaces",
+        orderable=False,
+    )
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "releaseworkspace__consent_group",
+            "releaseworkspace__dbgap_version",
+            "releaseworkspace__dbgap_participant_set",
+            "number_workspaces",
+            "releaseworkspace__date_released",
+        )
+
+    def render_number_workspaces(self, record):
+        return record.releaseworkspace.upload_workspaces.count()

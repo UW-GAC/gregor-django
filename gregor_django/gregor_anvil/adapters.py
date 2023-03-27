@@ -83,7 +83,7 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "release"
     name = "Release workspace"
     description = "Workspaces for release to the general scientific community via dbGaP"
-    list_table_class = WorkspaceTable
+    list_table_class = tables.ReleaseWorkspaceTable
     workspace_data_model = models.ReleaseWorkspace
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
