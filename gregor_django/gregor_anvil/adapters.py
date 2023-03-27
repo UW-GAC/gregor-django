@@ -86,4 +86,4 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = tables.ReleaseWorkspaceTable
     workspace_data_model = models.ReleaseWorkspace
     workspace_data_form_class = forms.ReleaseWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"

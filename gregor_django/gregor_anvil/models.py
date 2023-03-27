@@ -145,3 +145,8 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
                 fields=["consent_group", "dbgap_version"],
             ),
         ]
+
+    def get_dbgap_accession(self):
+        return "phs{phs:06d}.v{v}.p{p}".format(
+            phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set
+        )
