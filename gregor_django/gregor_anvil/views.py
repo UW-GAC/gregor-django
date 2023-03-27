@@ -51,10 +51,13 @@ class UploadWorkspaceAutocomplete(
     """View to provide autocompletion for UploadWorkspaces."""
 
     def get_queryset(self):
-        # Filter out unathorized users, or does the auth mixin do that?
         qs = models.UploadWorkspace.objects.filter().order_by(
             "workspace__billing_project__name", "workspace__name"
         )
+
+        consent_group = self.forwarded.get("consent_group", None)
+        if consent_group:
+            qs = qs.filter(consent_group=consent_group)
 
         if self.q:
             qs = qs.filter(workspace__name__icontains=self.q)

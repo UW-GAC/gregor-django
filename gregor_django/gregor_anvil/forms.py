@@ -106,6 +106,7 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "upload_workspaces": autocomplete.ModelSelect2Multiple(
                 url="gregor_anvil:upload_workspaces:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
+                forward=["consent_group"],
             ),
             # "release_date": forms.SelectDateInput(),
             # "release_date": forms.DateInput(),
