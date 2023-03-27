@@ -122,10 +122,12 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="The full data use limitations for this workspace."
     )
     dbgap_version = models.IntegerField(
+        verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
         help_text="Version of the release (should be the same as dbGaP version).",
     )
     dbgap_participant_set = models.IntegerField(
+        verbose_name=" dbGaP participant set",
         validators=[MinValueValidator(1)],
         help_text="dbGaP participant set of the workspace",
     )
