@@ -129,7 +129,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         validators=[MinValueValidator(1)],
         help_text="dbGaP participant set of the workspace",
     )
-    release_date = models.DateField(
+    date_released = models.DateField(
         null=True,
         blank=True,
         help_text="Date that this workspace was released to the scientific community.",
