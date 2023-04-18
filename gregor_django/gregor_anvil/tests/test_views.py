@@ -517,7 +517,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.version, 5)
 
 
-class UploadWorkspaceAutocompleteTest(TestCase):
+class UploadWorkspaceAutocompleteByTypeTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -531,13 +531,15 @@ class UploadWorkspaceAutocompleteTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("gregor_anvil:upload_workspaces:autocomplete", args=args)
+        return reverse(
+            "anvil_consortium_manager:workspaces:autocomplete_by_type", args=args
+        )
 
     def test_returns_all_objects(self):
         """Queryset returns all objects when there is no query."""
         workspaces = factories.UploadWorkspaceFactory.create_batch(10)
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url())
+        response = self.client.get(self.get_url("upload"))
         returned_ids = [
             int(x["id"])
             for x in json.loads(response.content.decode("utf-8"))["results"]
@@ -552,7 +554,7 @@ class UploadWorkspaceAutocompleteTest(TestCase):
             workspace__name="test-workspace"
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(), {"q": "test-workspace"})
+        response = self.client.get(self.get_url("upload"), {"q": "test-workspace"})
         returned_ids = [
             int(x["id"])
             for x in json.loads(response.content.decode("utf-8"))["results"]
@@ -567,7 +569,7 @@ class UploadWorkspaceAutocompleteTest(TestCase):
             workspace__name="test-workspace"
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(), {"q": "test"})
+        response = self.client.get(self.get_url("upload"), {"q": "test"})
         returned_ids = [
             int(x["id"])
             for x in json.loads(response.content.decode("utf-8"))["results"]
@@ -582,7 +584,7 @@ class UploadWorkspaceAutocompleteTest(TestCase):
             workspace__name="test-workspace"
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(), {"q": "work"})
+        response = self.client.get(self.get_url("upload"), {"q": "work"})
         returned_ids = [
             int(x["id"])
             for x in json.loads(response.content.decode("utf-8"))["results"]
@@ -597,7 +599,7 @@ class UploadWorkspaceAutocompleteTest(TestCase):
             workspace__name="test-workspace"
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(), {"q": "TEST-WORKSPACE"})
+        response = self.client.get(self.get_url("upload"), {"q": "TEST-WORKSPACE"})
         returned_ids = [
             int(x["id"])
             for x in json.loads(response.content.decode("utf-8"))["results"]
@@ -617,7 +619,7 @@ class UploadWorkspaceAutocompleteTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(),
+            self.get_url("upload"),
             {"q": "test", "forward": json.dumps({"consent_group": consent_group.pk})},
         )
         returned_ids = [
