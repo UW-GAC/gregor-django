@@ -1,6 +1,5 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
-from anvil_consortium_manager.tables import WorkspaceTable
 from django.db.models import Q
 
 from . import forms, models, tables
@@ -45,7 +44,7 @@ class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     description = (
         "Workspaces that contain examples of using AnVIL, working with data, etc."
     )
-    list_table_class = WorkspaceTable
+    list_table_class = tables.DefaultWorkspaceTable
     workspace_data_model = models.ExampleWorkspace
     workspace_data_form_class = forms.ExampleWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
@@ -69,7 +68,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "combined_consortium"
     name = "Combined consortium data workspace"
     description = "Workspaces for internal consortium use that contain data tables combined across upload workspaces"
-    list_table_class = WorkspaceTable
+    list_table_class = tables.DefaultWorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = (
