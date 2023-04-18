@@ -2,7 +2,6 @@ import json
 
 import responses
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tables import WorkspaceTable
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
@@ -653,7 +652,9 @@ class ExampleWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], WorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["table"], tables.DefaultWorkspaceTable
+        )
 
 
 class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
