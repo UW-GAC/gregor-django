@@ -77,13 +77,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     "sociallogin.extra_data.managed_scope_status should be a dict"
                 )
             else:
-                # Is this the best place to implement this??
-                # Right now, everyone should get the "account link" permission from ACM.
-                # Eventually, we may add a Drupal role indicating whether someone should get this permission.
-                # If a Drupal role is added, we will need to delete this group from the Django.
-                # Note that this breaks tests.
-                # managed_scope_status["ACM data access allowed"] = True
-
                 for group_name, user_has_group in managed_scope_status.items():
                     user_group, was_created = Group.objects.get_or_create(
                         name=group_name
