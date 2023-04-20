@@ -337,7 +337,7 @@ SOCIALACCOUNT_PROVIDERS = {
             {
                 "drupal_machine_name": "dsa_completed",
                 "request_scope": True,
-                "django_group_name": "ACM data access allowed",
+                "django_group_name": "DSA completed",
             },
         ],
     }
