@@ -35,6 +35,17 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_form_class = forms.UploadWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
 
+    def get_autocomplete_queryset(self, queryset, q, forwarded={}):
+        """Filter to Accounts where the email or the associated user name matches the query `q`."""
+        consent_group = forwarded.get("consent_group", None)
+        if consent_group:
+            queryset = queryset.filter(consent_group=consent_group)
+
+        if q:
+            queryset = queryset.filter(workspace__name__icontains=q)
+
+        return queryset
+
 
 class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ExampleWorkspaces."""

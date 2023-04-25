@@ -4,6 +4,7 @@ from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 from . import models
 
@@ -51,7 +52,10 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
         }
         widgets = {
             "upload_workspaces": autocomplete.ModelSelect2Multiple(
-                url="gregor_anvil:upload_workspaces:autocomplete",
+                url=reverse(
+                    "anvil_consortium_manager:workspaces:autocomplete_by_type",
+                    args=["upload"],
+                ),
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
