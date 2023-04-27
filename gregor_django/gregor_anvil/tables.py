@@ -34,6 +34,16 @@ class ResearchCenterTable(tables.Table):
         fields = ("full_name", "short_name")
 
 
+class PartnerGroupTable(tables.Table):
+    """A table for ResearchCenters."""
+
+    full_name = tables.Column(linkify=True)
+
+    class Meta:
+        model = models.PartnerGroup
+        fields = ("full_name", "short_name")
+
+
 class ConsentGroupTable(tables.Table):
     """A table for `ConsentGroups`."""
 
