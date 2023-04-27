@@ -44,6 +44,25 @@ class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.ResearchCenterTable
 
 
+class PartnerGroupDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """View to show details about a `PartnerGroup`."""
+
+    model = models.PartnerGroup
+    context_table_name = "partner_group_user_table"
+
+    def get_table(self):
+        return UserTable(User.objects.filter(partner_groups=self.object))
+
+
+class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `PartnerGroups`."""
+
+    model = models.PartnerGroup
+    table_class = tables.PartnerGroupTable
+
+
 # class UploadWorkspaceAutocomplete(
 #     AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
 # ):
