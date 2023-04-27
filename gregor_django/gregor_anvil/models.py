@@ -38,7 +38,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
     short_name = models.CharField(max_length=15, unique=True)
     """The short name of the Research Center."""
 
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Research Center."""
 
     history = HistoricalRecords()
@@ -62,7 +62,7 @@ class PartnerGroup(TimeStampedModel, models.Model):
     short_name = models.CharField(max_length=15, unique=True)
     """The short name of the Partner Group"""
 
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Partner Group"""
 
     history = HistoricalRecords()
