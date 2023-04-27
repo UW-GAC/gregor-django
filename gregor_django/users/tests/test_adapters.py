@@ -142,6 +142,7 @@ class TestsUserSocialLoginAdapter(object):
     def test_update_user_partner_groups_add(self):
         adapter = SocialAccountAdapter()
         pg1 = PartnerGroupFactory(short_name="pg1")
+        pg2 = PartnerGroupFactory(short_name="pg2")
 
         User = get_user_model()
         user = User()
@@ -150,8 +151,13 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_partner_groups(user, dict(partner_group=[pg1.full_name]))
+        adapter.update_user_partner_groups(user, dict(partner_group=[pg1.short_name]))
         assert user.partner_groups.filter(pk=pg1.pk).exists()
+        assert user.partner_groups.all().count() == 1
+
+        # test full_name as well
+        adapter.update_user_partner_groups(user, dict(partner_group=[pg2.full_name]))
+        assert user.partner_groups.filter(pk=pg2.pk).exists()
         assert user.partner_groups.all().count() == 1
 
     def test_update_user_partner_groups_remove(self):

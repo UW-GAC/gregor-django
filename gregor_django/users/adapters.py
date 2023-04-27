@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.core.mail import mail_admins
-from django.db.models import Q
 from django.http import HttpRequest
 
 from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
@@ -46,19 +45,21 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             partner_group_object_list = []
             for pg_name in partner_groups:
                 try:
-                    pg = PartnerGroup.objects.get(
-                        Q(full_name=pg_name) | Q(short_name=pg_name)
-                    )
+                    pg = PartnerGroup.objects.get(short_name=pg_name)
                 except ObjectDoesNotExist:
-                    logger.debug(
-                        f"[SocialAccountAdapter:update_user_partner_groups] Ignoring drupal "
-                        f"partner_group {pg_name} - not in PartnerGroup domain"
-                    )
-                    mail_admins(
-                        subject="Missing PartnerGroup",
-                        message=f"Missing partner group ({pg_name}) passed from drupal for user {user}",
-                    )
-                    continue
+                    try:
+                        pg = PartnerGroup.objects.get(full_name=pg_name)
+                    except ObjectDoesNotExist:
+                        logger.debug(
+                            f"[SocialAccountAdapter:update_user_partner_groups] Ignoring drupal "
+                            f"partner_group {pg_name} - not in PartnerGroup domain"
+                        )
+                        mail_admins(
+                            subject="Missing PartnerGroup",
+                            message=f"Missing partner group ({pg_name}) passed from drupal for user {user}",
+                        )
+                    else:
+                        partner_group_object_list.append(pg)
                 else:
                     partner_group_object_list.append(pg)
 
@@ -90,21 +91,22 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             research_center_object_list = []
             for rc_name in research_center_or_site:
                 try:
-                    # For transition from passed full name to short name
-                    # support both
-                    rc = ResearchCenter.objects.get(
-                        Q(full_name=rc_name) | Q(short_name=rc_name)
-                    )
+                    # For transition from passed full name to short name support both
+                    rc = ResearchCenter.objects.get(short_name=rc_name)
                 except ObjectDoesNotExist:
-                    logger.debug(
-                        f"[SocialAccountAdapter:update_user_research_centers] Ignoring drupal "
-                        f"research_center_or_site {rc_name} - not in ResearchCenter domain"
-                    )
-                    mail_admins(
-                        subject="Missing ResearchCenter",
-                        message=f"Missing research center {rc_name} passed from drupal for user {user}",
-                    )
-                    continue
+                    try:
+                        rc = ResearchCenter.objects.get(full_name=rc_name)
+                    except ObjectDoesNotExist:
+                        logger.debug(
+                            f"[SocialAccountAdapter:update_user_research_centers] Ignoring drupal "
+                            f"research_center_or_site {rc_name} - not in ResearchCenter domain"
+                        )
+                        mail_admins(
+                            subject="Missing ResearchCenter",
+                            message=f"Missing research center {rc_name} passed from drupal for user {user}",
+                        )
+                    else:
+                        research_center_object_list.append(rc)
                 else:
                     research_center_object_list.append(rc)
 
