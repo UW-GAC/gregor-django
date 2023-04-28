@@ -3,7 +3,7 @@ from django.db.models import CharField, ManyToManyField
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from gregor_django.gregor_anvil.models import ResearchCenter
+from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 
 
 class User(AbstractUser):
@@ -14,6 +14,7 @@ class User(AbstractUser):
     first_name = None  # type: ignore
     last_name = None  # type: ignore
     research_centers = ManyToManyField(ResearchCenter)
+    partner_groups = ManyToManyField(PartnerGroup)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
