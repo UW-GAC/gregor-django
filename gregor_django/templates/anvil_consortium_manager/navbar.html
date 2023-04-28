@@ -3,12 +3,18 @@
 {% block anvil_consortium_manager_nav_items %}
   {{ block.super }}
 
-  <li class="nav-item">
-      <a class="nav-link" href="{% url 'gregor_anvil:research_centers:list' %}">Research centers</a>
-  </li>
-
-  <li class="nav-item">
-    <a class="nav-link" href="{% url 'gregor_anvil:partner_groups:list' %}">Partner Groups</a>
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Centers
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+      <li>
+        <a class="dropdown-item" href="{% url 'gregor_anvil:research_centers:list' %}">Research Centers</a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'gregor_anvil:partner_groups:list' %}">Partner groups</a>
+      </li>
+    </ul>
   </li>
 
   <li class="nav-item">
