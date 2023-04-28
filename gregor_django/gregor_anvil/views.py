@@ -1,6 +1,5 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
 from anvil_consortium_manager.models import Account, Workspace
-from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.views.generic import DetailView, TemplateView
@@ -45,24 +44,43 @@ class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.ResearchCenterTable
 
 
-class UploadWorkspaceAutocomplete(
-    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+class PartnerGroupDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
 ):
-    """View to provide autocompletion for UploadWorkspaces."""
+    """View to show details about a `PartnerGroup`."""
 
-    def get_queryset(self):
-        qs = models.UploadWorkspace.objects.filter().order_by(
-            "workspace__billing_project__name", "workspace__name"
-        )
+    model = models.PartnerGroup
+    context_table_name = "partner_group_user_table"
 
-        consent_group = self.forwarded.get("consent_group", None)
-        if consent_group:
-            qs = qs.filter(consent_group=consent_group)
+    def get_table(self):
+        return UserTable(User.objects.filter(partner_groups=self.object))
 
-        if self.q:
-            qs = qs.filter(workspace__name__icontains=self.q)
 
-        return qs
+class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `PartnerGroups`."""
+
+    model = models.PartnerGroup
+    table_class = tables.PartnerGroupTable
+
+
+# class UploadWorkspaceAutocomplete(
+#     AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+# ):
+#     """View to provide autocompletion for UploadWorkspaces."""
+#
+#     def get_queryset(self):
+#         qs = models.UploadWorkspace.objects.filter().order_by(
+#             "workspace__billing_project__name", "workspace__name"
+#         )
+#
+#         consent_group = self.forwarded.get("consent_group", None)
+#         if consent_group:
+#             qs = qs.filter(consent_group=consent_group)
+#
+#         if self.q:
+#             qs = qs.filter(workspace__name__icontains=self.q)
+#
+#         return qs
 
 
 class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):

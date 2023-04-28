@@ -6,9 +6,10 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from django.core.mail import mail_admins
 from django.http import HttpRequest
 
-from gregor_django.gregor_anvil.models import ResearchCenter
+from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 
 logger = logging.getLogger(__name__)
 
@@ -33,34 +34,92 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             user.name = full_name
             user.save()
 
+    def update_user_partner_groups(self, user, extra_data: Dict):
+        partner_groups = extra_data.get("partner_group", [])
+        logger.debug(f"partner groups: {partner_groups} for user {user}")
+        if partner_groups:
+            if not isinstance(partner_groups, list):
+                raise ImproperlyConfigured(
+                    "sociallogin.extra_data.partner_groups should be None or a list"
+                )
+            partner_group_object_list = []
+            for pg_name in partner_groups:
+                try:
+                    pg = PartnerGroup.objects.get(short_name=pg_name)
+                except ObjectDoesNotExist:
+                    try:
+                        pg = PartnerGroup.objects.get(full_name=pg_name)
+                    except ObjectDoesNotExist:
+                        logger.debug(
+                            f"[SocialAccountAdapter:update_user_partner_groups] Ignoring drupal "
+                            f"partner_group {pg_name} - not in PartnerGroup domain"
+                        )
+                        mail_admins(
+                            subject="Missing PartnerGroup",
+                            message=f"Missing partner group ({pg_name}) passed from drupal for user {user}",
+                        )
+                    else:
+                        partner_group_object_list.append(pg)
+                else:
+                    partner_group_object_list.append(pg)
+
+            for pg in partner_group_object_list:
+                if not user.partner_groups.filter(pk=pg.pk):
+                    user.partner_groups.add(pg)
+                    logger.info(
+                        f"[SocialAccountAdatpter:update_user_partner_groups] adding user "
+                        f"partner_groups user: {user} rc: {pg}"
+                    )
+
+            for existing_pg in user.partner_groups.all():
+                if existing_pg not in partner_group_object_list:
+                    user.partner_groups.remove(existing_pg)
+                    logger.info(
+                        "[SocialAccountAdapter:update_user_partner_groups] "
+                        f"removing pg {existing_pg} for user {user}"
+                    )
+
     def update_user_research_centers(self, user, extra_data: Dict):
         # Get list of research centers in domain table
 
-        research_center_or_site = extra_data.get("research_center_or_site")
+        research_center_or_site = extra_data.get("research_center_or_site", [])
         if research_center_or_site:
             if not isinstance(research_center_or_site, list):
                 raise ImproperlyConfigured(
                     "sociallogin.extra_data.research_center_or_site should be a list"
                 )
+            research_center_object_list = []
             for rc_name in research_center_or_site:
                 try:
-                    rc = ResearchCenter.objects.get(full_name=rc_name)
+                    # For transition from passed full name to short name support both
+                    rc = ResearchCenter.objects.get(short_name=rc_name)
                 except ObjectDoesNotExist:
-                    logger.debug(
-                        f"[SocialAccountAdatpter:update_user_research_centers] Ignoring drupal "
-                        f"research_center_or_site {rc_name} - not in ResearchCenter domain"
-                    )
-                    continue
-                else:
-                    if not user.research_centers.filter(pk=rc.pk):
-                        user.research_centers.add(rc)
-                        logger.info(
-                            f"[SocialAccountAdatpter:update_user_research_centers] adding user "
-                            f"research_centers user: {user} rc: {rc}"
+                    try:
+                        rc = ResearchCenter.objects.get(full_name=rc_name)
+                    except ObjectDoesNotExist:
+                        logger.debug(
+                            f"[SocialAccountAdapter:update_user_research_centers] Ignoring drupal "
+                            f"research_center_or_site {rc_name} - not in ResearchCenter domain"
                         )
+                        mail_admins(
+                            subject="Missing ResearchCenter",
+                            message=f"Missing research center {rc_name} passed from drupal for user {user}",
+                        )
+                    else:
+                        research_center_object_list.append(rc)
+                else:
+                    research_center_object_list.append(rc)
+
+            for rc in research_center_object_list:
+                if not user.research_centers.filter(pk=rc.pk):
+                    user.research_centers.add(rc)
+                    logger.info(
+                        f"[SocialAccountAdatpter:update_user_research_centers] adding user "
+                        f"research_centers user: {user} rc: {rc}"
+                    )
 
             for existing_rc in user.research_centers.all():
-                if existing_rc.full_name not in research_center_or_site:
+                if existing_rc not in research_center_object_list:
                     user.research_centers.remove(existing_rc)
                     logger.info(
                         "[SocialAccountAdatpter:update_user_research_centers] "
@@ -113,4 +172,5 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
         self.update_user_name(user, extra_data)
         self.update_user_research_centers(user, extra_data)
+        self.update_user_partner_groups(user, extra_data)
         self.update_user_groups(user, extra_data)

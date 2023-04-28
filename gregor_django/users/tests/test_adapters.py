@@ -10,7 +10,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
-from gregor_django.gregor_anvil.tests.factories import ResearchCenterFactory
+from gregor_django.gregor_anvil.tests.factories import (
+    PartnerGroupFactory,
+    ResearchCenterFactory,
+)
 from gregor_django.users.adapters import AccountAdapter, SocialAccountAdapter
 
 from .factories import GroupFactory, UserFactory
@@ -109,7 +112,7 @@ class TestsUserSocialLoginAdapter(object):
                 user, dict(research_center_or_site="FOO")
             )
 
-    def test_update_user_research_centers_uknown(self):
+    def test_update_user_research_centers_unknown(self):
         adapter = SocialAccountAdapter()
         user = UserFactory()
         adapter.update_user_research_centers(
@@ -119,7 +122,7 @@ class TestsUserSocialLoginAdapter(object):
 
     def test_update_user_groups_add(self):
         adapter = SocialAccountAdapter()
-        rc1 = GroupFactory(name="g1")
+        g1 = GroupFactory(name="g1")
 
         User = get_user_model()
         user = User()
@@ -129,10 +132,63 @@ class TestsUserSocialLoginAdapter(object):
         user.save()
 
         adapter.update_user_groups(
-            user, extra_data=dict(managed_scope_status={rc1.name: True})
+            user, extra_data=dict(managed_scope_status={g1.name: True})
         )
-        assert user.groups.filter(pk=rc1.pk).exists()
+        assert user.groups.filter(pk=g1.pk).exists()
         assert user.groups.all().count() == 1
+
+    # Partner Groups
+
+    def test_update_user_partner_groups_add(self):
+        adapter = SocialAccountAdapter()
+        pg1 = PartnerGroupFactory(short_name="pg1")
+        pg2 = PartnerGroupFactory(short_name="pg2")
+
+        User = get_user_model()
+        user = User()
+        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
+        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
+
+        user.save()
+
+        adapter.update_user_partner_groups(user, dict(partner_group=[pg1.short_name]))
+        assert user.partner_groups.filter(pk=pg1.pk).exists()
+        assert user.partner_groups.all().count() == 1
+
+        # test full_name as well
+        adapter.update_user_partner_groups(user, dict(partner_group=[pg2.full_name]))
+        assert user.partner_groups.filter(pk=pg2.pk).exists()
+        assert user.partner_groups.all().count() == 1
+
+    def test_update_user_partner_groups_remove(self):
+        adapter = SocialAccountAdapter()
+        pg1 = PartnerGroupFactory(short_name="pg1")
+        pg2 = PartnerGroupFactory(short_name="pg2")
+
+        User = get_user_model()
+        user = User()
+        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
+        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
+
+        user.save()
+        user.partner_groups.add(pg1, pg2)
+        assert user.partner_groups.all().count() == 2
+
+        adapter.update_user_partner_groups(user, dict(partner_group=[pg1.short_name]))
+        assert user.partner_groups.filter(pk=pg1.pk).exists()
+        assert user.partner_groups.all().count() == 1
+
+    def test_update_partner_groups_malformed(self):
+        adapter = SocialAccountAdapter()
+        user = UserFactory()
+        with pytest.raises(ImproperlyConfigured):
+            adapter.update_user_partner_groups(user, dict(partner_group="FOO"))
+
+    def test_update_user_partner_groups_unknown(self):
+        adapter = SocialAccountAdapter()
+        user = UserFactory()
+        adapter.update_user_partner_groups(user, dict(partner_group=["UNKNOWN"]))
+        assert user.partner_groups.all().count() == 0
 
     def test_update_user_groups_create(self):
         adapter = SocialAccountAdapter()
