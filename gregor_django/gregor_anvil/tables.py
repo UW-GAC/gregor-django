@@ -35,7 +35,7 @@ class ResearchCenterTable(tables.Table):
 
 
 class PartnerGroupTable(tables.Table):
-    """A table for ResearchCenters."""
+    """A table for PartnerGroups."""
 
     full_name = tables.Column(linkify=True)
 
