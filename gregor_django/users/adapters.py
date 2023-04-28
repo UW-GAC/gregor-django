@@ -37,12 +37,13 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def update_user_partner_groups(self, user, extra_data: Dict):
         partner_groups = extra_data.get("partner_group", [])
         logger.debug(f"partner groups: {partner_groups} for user {user}")
+        partner_group_object_list = []
         if partner_groups:
             if not isinstance(partner_groups, list):
                 raise ImproperlyConfigured(
                     "sociallogin.extra_data.partner_groups should be None or a list"
                 )
-            partner_group_object_list = []
+
             for pg_name in partner_groups:
                 try:
                     pg = PartnerGroup.objects.get(short_name=pg_name)
@@ -71,24 +72,25 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                         f"partner_groups user: {user} rc: {pg}"
                     )
 
-            for existing_pg in user.partner_groups.all():
-                if existing_pg not in partner_group_object_list:
-                    user.partner_groups.remove(existing_pg)
-                    logger.info(
-                        "[SocialAccountAdapter:update_user_partner_groups] "
-                        f"removing pg {existing_pg} for user {user}"
-                    )
+        for existing_pg in user.partner_groups.all():
+            if existing_pg not in partner_group_object_list:
+                user.partner_groups.remove(existing_pg)
+                logger.info(
+                    "[SocialAccountAdapter:update_user_partner_groups] "
+                    f"removing pg {existing_pg} for user {user}"
+                )
 
     def update_user_research_centers(self, user, extra_data: Dict):
         # Get list of research centers in domain table
 
         research_center_or_site = extra_data.get("research_center_or_site", [])
+        research_center_object_list = []
         if research_center_or_site:
             if not isinstance(research_center_or_site, list):
                 raise ImproperlyConfigured(
                     "sociallogin.extra_data.research_center_or_site should be a list"
                 )
-            research_center_object_list = []
+
             for rc_name in research_center_or_site:
                 try:
                     # For transition from passed full name to short name support both
@@ -118,13 +120,13 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                         f"research_centers user: {user} rc: {rc}"
                     )
 
-            for existing_rc in user.research_centers.all():
-                if existing_rc not in research_center_object_list:
-                    user.research_centers.remove(existing_rc)
-                    logger.info(
-                        "[SocialAccountAdatpter:update_user_research_centers] "
-                        f"removing rc {existing_rc} for user {user}"
-                    )
+        for existing_rc in user.research_centers.all():
+            if existing_rc not in research_center_object_list:
+                user.research_centers.remove(existing_rc)
+                logger.info(
+                    "[SocialAccountAdatpter:update_user_research_centers] "
+                    f"removing rc {existing_rc} for user {user}"
+                )
 
     def update_user_groups(self, user, extra_data: Dict):
         managed_scope_status = extra_data.get("managed_scope_status")
