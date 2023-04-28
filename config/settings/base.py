@@ -321,15 +321,23 @@ SOCIALACCOUNT_PROVIDERS = {
         "API_URL": DRUPAL_SITE_URL,
         "OVERRIDE_NAME": "Gregor Consortium Site Login",
         "SCOPES": [
+            # This role will be used to grant ACM view permission.
             {
                 "drupal_machine_name": "dcc_staff",
                 "request_scope": True,
                 "django_group_name": "DCC Staff",
             },
+            # This role will be use dto grant ACM edit permission.
             {
                 "drupal_machine_name": "dcc_acm_admin",
                 "request_scope": True,
                 "django_group_name": "DCC ACM Admin",
+            },
+            # For now we can use the "DSA completed" group to determine who can link their accounts.
+            {
+                "drupal_machine_name": "dsa_completed",
+                "request_scope": True,
+                "django_group_name": "DSA completed",
             },
         ],
     }

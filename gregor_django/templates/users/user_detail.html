@@ -36,13 +36,21 @@
             <li class='list-group-item'>
               <h5><i class="bi bi-globe"></i> Research Center{% if object.research_centers.all.count > 1 %}(s){% endif %} <i class="bi bi-lock"></i></h5>
               {% for rc in object.research_centers.all %}
-              <p>&bull; {{ rc.full_name }}</p>
+              <p>&bull; <a href="{{ rc.get_absolute_url }}">{{ rc.full_name }}</a></p>
               {% empty %}
               <p>Not set</p>
               {% endfor %}
-              </li>
+            </li>
+            <li class='list-group-item'>
+              <h5><i class="bi bi-collection"></i> Partner Group{% if object.partner_groups.all.count > 1 %}(s){% endif %} <i class="bi bi-lock"></i></h5>
+              {% for pg in object.partner_groups.all %}
+              <p>&bull; <a href="{{ pg.get_absolute_url }}">{{ pg.full_name }}</a></p>
+              {% empty %}
+              <p>Not set</p>
+              {% endfor %}
+            </li>
             {% if object == request.user %}
-            <p class='alert alert-secondary alert-sm fs-7 mt-3'><i class="bi bi-lock"></i> Update name and research center on the <a href="{{ DRUPAL_SITE_URL }}">main GREGoR site</a></p>
+            <p class='alert alert-secondary alert-sm fs-7 mt-3'><i class="bi bi-lock"></i> Update name, partner groups and research centers on the <a href="{{ DRUPAL_SITE_URL }}">main GREGoR site</a></p>
             {% endif %}
           </ul>
         </div>

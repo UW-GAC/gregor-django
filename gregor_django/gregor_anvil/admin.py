@@ -41,6 +41,24 @@ class ResearchCenterAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.PartnerGroup)
+class PartnerGroupAdmin(SimpleHistoryAdmin):
+    """Admin class for the PartnerGroup model."""
+
+    list_display = (
+        "short_name",
+        "full_name",
+    )
+    search_fields = (
+        "short_name",
+        "full_name",
+    )
+    sortable_by = (
+        "short_name",
+        "full_name",
+    )
+
+
 @admin.register(models.UploadWorkspace)
 class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the UploadWorkspace model."""

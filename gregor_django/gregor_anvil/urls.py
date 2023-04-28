@@ -13,6 +13,14 @@ research_center_patterns = (
     "research_centers",
 )
 
+partner_group_patterns = (
+    [
+        path("<int:pk>", views.PartnerGroupDetail.as_view(), name="detail"),
+        path("", views.PartnerGroupList.as_view(), name="list"),
+    ],
+    "partner_groups",
+)
+
 consent_group_patterns = (
     [
         path("<int:pk>", views.ConsentGroupDetail.as_view(), name="detail"),
@@ -21,16 +29,6 @@ consent_group_patterns = (
     "consent_groups",
 )
 
-upload_workspace_patterns = (
-    [
-        path(
-            "autocomplete/",
-            views.UploadWorkspaceAutocomplete.as_view(),
-            name="autocomplete",
-        ),
-    ],
-    "upload_workspaces",
-)
 workspace_report_patterns = (
     [
         path("workspaces/", views.WorkspaceReport.as_view(), name="workspace"),
@@ -40,7 +38,7 @@ workspace_report_patterns = (
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
+    path("partner_groups", include(partner_group_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
-    path("upload_workspaces/", include(upload_workspace_patterns)),
     path("reports/", include(workspace_report_patterns)),
 ]

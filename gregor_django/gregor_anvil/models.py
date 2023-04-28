@@ -38,7 +38,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
     short_name = models.CharField(max_length=15, unique=True)
     """The short name of the Research Center."""
 
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Research Center."""
 
     history = HistoricalRecords()
@@ -54,6 +54,30 @@ class ResearchCenter(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("gregor_anvil:research_centers:detail", args=[self.pk])
+
+
+class PartnerGroup(TimeStampedModel, models.Model):
+    """A model to track Partner Groups"""
+
+    short_name = models.CharField(max_length=15, unique=True)
+    """The short name of the Partner Group"""
+
+    full_name = models.CharField(max_length=255, unique=True)
+    """The full name of the Partner Group"""
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        """String method.
+
+        Returns:
+        A string showing the short_name of the object.
+        """
+        return self.short_name
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:partner_groups:detail", args=[self.pk])
 
 
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
