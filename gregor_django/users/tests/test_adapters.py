@@ -104,6 +104,9 @@ class TestsUserSocialLoginAdapter(object):
         assert user.research_centers.filter(pk=rc1.pk).exists()
         assert user.research_centers.all().count() == 1
 
+        adapter.update_user_research_centers(user, dict(research_center_or_site=None))
+        assert user.research_centers.all().count() == 0
+
     def test_update_research_centers_malformed(self):
         adapter = SocialAccountAdapter()
         user = UserFactory()
@@ -177,6 +180,9 @@ class TestsUserSocialLoginAdapter(object):
         adapter.update_user_partner_groups(user, dict(partner_group=[pg1.short_name]))
         assert user.partner_groups.filter(pk=pg1.pk).exists()
         assert user.partner_groups.all().count() == 1
+
+        adapter.update_user_partner_groups(user, dict(partner_group=None))
+        assert user.partner_groups.all().count() == 0
 
     def test_update_partner_groups_malformed(self):
         adapter = SocialAccountAdapter()
