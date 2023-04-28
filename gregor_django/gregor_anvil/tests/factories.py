@@ -28,6 +28,17 @@ class ResearchCenterFactory(DjangoModelFactory):
         django_get_or_create = ["short_name"]
 
 
+class PartnerGroupFactory(DjangoModelFactory):
+    """A factory for the PartnerGroup model."""
+
+    short_name = Faker("word")
+    full_name = Faker("company")
+
+    class Meta:
+        model = models.PartnerGroup
+        django_get_or_create = ["short_name"]
+
+
 class UploadWorkspaceFactory(DjangoModelFactory):
     """A factory for the UploadWorkspace model."""
 
