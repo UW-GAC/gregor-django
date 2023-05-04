@@ -333,11 +333,17 @@ SOCIALACCOUNT_PROVIDERS = {
                 "request_scope": True,
                 "django_group_name": "DCC ACM Admin",
             },
-            # For now we can use the "DSA completed" group to determine who can link their accounts.
+            # We will not use this role for managing permissions, but we might want it at some point.
             {
                 "drupal_machine_name": "dsa_completed",
                 "request_scope": True,
                 "django_group_name": "DSA completed",
+            },
+            # We will use this role to grant the ACM AccountLink permission.
+            {
+                "drupal_machine_name": "approved_by_pi_for_anvil_access",
+                "request_scope": True,
+                "django_group_name": "Approved by PI for AnVIL access",
             },
         ],
     }
