@@ -29,8 +29,19 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
-        (_("Gregor Info"), {"fields": ("research_centers",)}),
+        (
+            _("Gregor Info"),
+            {
+                "fields": (
+                    "research_centers",
+                    "partner_groups",
+                )
+            },
+        ),
     )
     list_display = ["username", "name", "is_superuser"]
     search_fields = ["name"]
-    filter_horizontal = auth_admin.UserAdmin.filter_horizontal + ("research_centers",)
+    filter_horizontal = auth_admin.UserAdmin.filter_horizontal + (
+        "research_centers",
+        "partner_groups",
+    )
