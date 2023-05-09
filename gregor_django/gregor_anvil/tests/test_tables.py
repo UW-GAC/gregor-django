@@ -50,6 +50,7 @@ class AccountTableTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("status"), "Active")
         self.assertEqual(table.rows[1].get_cell("status"), "Inactive")
 
+
 class ResearchCenterTableTest(TestCase):
     model = models.ResearchCenter
     model_factory = factories.ResearchCenterFactory
