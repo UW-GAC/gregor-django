@@ -21,7 +21,13 @@ class AccountTable(tables.Table):
 
     class Meta:
         model = Account
-        fields = ("email", "user__name", "user__research_centers", "is_service_account", "status")
+        fields = (
+            "email",
+            "user__name",
+            "user__research_centers",
+            "is_service_account",
+            "status",
+        )
 
 
 class ResearchCenterTable(tables.Table):
