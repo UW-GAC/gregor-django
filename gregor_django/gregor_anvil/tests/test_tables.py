@@ -42,6 +42,14 @@ class AccountTableTest(TestCase):
         self.assertEqual(table.rows[1].get_cell("number_groups"), 1)
         self.assertEqual(table.rows[2].get_cell("number_groups"), 2)
 
+    def test_account_status(self):
+        self.model_factory.create()
+        account_1 = self.model_factory.create()
+        account_1.deactivate()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("status"), "Active")
+        self.assertEqual(table.rows[1].get_cell("status"), "Inactive")
+
 
 class ResearchCenterTableTest(TestCase):
     model = models.ResearchCenter
