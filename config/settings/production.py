@@ -66,7 +66,10 @@ SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=True)
 SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
     "DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", default=True
 )
-
+# Since we have disabled HSTS above we get a warning when running check --deploy
+# we are manually silencing this as we have verified apache is enforcing
+# https://docs.djangoproject.com/en/dev/ref/checks/#security
+SILENCED_SYSTEM_CHECKS = ["security.W004"]
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
