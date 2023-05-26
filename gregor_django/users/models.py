@@ -13,8 +13,8 @@ class User(AbstractUser):
     name = CharField(_("Name of User"), blank=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
-    research_centers = ManyToManyField(ResearchCenter)
-    partner_groups = ManyToManyField(PartnerGroup)
+    research_centers = ManyToManyField(ResearchCenter, blank=True)
+    partner_groups = ManyToManyField(PartnerGroup, blank=True)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
