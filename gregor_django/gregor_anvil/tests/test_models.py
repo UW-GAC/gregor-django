@@ -568,3 +568,61 @@ class ReleaseWorkspaceTest(TestCase):
             dbgap_version=1, dbgap_participant_set=2
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs003047.v1.p2")
+
+
+class DCCProcessingWorkspaceTest(TestCase):
+    """Tests for the DCCProcessingWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance = models.DCCProcessingWorkspace(
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DCCProcessingWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.DCCProcessingWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_one_upload_workspace(self):
+        """Can link one upload workspace."""
+        instance = factories.DCCProcessingWorkspaceFactory.create()
+        instance.save()
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        instance.upload_workspaces.add(upload_workspace)
+        self.assertEqual(instance.upload_workspaces.count(), 1)
+        self.assertIn(upload_workspace, instance.upload_workspaces.all())
+
+    def test_two_upload_workspaces(self):
+        """Can link two upload workspaces."""
+        instance = factories.DCCProcessingWorkspaceFactory.create()
+        instance.save()
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
+        self.assertEqual(instance.upload_workspaces.count(), 2)
+        self.assertIn(upload_workspace_1, instance.upload_workspaces.all())
+        self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
+
+    def test_unique(self):
+        """Can only have one DCCProcessingWorkspace per UploadCycle."""
+        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.DCCProcessingWorkspace(
+            upload_cycle=dcc_processing_workspace.upload_cycle,
+            workspace=workspace,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("upload_cycle", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["upload_cycle"]), 1)
+        with self.assertRaises(IntegrityError):
+            instance.save()

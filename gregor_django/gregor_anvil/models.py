@@ -204,3 +204,15 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         return "phs{phs:06d}.v{v}.p{p}".format(
             phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set
         )
+
+
+class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
+
+    upload_cycle = models.OneToOneField(
+        UploadCycle,
+        on_delete=models.PROTECT,
+        help_text="Upload cycle associated with this workspace.",
+    )
+    upload_workspaces = models.ManyToManyField(
+        UploadWorkspace, help_text="Upload workspaces contributing to this workspace."
+    )
