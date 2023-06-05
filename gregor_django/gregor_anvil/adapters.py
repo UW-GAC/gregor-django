@@ -107,7 +107,7 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
 
 
 class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
-    """Adapter for CombinedConsortiumDataWorkspace."""
+    """Adapter for DCCProcessingWorkspace."""
 
     type = "dcc_processing"
     name = "DCC processing workspace"
@@ -116,3 +116,17 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.DCCProcessingWorkspace
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/dccprocessingworkspace_detail.html"
+
+
+class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for DCCProcessedDataWorkspace."""
+
+    type = "dcc_processed_data"
+    name = "DCC processed data workspace"
+    description = "Workspaces containing data processed by the DCC."
+    list_table_class = tables.DefaultWorkspaceTable
+    workspace_data_model = models.DCCProcessedDataWorkspace
+    workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
+    workspace_detail_template_name = (
+        "gregor_anvil/dccprocesseddataworkspace_detail.html"
+    )
