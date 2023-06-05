@@ -234,3 +234,15 @@ class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 raise ValidationError(self.ERROR_UPLOAD_CYCLE)
 
         return cleaned_data
+
+
+class DCCProcessedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a DCCProcessedDataWorkspace object."""
+
+    class Meta:
+        model = models.DCCProcessedDataWorkspace
+        fields = (
+            "dcc_processing_workspace",
+            "consent_group",
+            "workspace",
+        )

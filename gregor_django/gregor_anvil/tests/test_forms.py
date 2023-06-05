@@ -749,3 +749,55 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             self.form_class.ERROR_UPLOAD_CYCLE,
             form.errors[NON_FIELD_ERRORS][0],
         )
+
+
+class DCCProcessedDataWorkspaceFormTest(TestCase):
+    """Tests for the DCCProcessedDataWorkspaceForm class."""
+
+    form_class = forms.DCCProcessedDataWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory()
+        consent_group = factories.ConsentGroupFactory()
+        form_data = {
+            "dcc_processing_workspace": dcc_processing_workspace,
+            "consent_group": consent_group,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_dcc_processing_workspace(self):
+        """Form is invalid when missing research_center."""
+        consent_group = factories.ConsentGroupFactory()
+        form_data = {
+            "consent_group": consent_group,
+            "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dcc_processing_workspace", form.errors)
+        self.assertEqual(len(form.errors["dcc_processing_workspace"]), 1)
+        self.assertIn("required", form.errors["dcc_processing_workspace"][0])
+
+    def test_invalid_missing_consent_group(self):
+        """Form is invalid when missing consent_group."""
+        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory()
+        form_data = {
+            "dcc_processing_workspace": dcc_processing_workspace,
+            "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("consent_group", form.errors)
+        self.assertEqual(len(form.errors["consent_group"]), 1)
+        self.assertIn("required", form.errors["consent_group"][0])
