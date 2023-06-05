@@ -147,3 +147,17 @@ class DCCProcessingWorkspaceFactory(DjangoModelFactory):
             # A list of groups were passed in, use them
             for upload_workspace in extracted:
                 self.upload_workspaces.add(upload_workspace)
+
+
+class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
+    """A factory for the class DCCProcessedDataWorkspace model."""
+
+    class Meta:
+        model = models.DCCProcessedDataWorkspace
+
+    consent_group = SubFactory(ConsentGroupFactory)
+    dcc_processing_workspace = SubFactory(DCCProcessingWorkspaceFactory)
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="dcc_processed_data",
+    )

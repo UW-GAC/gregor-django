@@ -626,3 +626,46 @@ class DCCProcessingWorkspaceTest(TestCase):
         self.assertEqual(len(e.exception.error_dict["upload_cycle"]), 1)
         with self.assertRaises(IntegrityError):
             instance.save()
+
+
+class DCCProcessedDataWorkspaceTest(TestCase):
+    """Tests for the DCCProcessedDataWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.DCCProcessedDataWorkspace(
+            consent_group=consent_group,
+            dcc_processing_workspace=dcc_processing_workspace,
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DCCProcessedDataWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.DCCProcessedDataWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_unique(self):
+        """Cannot have two workspaces with the same upload cycle and consent group."""
+        dcc_processed_data_workspace = (
+            factories.DCCProcessedDataWorkspaceFactory.create()
+        )
+        workspace = WorkspaceFactory.create()
+        instance = models.DCCProcessedDataWorkspace(
+            dcc_processing_workspace=dcc_processed_data_workspace.dcc_processing_workspace,
+            consent_group=dcc_processed_data_workspace.consent_group,
+            workspace=workspace,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        with self.assertRaises(IntegrityError):
+            instance.save()
