@@ -193,3 +193,44 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             # that all upload_workspaces have the same upload_cycle.
             if upload_cycle != upload_workspaces[0].upload_cycle:
                 raise ValidationError(self.ERROR_UPLOAD_CYCLE)
+
+        return cleaned_data
+
+
+class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a DCCProcessingWorkspace object."""
+
+    ERROR_UPLOAD_CYCLE = (
+        "upload_cycle must match upload_cycle of all upload_workspaces."
+    )
+
+    class Meta:
+        model = models.DCCProcessingWorkspace
+        fields = (
+            "upload_cycle",
+            "upload_workspaces",
+            "workspace",
+        )
+        widgets = {
+            "upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url=reverse(
+                    "anvil_consortium_manager:workspaces:autocomplete_by_type",
+                    args=["upload"],
+                ),
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+    def clean(self):
+        """Validate that upload_cycle matches the upload_cycle for upload_workspaces."""
+        cleaned_data = super().clean()
+        # Make sure that the consent group specified matches the consent group for the upload_workspaces.
+        upload_workspaces = cleaned_data.get("upload_workspaces")
+        upload_cycle = cleaned_data.get("upload_cycle")
+        if upload_cycle and upload_workspaces:
+            # We only need to check the first workspace since the clean_upload_workspaces method checks
+            # that all upload_workspaces have the same upload_cycle.
+            if upload_cycle != upload_workspaces[0].upload_cycle:
+                raise ValidationError(self.ERROR_UPLOAD_CYCLE)
+
+        return cleaned_data
