@@ -666,3 +666,86 @@ class ReleaseWorkspaceFormTest(TestCase):
             self.form_class.ERROR_UPLOAD_CYCLE,
             form.errors[NON_FIELD_ERRORS][0],
         )
+
+
+class DCCProcessingWorkspaceFormTest(TestCase):
+    """Tests for the DCCProcessingWorkspace class."""
+
+    form_class = forms.DCCProcessingWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace],
+            "upload_cycle": upload_workspace.upload_cycle,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing workspace."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        form_data = {
+            # "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace],
+            "upload_cycle": upload_workspace.upload_cycle,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_upload_workspaces(self):
+        """Form is invalid when missing upload_workspaces."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            # "upload_workspaces": [upload_workspace],
+            "upload_cycle": upload_cycle,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
+        self.assertIn("required", form.errors["upload_workspaces"][0])
+
+    def test_valid_two_upload_workspaces(self):
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_workspace_1.upload_cycle
+        )
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
+            "upload_cycle": upload_workspace_1.upload_cycle,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_clean(self):
+        """Form is invalid when upload_workspace upload cycle does not match upload_cycle."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            "upload_cycle": upload_cycle,
+            "upload_workspaces": [upload_workspace],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn(
+            self.form_class.ERROR_UPLOAD_CYCLE,
+            form.errors[NON_FIELD_ERRORS][0],
+        )
