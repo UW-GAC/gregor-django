@@ -226,3 +226,19 @@ class ReleaseWorkspaceTable(tables.Table):
 
     def render_number_workspaces(self, record):
         return record.releaseworkspace.upload_workspaces.count()
+
+
+class DCCProcessedDataWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+    """A table for Workspaces that includes fields from DCCProcessedDataWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    dccprocesseddataworkspace__consent_group = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "dccprocesseddataworkspace__consent_group",
+            "dccprocesseddataworkspace__dcc_processing_workspace__upload_cycle",
+            "is_shared",
+        )

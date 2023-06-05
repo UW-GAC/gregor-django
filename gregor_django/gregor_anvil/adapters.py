@@ -124,7 +124,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "dcc_processed_data"
     name = "DCC processed data workspace"
     description = "Workspaces containing data processed by the DCC."
-    list_table_class = tables.DefaultWorkspaceTable
+    list_table_class = tables.DCCProcessedDataWorkspaceTable
     workspace_data_model = models.DCCProcessedDataWorkspace
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
     workspace_detail_template_name = (
