@@ -1,0 +1,12 @@
+{% extends "anvil_consortium_manager/workspace_detail.html" %}
+
+{% block workspace_data %}
+  <hr>
+  <dl class="row">
+    <dt class="col-sm-2">Upload workspaces</dt> <dd class="col-sm-10">
+      {% for upload_workspace in object.dccprocessingworkspace.upload_workspaces.all %}
+        <a href="{{upload_workspace.get_absolute_url }}">{{ upload_workspace }}</a><br>
+      {% endfor %}
+    </dd>
+  </dl>
+{% endblock workspace_data %}
