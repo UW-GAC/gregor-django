@@ -1,19 +1,20 @@
 pytz==2022.1  # https://github.com/stub42/pytz
 python-slugify==6.1.2  # https://github.com/un33k/python-slugify
-Pillow==9.2.0  # https://github.com/python-pillow/Pillow
+Pillow==9.3.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
 whitenoise==6.0.0  # https://github.com/evansd/whitenoise
-redis==4.2.2  # https://github.com/andymccurdy/redis-py
+redis==4.5.4  # https://github.com/andymccurdy/redis-py
 hiredis==2.0.0  # https://github.com/redis/hiredis-py
 oauthlib==3.2.1  # https://github.com/oauthlib/oauthlib
+setuptools==65.5.1  # https://github.com/pypa/setuptools
 
 # Django
 # ------------------------------------------------------------------------------
-django==3.2.16  # pyup: < 3.3  # https://www.djangoproject.com/
+django==3.2.19  # pyup: < 3.3  # https://www.djangoproject.com/
 django-environ==0.8.1  # https://github.com/joke2k/django-environ
 django-maintenance-mode==0.16.3 # https://github.com/fabiocaccamo/django-maintenance-mode
 django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
-django-allauth==0.51.0  # https://github.com/pennersr/django-allauth
+django-allauth==0.54.0  # https://github.com/pennersr/django-allauth
 django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 django-login-required-middleware==0.8.0 # https://github.com/CleitonDeLima/django-login-required-middleware
