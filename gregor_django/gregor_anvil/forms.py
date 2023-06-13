@@ -9,6 +9,28 @@ from django.urls import reverse
 from . import models
 
 
+class CustomDateInput(forms.widgets.DateInput):
+    input_type = "date"
+
+
+class UploadCycleForm(forms.ModelForm):
+    """Form for a UploadCycle object."""
+
+    class Meta:
+        model = models.UploadCycle
+        fields = (
+            "cycle",
+            "start_date",
+            "end_date",
+            "note",
+        )
+
+        widgets = {
+            "start_date": CustomDateInput(),
+            "end_date": CustomDateInput(),
+        }
+
+
 class UploadWorkspaceForm(forms.ModelForm):
     """Form for a UploadWorkspace object."""
 
@@ -70,10 +92,6 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
                 ValidationError(self.ERROR_UPLOAD_VERSION_DOES_NOT_MATCH),
             )
         return data
-
-
-class CustomDateInput(forms.widgets.DateInput):
-    input_type = "date"
 
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
