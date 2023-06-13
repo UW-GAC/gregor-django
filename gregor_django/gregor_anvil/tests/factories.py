@@ -33,7 +33,7 @@ class ResearchCenterFactory(DjangoModelFactory):
 class UploadCycleFactory(DjangoModelFactory):
     """A factory for the UploadCycle model."""
 
-    cycle = Sequence(lambda x: x)
+    cycle = Sequence(lambda x: x + 1)
     start_date = Faker("date_object")
     end_date = LazyAttribute(lambda o: o.start_date + timedelta(days=o.duration))
 
