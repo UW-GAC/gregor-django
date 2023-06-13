@@ -141,10 +141,10 @@ class UploadCycleTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "U01")
 
-    # def test_get_absolute_url(self):
-    #     """The get_absolute_url() method works."""
-    #     instance = factories.ConsentGroupFactory()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.UploadCycleFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
     def test_cycle_unique(self):
         """Saving a model with a duplicate cycle fails."""
