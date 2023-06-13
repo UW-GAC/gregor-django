@@ -104,6 +104,10 @@ class UploadCycle(TimeStampedModel):
         if self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
 
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
+
 
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
