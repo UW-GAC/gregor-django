@@ -3,6 +3,14 @@
 
 {% block title %}Upload Cycle: {{ object }}{% endblock %}
 
+{% block note %}
+  {% if object.note %}
+  <div class="alert alert-secondary my-3" role="alert">
+    <b>Note</b>: {{ object.note }}
+  </div>
+  {% endif %}
+{% endblock note %}
+
 {% block panel %}
   <ul>
     <li>Cycle: {{ object.cycle }}</li>
