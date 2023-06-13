@@ -101,7 +101,7 @@ class UploadCycle(TimeStampedModel):
     def clean(self):
         """Custom cleaning methods."""
         # End date must be after start date.
-        if self.start_date >= self.end_date:
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
 
     def get_absolute_url(self):

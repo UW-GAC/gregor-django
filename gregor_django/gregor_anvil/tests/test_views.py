@@ -1,12 +1,15 @@
 import json
+from datetime import date, timedelta
 
 import responses
 from anvil_consortium_manager import models as acm_models
+from anvil_consortium_manager.models import AnVILProjectManagerAccess
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
 from django.http.response import Http404
 from django.shortcuts import resolve_url
@@ -15,7 +18,7 @@ from django.urls import reverse
 
 from gregor_django.users.tests.factories import UserFactory
 
-from .. import models, tables, views
+from .. import forms, models, tables, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -535,6 +538,181 @@ class PartnerGroupListTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
+
+
+class UploadCycleCreateTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        # Data for forms
+        self.start_date = date.today()
+        self.end_date = self.start_date + timedelta(days=10)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:upload_cycles:new", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadCycleCreate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.UploadCycleForm)
+
+    def test_can_create_an_object(self):
+        """Posting valid data to the form creates an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"cycle": 1, "start_date": self.start_date, "end_date": self.end_date},
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.UploadCycle.objects.latest("pk")
+        self.assertIsInstance(new_object, models.UploadCycle)
+        self.assertEqual(new_object.cycle, 1)
+        self.assertEqual(new_object.start_date, self.start_date)
+        self.assertEqual(new_object.end_date, self.end_date)
+        # History is added.
+        self.assertEqual(new_object.history.count(), 1)
+        self.assertEqual(new_object.history.latest().history_type, "+")
+
+    def test_can_create_an_object_with_note(self):
+        """Can create an object with a note."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cycle": 1,
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+                "note": "a test note",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.UploadCycle.objects.latest("pk")
+        self.assertIsInstance(new_object, models.UploadCycle)
+        self.assertEqual(new_object.note, "a test note")
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"cycle": 1, "start_date": self.start_date, "end_date": self.end_date},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.UploadCycleCreate.success_message, str(messages[0]))
+
+    def test_redirects_to_new_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"cycle": 1, "start_date": self.start_date, "end_date": self.end_date},
+        )
+        new_object = models.UploadCycle.objects.latest("pk")
+        self.assertRedirects(response, new_object.get_absolute_url())
+
+    def test_cannot_create_duplicate_object(self):
+        """Cannot create a duplicate object."""
+        obj = factories.UploadCycleFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cycle": obj.cycle,
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("cycle", form.errors.keys())
+        self.assertIn("already exists", form.errors["cycle"][0])
+        self.assertEqual(models.UploadCycle.objects.count(), 1)
+        self.assertEqual(models.UploadCycle.objects.get(), obj)
+
+    def test_invalid_input(self):
+        """Posting invalid data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"cycle": -1, "start_date": self.start_date, "end_date": self.end_date},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("cycle", form.errors.keys())
+        self.assertEqual(len(form.errors["cycle"]), 1)
+        self.assertEqual(models.UploadCycle.objects.count(), 0)
+
+    def test_post_blank_data(self):
+        """Posting blank data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {})
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(models.UploadCycle.objects.count(), 0)
 
 
 class UploadCycleDetailTest(TestCase):

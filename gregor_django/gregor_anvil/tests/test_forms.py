@@ -1,10 +1,81 @@
 """Test forms for the gregor_anvil app."""
 
+from datetime import date, timedelta
+
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 
 from .. import forms
 from . import factories
+
+
+class UploadCycleForm(TestCase):
+    """Tests for the UploadCycleForm class."""
+
+    form_class = forms.UploadCycleForm
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "cycle": 1,
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_cycle(self):
+        """Form is invalid when missing cycle."""
+        form_data = {
+            # "cycle": 1,
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("cycle", form.errors)
+        self.assertEqual(len(form.errors["cycle"]), 1)
+        self.assertIn("required", form.errors["cycle"][0])
+
+    def test_invalid_missing_start_date(self):
+        """Form is invalid when missing start_date."""
+        form_data = {
+            "cycle": 1,
+            # "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("start_date", form.errors)
+        self.assertEqual(len(form.errors["start_date"]), 1)
+        self.assertIn("required", form.errors["start_date"][0])
+
+    def test_invalid_missing_end_date(self):
+        """Form is invalid when missing cycle."""
+        form_data = {
+            "cycle": 1,
+            "start_date": date.today(),
+            # "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("end_date", form.errors)
+        self.assertEqual(len(form.errors["end_date"]), 1)
+        self.assertIn("required", form.errors["end_date"][0])
+
+    def test_valid_note(self):
+        """Form is valid with a note."""
+        form_data = {
+            "cycle": 1,
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+            "note": "my test note",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
 
 
 class UploadWorkspaceFormTest(TestCase):

@@ -31,7 +31,8 @@ consent_group_patterns = (
 
 upload_cycle_patterns = (
     [
-        path("<int:slug>", views.UploadCycleDetail.as_view(), name="detail"),
+        path("<int:slug>/", views.UploadCycleDetail.as_view(), name="detail"),
+        path("new/", views.UploadCycleCreate.as_view(), name="new"),
     ],
     "upload_cycles",
 )

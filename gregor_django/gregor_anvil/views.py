@@ -1,13 +1,17 @@
-from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.auth import (
+    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerViewRequired,
+)
 from anvil_consortium_manager.models import Account, Workspace
 from django.contrib.auth import get_user_model
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, TemplateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
 
-from . import models, tables
+from . import forms, models, tables
 
 User = get_user_model()
 
@@ -61,6 +65,16 @@ class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.PartnerGroup
     table_class = tables.PartnerGroupTable
+
+
+class UploadCycleCreate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+):
+    """View to create a new UploadCycle object."""
+
+    model = models.UploadCycle
+    form_class = forms.UploadCycleForm
+    success_message = "Successfully created Upload Cycle."
 
 
 class UploadCycleDetail(
