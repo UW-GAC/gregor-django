@@ -63,6 +63,15 @@ class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.PartnerGroupTable
 
 
+class UploadCycleDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """View to show details about an `UploadCycle`."""
+
+    model = models.UploadCycle
+    slug_field = "cycle"
+
+
 # class UploadWorkspaceAutocomplete(
 #     AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
 # ):

@@ -537,6 +537,72 @@ class PartnerGroupListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
 
+class UploadCycleDetailTest(TestCase):
+    """Tests for the UploadCycle view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.UploadCycleFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:upload_cycles:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadCycleDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.cycle + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, slug=obj.cycle + 1)
+
+    def test_uses_cycle_instead_of_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        self.model_factory.create(pk=1, cycle=10)
+        obj = self.model_factory.create(pk=2, cycle=1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context_data["object"], obj)
+
+
 class UploadWorkspaceDetailTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceDetail view using the UploadWorkspace adapter."""
 
