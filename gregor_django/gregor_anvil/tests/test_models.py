@@ -1,5 +1,7 @@
+from datetime import date, timedelta
+
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.utils import DataError, IntegrityError
 from django.test import TestCase
 
@@ -104,6 +106,99 @@ class ResearchCenterTest(TestCase):
             instance2.full_clean()
         with self.assertRaises(IntegrityError):
             instance2.save()
+
+
+class UploadCycleTest(TestCase):
+    """Tests for the UploadCycle model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        instance = models.UploadCycle(
+            cycle=1,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=1),
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.UploadCycle)
+
+    def test_model_saving_with_note(self):
+        """Creation using the model constructor and .save() works."""
+        instance = models.UploadCycle(
+            cycle=1,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=1),
+            note="foo",
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.UploadCycle)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.UploadCycleFactory.create(cycle=1)
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "U01")
+
+    # def test_get_absolute_url(self):
+    #     """The get_absolute_url() method works."""
+    #     instance = factories.ConsentGroupFactory()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_cycle_unique(self):
+        """Saving a model with a duplicate cycle fails."""
+        factories.UploadCycleFactory.create(cycle=2)
+        instance_2 = factories.UploadCycleFactory.build(cycle=2)
+        with self.assertRaises(ValidationError):
+            instance_2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+    def test_positive_cycle_not_negative(self):
+        """cycle cannot be negative."""
+        instance = factories.UploadCycleFactory.build(cycle=-1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("cycle", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["cycle"]), 1)
+
+    def test_positive_cycle_not_zero(self):
+        """cycle cannot be 0."""
+        instance = factories.UploadCycleFactory.build(cycle=0)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("cycle", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["cycle"]), 1)
+
+    def test_note(self):
+        instance = factories.UploadCycleFactory.create(cycle=0, note="my test note")
+        self.assertEqual(instance.note, "my test note")
+
+    def test_start_date_greater_than_end_date(self):
+        instance_2 = factories.UploadCycleFactory.build(
+            start_date=date.today(), end_date=date.today() - timedelta(days=10)
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance_2.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_start_date_equal_to_end_date(self):
+        same_date = date.today()
+        instance_2 = factories.UploadCycleFactory.build(
+            start_date=same_date, end_date=same_date
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance_2.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
 
 class UploadWorkspaceTest(TestCase):

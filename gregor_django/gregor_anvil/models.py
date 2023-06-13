@@ -1,4 +1,5 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -78,6 +79,30 @@ class PartnerGroup(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("gregor_anvil:partner_groups:detail", args=[self.pk])
+
+
+class UploadCycle(TimeStampedModel):
+    """A model tracking the upload cycles that exist in the app."""
+
+    cycle = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The upload cycle represented by this model.",
+        unique=True,
+    )
+    start_date = models.DateField(help_text="The start date of this upload cycle.")
+    end_date = models.DateField(help_text="The end date of this upload cycle.")
+    note = models.TextField(blank=True, help_text="Additional notes.")
+    # Django simple history.
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return "U{cycle:02d}".format(cycle=self.cycle)
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # End date must be after start date.
+        if self.start_date >= self.end_date:
+            raise ValidationError("end_date must be after start_date!")
 
 
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):

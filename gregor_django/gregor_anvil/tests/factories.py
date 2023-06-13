@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, SubFactory
+from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -26,6 +28,20 @@ class ResearchCenterFactory(DjangoModelFactory):
     class Meta:
         model = models.ResearchCenter
         django_get_or_create = ["short_name"]
+
+
+class UploadCycleFactory(DjangoModelFactory):
+    """A factory for the UploadCycle model."""
+
+    cycle = Sequence(lambda x: x)
+    start_date = Faker("date_object")
+    end_date = LazyAttribute(lambda o: o.start_date + timedelta(days=o.duration))
+
+    class Params:
+        duration = 90
+
+    class Meta:
+        model = models.UploadCycle
 
 
 class PartnerGroupFactory(DjangoModelFactory):
