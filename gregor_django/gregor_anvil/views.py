@@ -72,26 +72,6 @@ class UploadCycleDetail(
     slug_field = "cycle"
 
 
-# class UploadWorkspaceAutocomplete(
-#     AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
-# ):
-#     """View to provide autocompletion for UploadWorkspaces."""
-#
-#     def get_queryset(self):
-#         qs = models.UploadWorkspace.objects.filter().order_by(
-#             "workspace__billing_project__name", "workspace__name"
-#         )
-#
-#         consent_group = self.forwarded.get("consent_group", None)
-#         if consent_group:
-#             qs = qs.filter(consent_group=consent_group)
-#
-#         if self.q:
-#             qs = qs.filter(workspace__name__icontains=self.q)
-#
-#         return qs
-
-
 class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
     """View to show report on workspaces"""
 
