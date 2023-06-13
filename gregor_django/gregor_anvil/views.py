@@ -86,6 +86,13 @@ class UploadCycleDetail(
     slug_field = "cycle"
 
 
+class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `UploadCycle` objects."""
+
+    model = models.UploadCycle
+    table_class = tables.UploadCycleTable
+
+
 class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
     """View to show report on workspaces"""
 

@@ -63,6 +63,20 @@ class ConsentGroupTable(tables.Table):
         )
 
 
+class UploadCycleTable(tables.Table):
+    """A table for `UploadCycle` objects."""
+
+    cycle = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = models.UploadCycle
+        fields = (
+            "cycle",
+            "start_date",
+            "end_date",
+        )
+
+
 class WorkspaceSharedWithConsortiumTable(tables.Table):
     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
 
