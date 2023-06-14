@@ -81,7 +81,7 @@ class PartnerGroup(TimeStampedModel, models.Model):
         return reverse("gregor_anvil:partner_groups:detail", args=[self.pk])
 
 
-class UploadCycle(TimeStampedModel):
+class UploadCycle(TimeStampedModel, models.Model):
     """A model tracking the upload cycles that exist in the app."""
 
     cycle = models.PositiveIntegerField(
