@@ -123,6 +123,9 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     """The version associated with this Workspace."""
 
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
+    """The UploadCycle associated with this workspace."""
+
     class Meta:
         constraints = [
             # Model uniqueness.
@@ -151,6 +154,8 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
 class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
+
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace, help_text="Upload workspaces"
     )
@@ -167,6 +172,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="Consent group for the data in this workspace.",
         on_delete=models.PROTECT,
     )
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace,
         help_text="Upload workspaces contributing data to this workspace.",
