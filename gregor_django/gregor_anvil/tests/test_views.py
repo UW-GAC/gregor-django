@@ -952,6 +952,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
         billing_project = acm_factories.BillingProjectFactory.create(
             name="test-billing-project"
         )
@@ -980,7 +981,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-research_center": research_center.pk,
                 "workspacedata-0-consent_group": consent_group.pk,
-                "workspacedata-0-version": 5,
+                "workspacedata-0-upload_cycle": upload_cycle.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -992,7 +993,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.research_center, research_center)
         self.assertEqual(new_workspace_data.consent_group, consent_group)
-        self.assertEqual(new_workspace_data.version, 5)
+        self.assertEqual(new_workspace_data.upload_cycle, upload_cycle)
 
 
 class UploadWorkspaceAutocompleteByTypeTest(TestCase):

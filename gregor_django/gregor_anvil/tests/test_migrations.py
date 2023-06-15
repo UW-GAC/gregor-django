@@ -77,20 +77,19 @@ class PopulateUploadCycleTest(MigratorTestCase):
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
         )
         self.c_2 = CombinedConsortiumDataWorkspace.objects.create(workspace=workspace)
-        self.c_2.upload_workspaces.add(self.u_1, self.u_2, self.u_3)
+        self.c_2.upload_workspaces.add(self.u_3)
         # Release workspace.
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
         )
-        self.r_1 = factory.create(
-            ReleaseWorkspace,
-            FACTORY_CLASS=factories.ReleaseWorkspaceFactory,
+        self.r_1 = ReleaseWorkspace.objects.create(
+            consent_group=consent_group,
             workspace=workspace,
+            full_data_use_limitations="foo",
             dbgap_version=1,
             dbgap_participant_set=1,
-            consent_group=consent_group
         )
         self.r_1.upload_workspaces.add(self.u_1, self.u_2)
         workspace = factory.create(
@@ -98,15 +97,14 @@ class PopulateUploadCycleTest(MigratorTestCase):
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
         )
-        self.r_2 = factory.create(
-            ReleaseWorkspace,
-            FACTORY_CLASS=factories.ReleaseWorkspaceFactory,
+        self.r_2 = ReleaseWorkspace.objects.create(
+            consent_group=consent_group,
             workspace=workspace,
+            full_data_use_limitations="foo",
             dbgap_version=2,
             dbgap_participant_set=1,
-            consent_group=consent_group
         )
-        self.r_2.upload_workspaces.add(self.u_1, self.u_2, self.u_3)
+        self.r_2.upload_workspaces.add(self.u_3)
 
     def test_migration_0012_upload_cycles(self):
         """Run the test."""

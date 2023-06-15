@@ -42,6 +42,7 @@ class UploadCycleFactory(DjangoModelFactory):
 
     class Meta:
         model = models.UploadCycle
+        django_get_or_create = ["cycle"]
 
 
 class PartnerGroupFactory(DjangoModelFactory):
@@ -60,7 +61,7 @@ class UploadWorkspaceFactory(DjangoModelFactory):
 
     research_center = SubFactory(ResearchCenterFactory)
     consent_group = SubFactory(ConsentGroupFactory)
-    version = Faker("random_int", min=1, max=10)
+    upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(WorkspaceFactory, workspace_type="upload")
 
     class Meta:
@@ -99,6 +100,7 @@ class CombinedConsortiumDataWorkspaceFactory(DjangoModelFactory):
     class Meta:
         model = models.CombinedConsortiumDataWorkspace
 
+    upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(
         WorkspaceFactory,
         workspace_type="combined_consortium",
@@ -115,6 +117,7 @@ class ReleaseWorkspaceFactory(DjangoModelFactory):
     consent_group = SubFactory(ConsentGroupFactory)
     dbgap_version = Faker("random_int", min=1, max=10)
     dbgap_participant_set = Faker("random_int", min=1, max=10)
+    upload_cycle = SubFactory(UploadCycleFactory)
 
     workspace = SubFactory(
         WorkspaceFactory,

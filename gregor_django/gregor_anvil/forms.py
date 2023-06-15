@@ -39,7 +39,7 @@ class UploadWorkspaceForm(forms.ModelForm):
         fields = (
             "research_center",
             "consent_group",
-            "version",
+            "upload_cycle",
             "workspace",
         )
 
@@ -63,11 +63,13 @@ class TemplateWorkspaceForm(forms.ModelForm):
 class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a CombinedConsortiumDataWorkspace object."""
 
-    ERROR_UPLOAD_VERSION_DOES_NOT_MATCH = "Version of upload workspaces does not match."
+    ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH = (
+        "upload_cycle must match upload_cycle for upload_workspaces."
+    )
 
     class Meta:
         model = models.CombinedConsortiumDataWorkspace
-        fields = ("workspace", "upload_workspaces")
+        fields = ("workspace", "upload_cycle", "upload_workspaces")
         help_texts = {
             "upload_workspaces": """Upload workspaces contributing to the combined workspace.
                                     All upload workspaces must have the same version."""
@@ -82,16 +84,29 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
             ),
         }
 
-    def clean_upload_workspaces(self):
-        """Validate that all UploadWorkspaces have the same version."""
-        data = self.cleaned_data["upload_workspaces"]
-        versions = set([x.version for x in data])
-        if len(versions) > 1:
-            self.add_error(
-                "upload_workspaces",
-                ValidationError(self.ERROR_UPLOAD_VERSION_DOES_NOT_MATCH),
+    def clean(self):
+        cleaned_data = super().clean()
+        if "upload_cycle" in cleaned_data and "upload_workspaces" in cleaned_data:
+            upload_cycle = cleaned_data["upload_cycle"]
+            upload_workspace_cycles = set(
+                [x.upload_cycle for x in cleaned_data["upload_workspaces"]]
             )
-        return data
+            if len(upload_workspace_cycles) > 1:
+                raise ValidationError(self.ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH)
+            x = upload_workspace_cycles.pop()
+            if x != upload_cycle:
+                raise ValidationError(self.ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH)
+
+    # def clean_upload_workspaces(self):
+    #     """Validate that all UploadWorkspaces have the same version."""
+    #     data = self.cleaned_data["upload_workspaces"]
+    #     versions = set([x.version for x in data])
+    #     if len(versions) > 1:
+    #         self.add_error(
+    #             "upload_workspaces",
+    #             ValidationError(self.ERROR_UPLOAD_VERSION_DOES_NOT_MATCH),
+    #         )
+    #     return data
 
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
@@ -103,10 +118,14 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     ERROR_UPLOAD_WORKSPACE_CONSENT = (
         "Consent group for upload workspaces must be the same."
     )
+    ERROR_UPLOAD_CYCLE = (
+        "upload_cycle must match upload_cycle of all upload_workspaces."
+    )
 
     class Meta:
         model = models.ReleaseWorkspace
         fields = (
+            "upload_cycle",
             "consent_group",
             "upload_workspaces",
             "full_data_use_limitations",
@@ -140,10 +159,16 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         """Validate that all UploadWorkspaces have the same consent group."""
         data = self.cleaned_data["upload_workspaces"]
         versions = set([x.consent_group for x in data])
+        upload_cycles = set([x.upload_cycle for x in data])
         if len(versions) > 1:
             self.add_error(
                 "upload_workspaces",
                 ValidationError(self.ERROR_UPLOAD_WORKSPACE_CONSENT),
+            )
+        if len(upload_cycles) > 1:
+            self.add_error(
+                "upload_workspaces",
+                ValidationError(self.ERROR_UPLOAD_CYCLE),
             )
         return data
 
@@ -153,10 +178,14 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         # Make sure that the consent group specified matches the consent group for the upload_workspaces.
         consent_group = cleaned_data.get("consent_group")
         upload_workspaces = cleaned_data.get("upload_workspaces")
+        upload_cycle = cleaned_data.get("upload_cycle")
         if consent_group and upload_workspaces:
             # We only need to check the first workspace since the clean_upload_workspaces method checks
             # that all upload_workspaces have the same consent.
             if consent_group != upload_workspaces[0].consent_group:
                 raise ValidationError(self.ERROR_CONSENT_DOES_NOT_MATCH)
-
-        return cleaned_data
+        if upload_cycle and upload_workspaces:
+            # We only need to check the first workspace since the clean_upload_workspaces method checks
+            # that all upload_workspaces have the same upload_cycle.
+            if upload_cycle != upload_workspaces[0].upload_cycle:
+                raise ValidationError(self.ERROR_UPLOAD_CYCLE)

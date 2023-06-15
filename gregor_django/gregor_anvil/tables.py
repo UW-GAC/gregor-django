@@ -128,14 +128,15 @@ class UploadWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     """A table for Workspaces that includes fields from UploadWorkspace."""
 
     name = tables.columns.Column(linkify=True)
+    uploadworkspace__upload_cycle = tables.columns.Column(linkify=True)
 
     class Meta:
         model = Workspace
         fields = (
             "name",
+            "uploadworkspace__upload_cycle",
             "uploadworkspace__research_center",
             "uploadworkspace__consent_group",
-            "uploadworkspace__version",
             "is_shared",
         )
 
@@ -176,6 +177,7 @@ class ReleaseWorkspaceTable(tables.Table):
     """A table for Workspaces that includes fields from ReleaseWorkspace."""
 
     name = tables.columns.Column(linkify=True)
+    releaseworkspace__upload_cycle = tables.columns.Column(linkify=True)
     number_workspaces = tables.columns.Column(
         accessor="pk",
         verbose_name="Number of workspaces",
@@ -186,6 +188,7 @@ class ReleaseWorkspaceTable(tables.Table):
         model = Workspace
         fields = (
             "name",
+            "releaseworkspace__upload_cycle",
             "releaseworkspace__consent_group",
             "releaseworkspace__dbgap_version",
             "releaseworkspace__dbgap_participant_set",
