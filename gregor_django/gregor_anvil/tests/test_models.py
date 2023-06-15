@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
-from django.db.utils import DataError, IntegrityError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from .. import models
@@ -208,12 +208,13 @@ class UploadWorkspaceTest(TestCase):
         """Creation using the model constructor and .save() works."""
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
         workspace = WorkspaceFactory.create()
         instance = models.UploadWorkspace(
             research_center=research_center,
             consent_group=consent_group,
             workspace=workspace,
-            version=1,
+            upload_cycle=upload_cycle,
         )
         instance.save()
         self.assertIsInstance(instance, models.UploadWorkspace)
@@ -227,22 +228,13 @@ class UploadWorkspaceTest(TestCase):
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
-        research_center = factories.ResearchCenterFactory.create()
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace_1 = WorkspaceFactory.create(name="ws-1")
-        workspace_2 = WorkspaceFactory.create(name="ws-2")
-        instance_1 = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group,
-            workspace=workspace_1,
-            version=1,
-        )
-        instance_1.save()
-        instance_2 = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group,
-            workspace=workspace_2,
-            version=1,
+        instance_1 = factories.UploadWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.UploadWorkspaceFactory.build(
+            research_center=instance_1.research_center,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            upload_cycle=instance_1.upload_cycle,
         )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
@@ -251,23 +243,15 @@ class UploadWorkspaceTest(TestCase):
 
     def test_same_research_center(self):
         """Can save multiple UploadWorkspace models with the same ResearchCenter."""
-        research_center = factories.ResearchCenterFactory()
-        consent_group_1 = factories.ConsentGroupFactory()
-        consent_group_2 = factories.ConsentGroupFactory()
-        workspace_1 = WorkspaceFactory.create()
-        workspace_2 = WorkspaceFactory.create()
-        instance_1 = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group_1,
-            workspace=workspace_1,
-            version=1,
-        )
-        instance_1.save()
-        instance_2 = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group_2,
-            workspace=workspace_2,
-            version=1,
+        instance_1 = factories.UploadWorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.UploadWorkspaceFactory.build(
+            research_center=instance_1.research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+            upload_cycle=upload_cycle,
         )
         instance_2.full_clean()
         instance_2.save()
@@ -275,46 +259,31 @@ class UploadWorkspaceTest(TestCase):
 
     def test_same_consent_group(self):
         """Can save multiple UploadWorkspace models with the same ConsentGroup."""
-        consent_group = factories.ConsentGroupFactory()
-        research_center_1 = factories.ResearchCenterFactory()
-        research_center_2 = factories.ResearchCenterFactory()
-        workspace_1 = WorkspaceFactory.create()
-        workspace_2 = WorkspaceFactory.create()
-        instance_1 = models.UploadWorkspace(
-            research_center=research_center_1,
-            consent_group=consent_group,
-            workspace=workspace_1,
-            version=1,
-        )
-        instance_1.save()
-        instance_2 = models.UploadWorkspace(
-            research_center=research_center_2,
-            consent_group=consent_group,
-            workspace=workspace_2,
-            version=1,
+        instance_1 = factories.UploadWorkspaceFactory.create()
+        research_center = factories.ResearchCenterFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.UploadWorkspaceFactory.build(
+            research_center=research_center,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            upload_cycle=upload_cycle,
         )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.UploadWorkspace.objects.count(), 2)
 
-    def test_same_version(self):
-        """Can save multiple UploadWorkspace models with the same version."""
-        consent_group = factories.ConsentGroupFactory()
-        research_center = factories.ResearchCenterFactory()
-        workspace_1 = WorkspaceFactory.create()
-        workspace_2 = WorkspaceFactory.create()
-        instance_1 = models.UploadWorkspace(
+    def test_same_upload_cycle(self):
+        """Can save multiple UploadWorkspace models with the same upload_cycle."""
+        instance_1 = factories.UploadWorkspaceFactory.create()
+        research_center = factories.ResearchCenterFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.UploadWorkspaceFactory.build(
             research_center=research_center,
             consent_group=consent_group,
-            workspace=workspace_1,
-            version=1,
-        )
-        instance_1.save()
-        instance_2 = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group,
-            workspace=workspace_2,
-            version=2,
+            workspace=workspace,
+            upload_cycle=instance_1.upload_cycle,
         )
         instance_2.full_clean()
         instance_2.save()
@@ -322,64 +291,20 @@ class UploadWorkspaceTest(TestCase):
 
     def test_duplicated_workspace(self):
         """One workspace cannot be associated with two UploadWorkspace models."""
-        workspace = WorkspaceFactory.create()
-        consent_group_1 = factories.ConsentGroupFactory()
-        consent_group_2 = factories.ConsentGroupFactory()
-        research_center_1 = factories.ResearchCenterFactory.create()
-        research_center_2 = factories.ResearchCenterFactory.create()
-        instance_1 = models.UploadWorkspace(
-            research_center=research_center_1,
-            consent_group=consent_group_1,
-            workspace=workspace,
-            version=1,
-        )
-        instance_1.save()
-        instance_2 = models.UploadWorkspace(
-            research_center=research_center_2,
-            consent_group=consent_group_2,
-            workspace=workspace,
-            version=1,
+        instance_1 = factories.UploadWorkspaceFactory.create()
+        research_center = factories.ResearchCenterFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        instance_2 = factories.UploadWorkspaceFactory.build(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=instance_1.workspace,
+            upload_cycle=upload_cycle,
         )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
             instance_2.save()
-
-    def test_constraint_positive_version_not_negative(self):
-        """Version cannot be negative."""
-        research_center = factories.ResearchCenterFactory.create()
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace = WorkspaceFactory.create(name="ws")
-        instance = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group,
-            workspace=workspace,
-            version=-1,
-        )
-        # No validation error with CheckConstraints.
-        with self.assertRaises(ValidationError):
-            instance.full_clean()
-        # mysql raises DataError, sqlite IntegrityError
-        # allow either
-        with self.assertRaises((DataError, IntegrityError)):
-            instance.save()
-
-    def test_constraint_positive_version_not_zero(self):
-        """Version cannot be 0."""
-        research_center = factories.ResearchCenterFactory.create()
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace = WorkspaceFactory.create(name="ws")
-        instance = models.UploadWorkspace(
-            research_center=research_center,
-            consent_group=consent_group,
-            workspace=workspace,
-            version=-0,
-        )
-        # No validation error with CheckConstraints.
-        with self.assertRaises(ValidationError):
-            instance.full_clean()
-        with self.assertRaises(IntegrityError):
-            instance.save()
 
 
 class ExampleWorkspaceTest(TestCase):
@@ -426,7 +351,10 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.CombinedConsortiumDataWorkspace(workspace=workspace)
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance = models.CombinedConsortiumDataWorkspace(
+            workspace=workspace, upload_cycle=upload_cycle
+        )
         instance.save()
         self.assertIsInstance(instance, models.CombinedConsortiumDataWorkspace)
 
@@ -439,8 +367,10 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
 
     def test_one_upload_workspace(self):
         """Can link one upload workspace."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle=instance.upload_cycle
+        )
         instance.save()
         instance.upload_workspaces.add(upload_workspace)
         self.assertEqual(instance.upload_workspaces.count(), 1)
@@ -448,9 +378,13 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
 
     def test_two_upload_workspaces(self):
         """Can link two upload workspaces."""
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
         instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=instance.upload_cycle
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=instance.upload_cycle
+        )
         instance.save()
         instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
         self.assertEqual(instance.upload_workspaces.count(), 2)
@@ -464,9 +398,11 @@ class ReleaseWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         instance = models.ReleaseWorkspace(
             workspace=workspace,
+            upload_cycle=upload_cycle,
             full_data_use_limitations="foo",
             consent_group=consent_group,
             dbgap_version=1,
@@ -487,7 +423,7 @@ class ReleaseWorkspaceTest(TestCase):
         instance = factories.ReleaseWorkspaceFactory.create()
         instance.save()
         upload_workspace = factories.UploadWorkspaceFactory.create(
-            consent_group=instance.consent_group
+            consent_group=instance.consent_group, upload_cycle=instance.upload_cycle
         )
         instance.upload_workspaces.add(upload_workspace)
         self.assertEqual(instance.upload_workspaces.count(), 1)
@@ -498,10 +434,10 @@ class ReleaseWorkspaceTest(TestCase):
         instance = factories.ReleaseWorkspaceFactory.create()
         instance.save()
         upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            consent_group=instance.consent_group
+            consent_group=instance.consent_group, upload_cycle=instance.upload_cycle
         )
         upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            consent_group=instance.consent_group
+            consent_group=instance.consent_group, upload_cycle=instance.upload_cycle
         )
         instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
         self.assertEqual(instance.upload_workspaces.count(), 2)
@@ -509,19 +445,13 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
 
     def test_unique_constraint(self):
-        """Cannot save two instances with the same ConsentGroup and dbgap_version."""
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace_1 = WorkspaceFactory.create(name="ws-1")
-        factories.ReleaseWorkspaceFactory.create(
-            workspace=workspace_1,
-            consent_group=consent_group,
-            dbgap_version=1,
-        )
+        """Cannot save two instances with the same ConsentGroup and upload_cycle."""
+        instance_1 = factories.ReleaseWorkspaceFactory.create()
         workspace_2 = WorkspaceFactory.create(name="ws-2")
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
-            consent_group=consent_group,
-            dbgap_version=1,
+            consent_group=instance_1.consent_group,
+            upload_cycle=instance_1.upload_cycle,
         )
         with self.assertRaises(ValidationError):
             instance_2.full_clean()
@@ -529,37 +459,28 @@ class ReleaseWorkspaceTest(TestCase):
             instance_2.save()
 
     def test_same_consent_group(self):
-        """Can save multiple ReleaseWorkspace models with the same ConsentGroup and different dbgap_version."""
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace_1 = WorkspaceFactory.create(name="ws-1")
-        factories.ReleaseWorkspaceFactory.create(
-            workspace=workspace_1,
-            consent_group=consent_group,
-            dbgap_version=1,
-        )
+        """Can save multiple ReleaseWorkspace models with the same ConsentGroup and different upload_cycle."""
+        instance_1 = factories.ReleaseWorkspaceFactory.create()
         workspace_2 = WorkspaceFactory.create(name="ws-2")
+        upload_cycle = factories.UploadCycleFactory.create()
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
-            consent_group=consent_group,
-            dbgap_version=2,
+            consent_group=instance_1.consent_group,
+            upload_cycle=upload_cycle,
         )
         instance_2.full_clean()
         instance_2.save()
         self.assertEqual(models.ReleaseWorkspace.objects.count(), 2)
 
     def test_same_dbgap_version(self):
-        """Can save multiple ReleaseWorkspace models with the same dbgap_version and different ConsentGroup."""
-        consent_group_1 = factories.ConsentGroupFactory()
-        consent_group_2 = factories.ConsentGroupFactory()
-        factories.ReleaseWorkspaceFactory.create(
-            consent_group=consent_group_1,
-            dbgap_version=1,
-        )
+        """Can save multiple ReleaseWorkspace models with the same upload_cycle and different ConsentGroup."""
+        instance_1 = factories.ReleaseWorkspaceFactory.create()
         workspace_2 = WorkspaceFactory.create(name="ws-2")
+        consent_group_2 = factories.ConsentGroupFactory()
         instance_2 = factories.ReleaseWorkspaceFactory.build(
             workspace=workspace_2,
             consent_group=consent_group_2,
-            dbgap_version=1,
+            upload_cycle=instance_1.upload_cycle,
         )
         instance_2.full_clean()
         instance_2.save()
@@ -569,9 +490,11 @@ class ReleaseWorkspaceTest(TestCase):
         """Version cannot be negative."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
+        upload_cycle = factories.UploadCycleFactory.create()
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
+            upload_cycle=upload_cycle,
             dbgap_version=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -584,9 +507,11 @@ class ReleaseWorkspaceTest(TestCase):
         """Version cannot be 0."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
+        upload_cycle = factories.UploadCycleFactory.create()
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
+            upload_cycle=upload_cycle,
             dbgap_version=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -599,9 +524,11 @@ class ReleaseWorkspaceTest(TestCase):
         """dbgap_participant_set cannot be negative."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
+        upload_cycle = factories.UploadCycleFactory.create()
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
+            upload_cycle=upload_cycle,
             dbgap_participant_set=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -614,9 +541,11 @@ class ReleaseWorkspaceTest(TestCase):
         """dbgap_participant_set cannot be 0."""
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create(name="ws")
+        upload_cycle = factories.UploadCycleFactory.create()
         instance = factories.ReleaseWorkspaceFactory.build(
             consent_group=consent_group,
             workspace=workspace,
+            upload_cycle=upload_cycle,
             dbgap_participant_set=0,
         )
         with self.assertRaises(ValidationError) as e:

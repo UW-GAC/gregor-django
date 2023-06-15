@@ -68,7 +68,7 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
         "workspace",
         "research_center",
         "consent_group",
-        "version",
+        "upload_cycle",
     )
     list_filter = (
         "research_center",
@@ -77,7 +77,7 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     sortable_by = (
         "id",
         "workspace",
-        "version",
+        "upload_cycle",
     )
 
 

@@ -118,12 +118,8 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
     """The ConsentGroup associated with this workspace."""
 
-    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
-    # We'll need to add a separate constraint in addition to this validator.
-    version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    """The version associated with this Workspace."""
-
-    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
+    # Replaces previous version field following 0011-0013 migrations.
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     """The UploadCycle associated with this workspace."""
 
     class Meta:
@@ -131,12 +127,7 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_workspace_data",
-                fields=["research_center", "consent_group", "version"],
-            ),
-            # Version must be positive and *not* zero.
-            models.CheckConstraint(
-                name="positive_version",
-                check=models.Q(version__gt=0),
+                fields=["research_center", "consent_group", "upload_cycle"],
             ),
         ]
 
@@ -154,8 +145,7 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
 class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
-    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
-
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace, help_text="Upload workspaces"
     )
@@ -172,7 +162,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="Consent group for the data in this workspace.",
         on_delete=models.PROTECT,
     )
-    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT, null=True)
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace,
         help_text="Upload workspaces contributing data to this workspace.",
@@ -201,7 +191,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_release_workspace",
-                fields=["consent_group", "dbgap_version"],
+                fields=["consent_group", "upload_cycle"],
             ),
         ]
 
