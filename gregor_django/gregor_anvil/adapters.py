@@ -12,7 +12,10 @@ class AccountAdapter(BaseAccountAdapter):
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
-        queryset = queryset.filter(Q(email__icontains=q) | Q(user__name__icontains=q))
+        if q:
+            queryset = queryset.filter(
+                Q(email__icontains=q) | Q(user__name__icontains=q)
+            )
         return queryset
 
     def get_autocomplete_label(self, account):
