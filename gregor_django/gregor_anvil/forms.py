@@ -145,7 +145,10 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             # Unfortunately we need to select only those with a given consent, not all workspaces.
             # So go back to the ModelSelect2Multiple widget.
             "upload_workspaces": autocomplete.ModelSelect2Multiple(
-                url="gregor_anvil:upload_workspaces:autocomplete",
+                url=reverse(
+                    "anvil_consortium_manager:workspaces:autocomplete_by_type",
+                    args=["upload"],
+                ),
                 attrs={"data-theme": "bootstrap-5"},
                 forward=["consent_group"],
             ),
