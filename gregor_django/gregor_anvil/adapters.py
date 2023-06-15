@@ -79,7 +79,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "combined_consortium"
     name = "Combined consortium data workspace"
     description = "Workspaces for internal consortium use that contain data tables combined across upload workspaces"
-    list_table_class = tables.DefaultWorkspaceTable
+    list_table_class = tables.CombinedConsortiumDataWorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = (
