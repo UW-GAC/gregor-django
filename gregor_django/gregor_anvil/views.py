@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
 from django.views.generic import CreateView, DetailView, TemplateView
-from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
 
@@ -78,12 +78,29 @@ class UploadCycleCreate(
 
 
 class UploadCycleDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView
 ):
     """View to show details about an `UploadCycle`."""
 
     model = models.UploadCycle
     slug_field = "cycle"
+    tables = [
+        tables.UploadWorkspaceTable,
+        tables.CombinedConsortiumDataWorkspaceTable,
+        tables.ReleaseWorkspaceTable,
+    ]
+
+    def get_tables_data(self):
+        upload_workspace_qs = Workspace.objects.filter(
+            uploadworkspace__upload_cycle=self.object
+        )
+        combined_workspace_qs = Workspace.objects.filter(
+            combinedconsortiumdataworkspace__upload_cycle=self.object
+        )
+        release_workspace_qs = Workspace.objects.filter(
+            releaseworkspace__upload_cycle=self.object
+        )
+        return [upload_workspace_qs, combined_workspace_qs, release_workspace_qs]
 
 
 class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):

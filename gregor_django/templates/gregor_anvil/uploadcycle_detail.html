@@ -18,3 +18,21 @@
     <li>End date: {{ object.end_date }}</li>
   </ul>
 {% endblock panel %}
+
+{% block after_panel %}
+<h2>Upload workspaces</h2>
+<div class="container">
+  {% render_table tables.0 %}
+</div>
+
+<h2>Combined consortium data workspaces</h2>
+<div class="container">
+  {% render_table tables.1 %}
+</div>
+
+<h2>Release workspaces</h2>
+<div class="container">
+  {% render_table tables.2 %}
+</div>
+
+{% endblock after_panel %}

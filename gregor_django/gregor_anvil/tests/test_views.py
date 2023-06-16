@@ -780,6 +780,61 @@ class UploadCycleDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context_data["object"], obj)
 
+    def test_table_classes(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertIsInstance(
+            response.context_data["tables"][0], tables.UploadWorkspaceTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][1],
+            tables.CombinedConsortiumDataWorkspaceTable,
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][2], tables.ReleaseWorkspaceTable
+        )
+
+    def test_upload_workspace_table(self):
+        """Contains a table of UploadWorkspaces from this upload cycle."""
+        obj = self.model_factory.create()
+        workspace = factories.UploadWorkspaceFactory.create(upload_cycle=obj)
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_combined_workspace_table(self):
+        """Contains a table of CombinedConsortiumDataWorkspaces from this upload cycle."""
+        obj = self.model_factory.create()
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=obj
+        )
+        other_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_release_workspace_table(self):
+        """Contains a table of ReleaseWorkspaces from this upload cycle."""
+        obj = self.model_factory.create()
+        workspace = factories.ReleaseWorkspaceFactory.create(upload_cycle=obj)
+        other_workspace = factories.ReleaseWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
