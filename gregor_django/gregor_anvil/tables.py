@@ -76,6 +76,9 @@ class UploadCycleTable(tables.Table):
             "end_date",
         )
 
+    def render_cycle(self, record):
+        return str(record)
+
 
 class WorkspaceSharedWithConsortiumTable(tables.Table):
     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
