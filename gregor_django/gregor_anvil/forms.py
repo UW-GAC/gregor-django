@@ -81,6 +81,7 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
                     args=["upload"],
                 ),
                 attrs={"data-theme": "bootstrap-5"},
+                forward=["upload_cycle"],
             ),
         }
 
@@ -150,7 +151,7 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                     args=["upload"],
                 ),
                 attrs={"data-theme": "bootstrap-5"},
-                forward=["consent_group"],
+                forward=["consent_group", "upload_cycle"],
             ),
             # "date_released": forms.SelectDateInput(),
             # "date_released": forms.DateInput(),
