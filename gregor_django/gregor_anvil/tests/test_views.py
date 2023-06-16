@@ -1088,18 +1088,12 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
 
     def test_forwarded_consent_group(self):
         """Queryset is filtered to consent groups matching the forwarded value if specified."""
-        consent_group = factories.ConsentGroupFactory.create()
-        workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test_1", consent_group=consent_group
-        )
-        other_consent_group = factories.ConsentGroupFactory.create()
-        other_workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test_2", consent_group=other_consent_group
-        )
+        workspace = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url("upload"),
-            {"q": "test", "forward": json.dumps({"consent_group": consent_group.pk})},
+            {"forward": json.dumps({"consent_group": workspace.consent_group.pk})},
         )
         returned_ids = [
             int(x["id"])
@@ -1108,6 +1102,53 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         self.assertEqual(len(returned_ids), 1)
         self.assertIn(workspace.pk, returned_ids)
         self.assertNotIn(other_workspace.pk, returned_ids)
+
+    def test_forwarded_upload_cycle(self):
+        """Queryset is filtered to upload cycles matching the forwarded value if specified."""
+        workspace = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url("upload"),
+            {"forward": json.dumps({"upload_cycle": workspace.upload_cycle.pk})},
+        )
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertIn(workspace.pk, returned_ids)
+        self.assertNotIn(other_workspace.pk, returned_ids)
+
+    def test_forwarded_consent_group_and_upload_cycle(self):
+        """Queryset is filtered to upload_cycle and consent_groups matching the forwarded value if specified."""
+        workspace = factories.UploadWorkspaceFactory.create()
+        other_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=workspace.upload_cycle
+        )
+        other_workspace_2 = factories.UploadWorkspaceFactory.create(
+            consent_group=workspace.consent_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url("upload"),
+            {
+                "forward": json.dumps(
+                    {
+                        "consent_group": workspace.consent_group.pk,
+                        "upload_cycle": workspace.upload_cycle.pk,
+                    }
+                )
+            },
+        )
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertIn(workspace.pk, returned_ids)
+        self.assertNotIn(other_workspace_1.pk, returned_ids)
+        self.assertNotIn(other_workspace_2.pk, returned_ids)
 
 
 class ExampleWorkspaceListTest(TestCase):

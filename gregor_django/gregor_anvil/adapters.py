@@ -44,6 +44,10 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
         if consent_group:
             queryset = queryset.filter(consent_group=consent_group)
 
+        upload_cycle = forwarded.get("upload_cycle", None)
+        if upload_cycle:
+            queryset = queryset.filter(upload_cycle=upload_cycle)
+
         if q:
             queryset = queryset.filter(workspace__name__icontains=q)
 
