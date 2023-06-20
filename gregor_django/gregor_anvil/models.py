@@ -126,7 +126,7 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         constraints = [
             # Model uniqueness.
             models.UniqueConstraint(
-                name="unique_workspace_data",
+                name="unique_workspace_data_2",
                 fields=["research_center", "consent_group", "upload_cycle"],
             ),
         ]
@@ -190,7 +190,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         constraints = [
             # Model uniqueness.
             models.UniqueConstraint(
-                name="unique_release_workspace",
+                name="unique_release_workspace_2",
                 fields=["consent_group", "upload_cycle"],
             ),
         ]
