@@ -11,6 +11,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddConstraint(
+            model_name='releaseworkspace',
+            constraint=models.UniqueConstraint(fields=('consent_group', 'upload_cycle'), name='unique_release_workspace_2'),
+        ),
+        migrations.AddConstraint(
+            model_name='uploadworkspace',
+            constraint=models.UniqueConstraint(fields=('research_center', 'consent_group', 'upload_cycle'), name='unique_workspace_data_2'),
+        ),
         migrations.RemoveConstraint(
             model_name='releaseworkspace',
             name='unique_release_workspace',
@@ -48,13 +56,5 @@ class Migration(migrations.Migration):
             name='upload_cycle',
             field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='gregor_anvil.uploadcycle'),
             preserve_default=False,
-        ),
-        migrations.AddConstraint(
-            model_name='releaseworkspace',
-            constraint=models.UniqueConstraint(fields=('consent_group', 'upload_cycle'), name='unique_release_workspace'),
-        ),
-        migrations.AddConstraint(
-            model_name='uploadworkspace',
-            constraint=models.UniqueConstraint(fields=('research_center', 'consent_group', 'upload_cycle'), name='unique_workspace_data'),
         ),
     ]
