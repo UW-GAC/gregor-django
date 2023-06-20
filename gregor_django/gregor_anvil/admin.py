@@ -59,6 +59,22 @@ class PartnerGroupAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.UploadCycle)
+class UploadCycleAdmin(SimpleHistoryAdmin):
+    """Admin class for the UploadCycle model."""
+
+    list_display = (
+        "cycle",
+        "start_date",
+        "end_date",
+    )
+    sortable_by = (
+        "cycle",
+        "start_date",
+        "end_date",
+    )
+
+
 @admin.register(models.UploadWorkspace)
 class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the UploadWorkspace model."""
@@ -78,20 +94,4 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
         "id",
         "workspace",
         "upload_cycle",
-    )
-
-
-@admin.register(models.UploadCycle)
-class UploadCycleAdmin(SimpleHistoryAdmin):
-    """Admin class for the UploadCycle model."""
-
-    list_display = (
-        "cycle",
-        "start_date",
-        "end_date",
-    )
-    sortable_by = (
-        "cycle",
-        "start_date",
-        "end_date",
     )
