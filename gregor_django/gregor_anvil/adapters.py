@@ -12,7 +12,10 @@ class AccountAdapter(BaseAccountAdapter):
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
-        queryset = queryset.filter(Q(email__icontains=q) | Q(user__name__icontains=q))
+        if q:
+            queryset = queryset.filter(
+                Q(email__icontains=q) | Q(user__name__icontains=q)
+            )
         return queryset
 
     def get_autocomplete_label(self, account):
@@ -40,6 +43,10 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
         consent_group = forwarded.get("consent_group", None)
         if consent_group:
             queryset = queryset.filter(consent_group=consent_group)
+
+        upload_cycle = forwarded.get("upload_cycle", None)
+        if upload_cycle:
+            queryset = queryset.filter(upload_cycle=upload_cycle)
 
         if q:
             queryset = queryset.filter(workspace__name__icontains=q)
@@ -79,7 +86,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "combined_consortium"
     name = "Combined consortium data workspace"
     description = "Workspaces for internal consortium use that contain data tables combined across upload workspaces"
-    list_table_class = tables.DefaultWorkspaceTable
+    list_table_class = tables.CombinedConsortiumDataWorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = (
