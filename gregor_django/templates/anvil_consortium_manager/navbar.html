@@ -1,28 +1,36 @@
 {% extends "anvil_consortium_manager/navbar.html" %}
 
 {% block anvil_consortium_manager_nav_items %}
+
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    GREGoR
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:research_centers:list' %}">Research Centers</a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:partner_groups:list' %}">Partner groups</a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:consent_groups:list' %}">Consent Groups</a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:upload_cycles:list' %}">List upload cycles</a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:upload_cycles:new' %}">Add a new upload cycle</a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item" href="{% url 'gregor_anvil:reports:workspace' %}">Workspace report</a>
+    </li>
+  </ul>
+</li>
+
   {{ block.super }}
-
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      Centers
-    </a>
-    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-      <li>
-        <a class="dropdown-item" href="{% url 'gregor_anvil:research_centers:list' %}">Research Centers</a>
-      </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'gregor_anvil:partner_groups:list' %}">Partner groups</a>
-      </li>
-    </ul>
-  </li>
-
-  <li class="nav-item">
-      <a class="nav-link" href="{% url 'gregor_anvil:consent_groups:list' %}">Consent Groups</a>
-  </li>
-
-  <li class="nav-item">
-      <a class="nav-link" href="{% url 'gregor_anvil:reports:workspace' %}">Workspace report</a>
-  </li>
 
 {% endblock anvil_consortium_manager_nav_items %}

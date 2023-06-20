@@ -68,7 +68,7 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
         "workspace",
         "research_center",
         "consent_group",
-        "version",
+        "upload_cycle",
     )
     list_filter = (
         "research_center",
@@ -77,5 +77,21 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     sortable_by = (
         "id",
         "workspace",
-        "version",
+        "upload_cycle",
+    )
+
+
+@admin.register(models.UploadCycle)
+class UploadCycleAdmin(SimpleHistoryAdmin):
+    """Admin class for the UploadCycle model."""
+
+    list_display = (
+        "cycle",
+        "start_date",
+        "end_date",
+    )
+    sortable_by = (
+        "cycle",
+        "start_date",
+        "end_date",
     )
