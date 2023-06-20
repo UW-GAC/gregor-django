@@ -95,6 +95,11 @@ class UploadCycle(TimeStampedModel, models.Model):
     # Django simple history.
     history = HistoricalRecords()
 
+    class Meta:
+        ordering = [
+            "cycle",
+        ]
+
     def __str__(self):
         return "U{cycle:02d}".format(cycle=self.cycle)
 
