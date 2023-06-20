@@ -141,6 +141,14 @@ class UploadCycleTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "U01")
 
+    def test_model_order(self):
+        """Models are ordered by cycle."""
+        instance_1 = factories.UploadCycleFactory.create(cycle=2)
+        instance_2 = factories.UploadCycleFactory.create(cycle=1)
+        qs = models.UploadCycle.objects.all()
+        self.assertEqual(qs[0], instance_2)
+        self.assertEqual(qs[1], instance_1)
+
     def test_get_absolute_url(self):
         """The get_absolute_url() method works."""
         instance = factories.UploadCycleFactory()
