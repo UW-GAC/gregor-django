@@ -59,6 +59,22 @@ class PartnerGroupAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.UploadCycle)
+class UploadCycleAdmin(SimpleHistoryAdmin):
+    """Admin class for the UploadCycle model."""
+
+    list_display = (
+        "cycle",
+        "start_date",
+        "end_date",
+    )
+    sortable_by = (
+        "cycle",
+        "start_date",
+        "end_date",
+    )
+
+
 @admin.register(models.UploadWorkspace)
 class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the UploadWorkspace model."""
@@ -73,6 +89,7 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     list_filter = (
         "research_center",
         "consent_group",
+        "upload_cycle",
     )
     sortable_by = (
         "id",
@@ -81,17 +98,68 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     )
 
 
-@admin.register(models.UploadCycle)
-class UploadCycleAdmin(SimpleHistoryAdmin):
-    """Admin class for the UploadCycle model."""
+@admin.register(models.ExampleWorkspace)
+class ExampleWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ExampleWorkspace model."""
 
     list_display = (
-        "cycle",
-        "start_date",
-        "end_date",
+        "id",
+        "workspace",
     )
     sortable_by = (
-        "cycle",
-        "start_date",
-        "end_date",
+        "id",
+        "workspace",
+    )
+
+
+@admin.register(models.TemplateWorkspace)
+class TemplateWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the TemplateWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+    )
+
+
+@admin.register(models.CombinedConsortiumDataWorkspace)
+class CombinedConsortiumDataWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the CombinedConsortiumDataWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "upload_cycle",
+    )
+    list_filter = ("upload_cycle",)
+    sortable_by = (
+        "id",
+        "workspace",
+        "upload_cycle",
+    )
+
+
+@admin.register(models.ReleaseWorkspace)
+class ReleaseWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ReleaseWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "upload_cycle",
+        "consent_group",
+    )
+    list_filter = (
+        "upload_cycle",
+        "consent_group",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+        "upload_cycle",
+        "consent_group",
     )
