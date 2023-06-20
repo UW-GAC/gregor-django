@@ -63,6 +63,23 @@ class ConsentGroupTable(tables.Table):
         )
 
 
+class UploadCycleTable(tables.Table):
+    """A table for `UploadCycle` objects."""
+
+    cycle = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = models.UploadCycle
+        fields = (
+            "cycle",
+            "start_date",
+            "end_date",
+        )
+
+    def render_cycle(self, record):
+        return str(record)
+
+
 class WorkspaceSharedWithConsortiumTable(tables.Table):
     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
 
@@ -114,14 +131,15 @@ class UploadWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     """A table for Workspaces that includes fields from UploadWorkspace."""
 
     name = tables.columns.Column(linkify=True)
+    uploadworkspace__upload_cycle = tables.columns.Column(linkify=True)
 
     class Meta:
         model = Workspace
         fields = (
             "name",
+            "uploadworkspace__upload_cycle",
             "uploadworkspace__research_center",
             "uploadworkspace__consent_group",
-            "uploadworkspace__version",
             "is_shared",
         )
 
@@ -158,10 +176,13 @@ class WorkspaceReportTable(tables.Table):
         return adapter_names[value] + "s"
 
 
-class ReleaseWorkspaceTable(tables.Table):
-    """A table for Workspaces that includes fields from ReleaseWorkspace."""
+class CombinedConsortiumDataWorkspaceTable(
+    WorkspaceSharedWithConsortiumTable, tables.Table
+):
+    """A table for Workspaces that includes fields from CombinedConsortiumDataWorkspace."""
 
     name = tables.columns.Column(linkify=True)
+    combinedconsortiumdataworkspace__upload_cycle = tables.columns.Column(linkify=True)
     number_workspaces = tables.columns.Column(
         accessor="pk",
         verbose_name="Number of workspaces",
@@ -172,6 +193,30 @@ class ReleaseWorkspaceTable(tables.Table):
         model = Workspace
         fields = (
             "name",
+            "combinedconsortiumdataworkspace__upload_cycle",
+            "number_workspaces",
+        )
+
+    def render_number_workspaces(self, record):
+        return record.combinedconsortiumdataworkspace.upload_workspaces.count()
+
+
+class ReleaseWorkspaceTable(tables.Table):
+    """A table for Workspaces that includes fields from ReleaseWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    releaseworkspace__upload_cycle = tables.columns.Column(linkify=True)
+    number_workspaces = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Number of workspaces",
+        orderable=False,
+    )
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "releaseworkspace__upload_cycle",
             "releaseworkspace__consent_group",
             "releaseworkspace__dbgap_version",
             "releaseworkspace__dbgap_participant_set",

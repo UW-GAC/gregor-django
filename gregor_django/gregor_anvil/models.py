@@ -1,4 +1,5 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -80,6 +81,34 @@ class PartnerGroup(TimeStampedModel, models.Model):
         return reverse("gregor_anvil:partner_groups:detail", args=[self.pk])
 
 
+class UploadCycle(TimeStampedModel, models.Model):
+    """A model tracking the upload cycles that exist in the app."""
+
+    cycle = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The upload cycle represented by this model.",
+        unique=True,
+    )
+    start_date = models.DateField(help_text="The start date of this upload cycle.")
+    end_date = models.DateField(help_text="The end date of this upload cycle.")
+    note = models.TextField(blank=True, help_text="Additional notes.")
+    # Django simple history.
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return "U{cycle:02d}".format(cycle=self.cycle)
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # End date must be after start date.
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
+            raise ValidationError("end_date must be after start_date!")
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
+
+
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
 
@@ -89,22 +118,16 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
     """The ConsentGroup associated with this workspace."""
 
-    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
-    # We'll need to add a separate constraint in addition to this validator.
-    version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    """The version associated with this Workspace."""
+    # Replaces previous version field following 0011-0013 migrations.
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
+    """The UploadCycle associated with this workspace."""
 
     class Meta:
         constraints = [
             # Model uniqueness.
             models.UniqueConstraint(
-                name="unique_workspace_data",
-                fields=["research_center", "consent_group", "version"],
-            ),
-            # Version must be positive and *not* zero.
-            models.CheckConstraint(
-                name="positive_version",
-                check=models.Q(version__gt=0),
+                name="unique_workspace_data_2",
+                fields=["research_center", "consent_group", "upload_cycle"],
             ),
         ]
 
@@ -122,6 +145,7 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
 class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace, help_text="Upload workspaces"
     )
@@ -138,6 +162,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="Consent group for the data in this workspace.",
         on_delete=models.PROTECT,
     )
+    upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace,
         help_text="Upload workspaces contributing data to this workspace.",
@@ -165,8 +190,8 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         constraints = [
             # Model uniqueness.
             models.UniqueConstraint(
-                name="unique_release_workspace",
-                fields=["consent_group", "dbgap_version"],
+                name="unique_release_workspace_2",
+                fields=["consent_group", "upload_cycle"],
             ),
         ]
 
