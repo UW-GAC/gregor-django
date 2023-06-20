@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, SubFactory
+from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -28,6 +30,21 @@ class ResearchCenterFactory(DjangoModelFactory):
         django_get_or_create = ["short_name"]
 
 
+class UploadCycleFactory(DjangoModelFactory):
+    """A factory for the UploadCycle model."""
+
+    cycle = Sequence(lambda x: x + 1)
+    start_date = Faker("date_object")
+    end_date = LazyAttribute(lambda o: o.start_date + timedelta(days=o.duration))
+
+    class Params:
+        duration = 90
+
+    class Meta:
+        model = models.UploadCycle
+        django_get_or_create = ["cycle"]
+
+
 class PartnerGroupFactory(DjangoModelFactory):
     """A factory for the PartnerGroup model."""
 
@@ -44,7 +61,7 @@ class UploadWorkspaceFactory(DjangoModelFactory):
 
     research_center = SubFactory(ResearchCenterFactory)
     consent_group = SubFactory(ConsentGroupFactory)
-    version = Faker("random_int", min=1, max=10)
+    upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(WorkspaceFactory, workspace_type="upload")
 
     class Meta:
@@ -83,6 +100,7 @@ class CombinedConsortiumDataWorkspaceFactory(DjangoModelFactory):
     class Meta:
         model = models.CombinedConsortiumDataWorkspace
 
+    upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(
         WorkspaceFactory,
         workspace_type="combined_consortium",
@@ -99,6 +117,7 @@ class ReleaseWorkspaceFactory(DjangoModelFactory):
     consent_group = SubFactory(ConsentGroupFactory)
     dbgap_version = Faker("random_int", min=1, max=10)
     dbgap_participant_set = Faker("random_int", min=1, max=10)
+    upload_cycle = SubFactory(UploadCycleFactory)
 
     workspace = SubFactory(
         WorkspaceFactory,

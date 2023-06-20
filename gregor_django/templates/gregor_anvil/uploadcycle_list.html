@@ -1,0 +1,11 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load render_table from django_tables2 %}
+
+{% block title %}Upload Cycle List{% endblock %}
+
+{% block content %}
+<h1>Upload Cycles</h1>
+
+{% render_table table %}
+
+{% endblock content %}
