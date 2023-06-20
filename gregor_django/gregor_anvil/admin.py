@@ -95,3 +95,70 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
         "workspace",
         "upload_cycle",
     )
+
+
+@admin.register(models.ExampleWorkspace)
+class ExampleWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ExampleWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+    )
+
+
+@admin.register(models.TemplateWorkspace)
+class TemplateWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the TemplateWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+    )
+
+
+@admin.register(models.CombinedConsortiumDataWorkspace)
+class CombinedConsortiumDataWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the CombinedConsortiumDataWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "upload_cycle",
+    )
+    list_filter = ("upload_cycle",)
+    sortable_by = (
+        "id",
+        "workspace",
+        "upload_cycle",
+    )
+
+
+@admin.register(models.ReleaseWorkspace)
+class ReleaseWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ReleaseWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "upload_cycle",
+        "consent_group",
+    )
+    list_filter = (
+        "upload_cycle",
+        "consent_group",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+        "upload_cycle",
+        "consent_group",
+    )
