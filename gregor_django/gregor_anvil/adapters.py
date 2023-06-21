@@ -111,7 +111,7 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "dcc_processing"
     name = "DCC processing workspace"
-    description = "Workspaces used for DCC processing"
+    description = "Workspaces used for DCC processing of data."
     list_table_class = tables.DefaultWorkspaceTable
     workspace_data_model = models.DCCProcessingWorkspace
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
@@ -123,7 +123,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "dcc_processed_data"
     name = "DCC processed data workspace"
-    description = "Workspaces containing data processed by the DCC."
+    description = "Workspaces containing data processed by the DCC and hosted by AnVIL."
     list_table_class = tables.DCCProcessedDataWorkspaceTable
     workspace_data_model = models.DCCProcessedDataWorkspace
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
