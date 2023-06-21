@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, LazyAttribute, Sequence, SubFactory, post_generation
+from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -137,16 +137,17 @@ class DCCProcessingWorkspaceFactory(DjangoModelFactory):
         workspace_type="dcc_processing",
     )
 
-    @post_generation
-    def upload_workspaces(self, create, extracted, **kwargs):
-        if not create:
-            # Simple build, do nothing.
-            return
-
-        if extracted:
-            # A list of groups were passed in, use them
-            for upload_workspace in extracted:
-                self.upload_workspaces.add(upload_workspace)
+    # Not used yet.
+    # @post_generation
+    # def upload_workspaces(self, create, extracted, **kwargs):
+    #     if not create:
+    #         # Simple build, do nothing.
+    #         return
+    #
+    #     if extracted:
+    #         # A list of groups were passed in, use them
+    #         for upload_workspace in extracted:
+    #             self.upload_workspaces.add(upload_workspace)
 
 
 class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
