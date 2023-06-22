@@ -3,6 +3,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import Account, Workspace
+from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
@@ -129,3 +130,21 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
         )
         context["workspace_count_table"] = tables.WorkspaceReportTable(qs)
         return context
+
+
+class UserAutocomplete(
+    AnVILConsortiumManagerEditRequired, autocomplete.Select2QuerySetView
+):
+    """View to provide autocompletion for User."""
+
+    def get_result_label(self, item):
+        return item.name
+
+    def get_queryset(self):
+        # Filter out unathorized users, or does the auth mixin do that?
+        qs = User.objects.filter().order_by("name")
+
+        if self.q:
+            qs = qs.filter(Q(name__icontains=self.q) | Q(username__icontains=self.q))
+
+        return qs

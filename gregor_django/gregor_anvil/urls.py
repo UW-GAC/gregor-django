@@ -51,4 +51,7 @@ urlpatterns = [
     path("consent_groups/", include(consent_group_patterns)),
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
+    path(
+        "user/autocomplete/", views.UserAutocomplete.as_view(), name="user_autocomplete"
+    ),
 ]
