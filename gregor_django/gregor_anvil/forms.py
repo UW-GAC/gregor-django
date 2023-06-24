@@ -3,6 +3,7 @@
 from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 
@@ -58,6 +59,25 @@ class TemplateWorkspaceForm(forms.ModelForm):
     class Meta:
         model = models.TemplateWorkspace
         fields = ("workspace", "intended_use")
+
+
+class UserSearchForm(forms.ModelForm):
+    """Form for the User model."""
+
+    class Meta:
+        model = get_user_model()
+        fields = ("name",)
+
+        widgets = {
+            "name": autocomplete.ListSelect2(
+                url="gregor_anvil:user:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+        help_texts = {
+            "name": "Enter either the name or username to search",
+        }
 
 
 class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
