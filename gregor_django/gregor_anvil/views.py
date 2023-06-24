@@ -8,9 +8,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.views.generic import CreateView, DetailView, FormView, TemplateView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
-from django.urls import reverse
 
 from gregor_django.users.tables import UserTable
 
@@ -160,5 +160,5 @@ class UserSearchFormView(AnVILConsortiumManagerEditRequired, FormView):
 
     def post(self, request, *args, **kwargs):
         """Redirect to the user profile page."""
-        url = reverse("users:detail", kwargs={"username": request.POST.get('name')})
+        url = reverse("users:detail", kwargs={"username": request.POST.get("name")})
         return HttpResponseRedirect(url)
