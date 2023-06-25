@@ -64,6 +64,10 @@ class TemplateWorkspaceForm(forms.ModelForm):
 class UserSearchForm(forms.ModelForm):
     """Form for the User model."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].required = True
+
     class Meta:
         model = get_user_model()
         fields = ("name",)
