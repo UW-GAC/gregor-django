@@ -4,6 +4,7 @@ from anvil_consortium_manager.auth import (
 )
 from anvil_consortium_manager.models import Account, Workspace
 from dal import autocomplete
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
@@ -157,8 +158,16 @@ class UserSearchAutocomplete(
 class UserSearchFormView(AnVILConsortiumManagerEditRequired, FormView):
     template_name = "gregor_anvil/usersearch_form.html"
     form_class = forms.UserSearchForm
+    message_name_is_required = "Enter a name or a username to search"
 
     def post(self, request, *args, **kwargs):
-        """Redirect to the user profile page."""
-        url = reverse("users:detail", kwargs={"username": request.POST.get("name")})
-        return HttpResponseRedirect(url)
+        """Redirect to the user profile page"""
+        username = request.POST.get("name")
+        if username:
+            url = reverse("users:detail", kwargs={"username": username})
+            return HttpResponseRedirect(url)
+        else:
+            messages.add_message(
+                self.request, messages.ERROR, self.message_name_is_required
+            )
+            return HttpResponseRedirect(reverse("gregor_anvil:user:search"))
