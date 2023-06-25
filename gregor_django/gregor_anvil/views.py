@@ -134,7 +134,7 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
         return context
 
 
-class UserAutocomplete(
+class UserSearchAutocomplete(
     AnVILConsortiumManagerEditRequired, autocomplete.Select2QuerySetView
 ):
     """View to provide autocompletion for User."""
