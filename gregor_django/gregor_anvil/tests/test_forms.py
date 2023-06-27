@@ -681,7 +681,7 @@ class UserSearchFormTest(TestCase):
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
-            "name": self.user.name,
+            "user": self.user.name,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -692,6 +692,6 @@ class UserSearchFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("name", form.errors)
-        self.assertEqual(len(form.errors["name"]), 1)
-        self.assertIn("required", form.errors["name"][0])
+        self.assertIn("user", form.errors)
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("required", form.errors["user"][0])
