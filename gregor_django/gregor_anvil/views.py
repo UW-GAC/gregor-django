@@ -165,7 +165,7 @@ class UserSearchFormView(AnVILConsortiumManagerEditRequired, FormView):
 
         form = self.get_form()
         if form.is_valid():
-            url = reverse("users:detail", kwargs={"username": request.POST.get("name")})
+            url = reverse("users:detail", kwargs={"username": request.POST.get("user")})
             return HttpResponseRedirect(url)
         else:
             messages.add_message(
