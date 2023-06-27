@@ -1857,7 +1857,7 @@ class UserSearchFormViewTest(TestCase):
             email="user1@example.com",
         )
         self.client.force_login(self.user)
-        response = self.client.post(self.get_url(), {"name": "user1"})
+        response = self.client.post(self.get_url(), {"user": "user1"})
         self.assertRedirects(
             response,
             resolve_url(reverse("users:detail", kwargs={"username": object.username})),
