@@ -45,16 +45,6 @@ workspace_report_patterns = (
     "reports",
 )
 
-user_search_patterns = (
-    [
-        path(
-            "autocomplete/", views.UserSearchAutocomplete.as_view(), name="autocomplete"
-        ),
-        path("search/", views.UserSearchFormView.as_view(), name="search"),
-    ],
-    "user",
-)
-
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
@@ -62,5 +52,4 @@ urlpatterns = [
     path("consent_groups/", include(consent_group_patterns)),
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
-    path("user/", include(user_search_patterns)),
 ]

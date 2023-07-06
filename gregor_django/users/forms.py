@@ -1,3 +1,6 @@
+from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
+from dal import autocomplete
+from django import forms
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
@@ -17,3 +20,18 @@ class UserCreationForm(admin_forms.UserCreationForm):
         error_messages = {
             "username": {"unique": _("This username has already been taken.")}
         }
+
+
+class UserSearchForm(Bootstrap5MediaFormMixin, forms.Form):
+    """Form for the user search"""
+
+    user = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        widget=autocomplete.ListSelect2(
+            url="users:autocomplete",
+            attrs={"data-theme": "bootstrap-5"},
+        ),
+        to_field_name="username",
+        required=True,
+        help_text="Enter either the name or username to search.",
+    )
