@@ -3,14 +3,10 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import Account, Workspace
-from dal import autocomplete
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from django.views.generic import CreateView, DetailView, FormView, TemplateView
+from django.views.generic import CreateView, DetailView, TemplateView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
@@ -133,35 +129,3 @@ class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
         )
         context["workspace_count_table"] = tables.WorkspaceReportTable(qs)
         return context
-
-
-class UserSearchAutocomplete(
-    AnVILConsortiumManagerEditRequired, autocomplete.Select2QuerySetView
-):
-    """View to provide autocompletion for User."""
-
-    def get_result_label(self, item):
-        return "{} ({})".format(item.name, item.username)
-
-    def get_result_value(self, item):
-        """Return the value of a result."""
-        return item.username
-
-    def get_queryset(self):
-        qs = User.objects.all().order_by("name")
-
-        if self.q:
-            qs = qs.filter(Q(name__icontains=self.q) | Q(username__icontains=self.q))
-        return qs
-
-
-class UserSearchFormView(AnVILConsortiumManagerEditRequired, FormView):
-    template_name = "gregor_anvil/usersearch_form.html"
-    form_class = forms.UserSearchForm
-
-    def get_success_url(self):
-        """Redirect to the user profile page after processing a valid form."""
-
-        return reverse(
-            "users:detail", kwargs={"username": self.request.POST.get("user")}
-        )
