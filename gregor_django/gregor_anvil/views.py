@@ -158,17 +158,10 @@ class UserSearchAutocomplete(
 class UserSearchFormView(AnVILConsortiumManagerEditRequired, FormView):
     template_name = "gregor_anvil/usersearch_form.html"
     form_class = forms.UserSearchForm
-    message_name_is_required = "Enter a name or a username to search"
 
-    def post(self, request, *args, **kwargs):
-        """Redirect to the user profile page"""
+    def get_success_url(self):
+        """Redirect to the user profile page after processing a valid form."""
 
-        form = self.get_form()
-        if form.is_valid():
-            url = reverse("users:detail", kwargs={"username": request.POST.get("user")})
-            return HttpResponseRedirect(url)
-        else:
-            messages.add_message(
-                self.request, messages.ERROR, self.message_name_is_required
-            )
-            return HttpResponseRedirect(reverse("gregor_anvil:user:search"))
+        return reverse(
+            "users:detail", kwargs={"username": self.request.POST.get("user")}
+        )
