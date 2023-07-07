@@ -70,12 +70,14 @@ class UserSearchFormView(LoginRequiredMixin, FormView):
     template_name = "users/usersearch_form.html"
     form_class = UserSearchForm
 
+    def form_valid(self, form):
+        self.user = form.cleaned_data["user"]
+        return super().form_valid(form)
+
     def get_success_url(self):
         """Redirect to the user profile page after processing a valid form."""
 
-        return reverse(
-            "users:detail", kwargs={"username": self.request.POST.get("user")}
-        )
+        return reverse("users:detail", kwargs={"username": self.user.username})
 
 
 user_search_form_view = UserSearchFormView.as_view()
