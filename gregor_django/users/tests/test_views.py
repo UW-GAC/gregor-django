@@ -13,7 +13,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from gregor_django.users.forms import UserChangeForm
+from gregor_django.users.forms import UserChangeForm, UserSearchForm
 from gregor_django.users.tests.factories import UserFactory
 from gregor_django.users.views import (
     UserRedirectView,
@@ -260,6 +260,13 @@ class UserSearchFormViewTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
+    def test_form_class(self):
+        """The form class is as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("form", response.context_data)
+        self.assertIsInstance(response.context_data["form"], UserSearchForm)
+
     def test_redirect_to_the_correct_profile_page(self):
         """The search view correctly redirect to the user profile page"""
         object = UserFactory.create(
@@ -273,3 +280,33 @@ class UserSearchFormViewTest(TestCase):
             response,
             resolve_url(reverse("users:detail", kwargs={"username": object.username})),
         )
+
+    def test_invalid_input(self):
+        """Posting invalid data re-renders the form with an error."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"user": -1},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("user", form.errors.keys())
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("valid choice", form.errors["user"][0])
+
+    def test_blank_user(self):
+        """Posting invalid data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("user", form.errors.keys())
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("required", form.errors["user"][0])
