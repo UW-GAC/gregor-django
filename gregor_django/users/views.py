@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, UpdateView
 
-from .forms import UserSearchForm
+from .forms import UserLookupForm
 
 User = get_user_model()
 
@@ -66,9 +66,9 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
 user_autocomplete_view = UserAutocompleteView.as_view()
 
 
-class UserSearchFormView(LoginRequiredMixin, FormView):
-    template_name = "users/usersearch_form.html"
-    form_class = UserSearchForm
+class UserLookup(LoginRequiredMixin, FormView):
+    template_name = "users/userlookup_form.html"
+    form_class = UserLookupForm
 
     def form_valid(self, form):
         self.user = form.cleaned_data["user"]
@@ -80,4 +80,4 @@ class UserSearchFormView(LoginRequiredMixin, FormView):
         return reverse("users:detail", kwargs={"username": self.user.username})
 
 
-user_search_form_view = UserSearchFormView.as_view()
+user_lookup_view = UserLookup.as_view()

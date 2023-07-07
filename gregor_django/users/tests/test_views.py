@@ -13,13 +13,13 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from gregor_django.users.forms import UserChangeForm, UserSearchForm
+from gregor_django.users.forms import UserChangeForm, UserLookupForm
 from gregor_django.users.tests.factories import UserFactory
 from gregor_django.users.views import (
     UserRedirectView,
     UserUpdateView,
     user_detail_view,
-    user_search_form_view,
+    user_lookup_view,
 )
 
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -131,7 +131,7 @@ class UserAutocompleteViewTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return user_search_form_view
+        return user_lookup_view
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -228,8 +228,8 @@ class UserAutocompleteViewTest(TestCase):
         self.assertEqual(returned_ids[0], object.pk)
 
 
-class UserSearchFormViewTest(TestCase):
-    """Test for UserSearchForm view"""
+class UserLookupTest(TestCase):
+    """Test for UserLookup view"""
 
     def setUp(self):
         """Set up test class."""
@@ -245,7 +245,7 @@ class UserSearchFormViewTest(TestCase):
 
     def get_url(self):
         """Get the url for the view being tested."""
-        return reverse("users:search")
+        return reverse("users:lookup")
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -265,7 +265,7 @@ class UserSearchFormViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("form", response.context_data)
-        self.assertIsInstance(response.context_data["form"], UserSearchForm)
+        self.assertIsInstance(response.context_data["form"], UserLookupForm)
 
     def test_redirect_to_the_correct_profile_page(self):
         """The search view correctly redirect to the user profile page"""
