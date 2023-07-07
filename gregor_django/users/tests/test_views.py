@@ -152,14 +152,14 @@ class UserAutocompleteViewTest(TestCase):
         UserFactory.create_batch(9)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        user_obj = User.objects.all()
-        returned_usernames = [
-            x["id"] for x in json.loads(response.content.decode("utf-8"))["results"]
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
         ]
-        self.assertEqual(len(returned_usernames), 10)
+        self.assertEqual(len(returned_ids), User.objects.count())
         self.assertEqual(
-            sorted(returned_usernames),
-            sorted([object.get_username() for object in user_obj]),
+            sorted(returned_ids),
+            sorted(User.objects.values_list("id", flat=True)),
         )
 
     def test_returns_correct_object_match(self):
@@ -171,11 +171,13 @@ class UserAutocompleteViewTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "another-user"})
-        returned_usernames = [
-            x["id"] for x in json.loads(response.content.decode("utf-8"))["results"]
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
         ]
-        self.assertEqual(len(returned_usernames), 1)
-        self.assertEqual(returned_usernames[0], object.username)
+
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_starting_with_query(self):
         """Returns the correct objects when query matches the beginning of the name."""
@@ -187,10 +189,11 @@ class UserAutocompleteViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "another"})
         returned_ids = [
-            x["id"] for x in json.loads(response.content.decode("utf-8"))["results"]
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
         ]
         self.assertEqual(len(returned_ids), 1)
-        self.assertEqual(returned_ids[0], object.username)
+        self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_containing_query(self):
         """Returns the correct objects when the name contains the query."""
@@ -202,10 +205,11 @@ class UserAutocompleteViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "use"})
         returned_ids = [
-            x["id"] for x in json.loads(response.content.decode("utf-8"))["results"]
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
         ]
         self.assertEqual(len(returned_ids), 1)
-        self.assertEqual(returned_ids[0], object.username)
+        self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_case_insensitive(self):
         """Returns the correct objects when query matches the beginning of the name."""
@@ -217,10 +221,11 @@ class UserAutocompleteViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "ANOTHER-USER"})
         returned_ids = [
-            x["id"] for x in json.loads(response.content.decode("utf-8"))["results"]
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
         ]
         self.assertEqual(len(returned_ids), 1)
-        self.assertEqual(returned_ids[0], object.username)
+        self.assertEqual(returned_ids[0], object.pk)
 
 
 class UserSearchFormViewTest(TestCase):
