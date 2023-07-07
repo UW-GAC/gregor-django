@@ -27,7 +27,7 @@ class UserLookupForm(Bootstrap5MediaFormMixin, forms.Form):
 
     user = forms.ModelChoiceField(
         queryset=User.objects.all(),
-        widget=autocomplete.ListSelect2(
+        widget=autocomplete.ModelSelect2(
             url="users:autocomplete",
             attrs={"data-theme": "bootstrap-5"},
         ),
