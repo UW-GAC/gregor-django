@@ -55,10 +55,6 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
     def get_result_label(self, item):
         return "{} ({})".format(item.name, item.username)
 
-    def get_result_value(self, item):
-        """Return the value of a result."""
-        return item.username
-
     def get_queryset(self):
         qs = User.objects.all().order_by("username")
 
