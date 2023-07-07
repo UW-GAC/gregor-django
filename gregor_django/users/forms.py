@@ -22,8 +22,8 @@ class UserCreationForm(admin_forms.UserCreationForm):
         }
 
 
-class UserSearchForm(Bootstrap5MediaFormMixin, forms.Form):
-    """Form for the user search"""
+class UserLookupForm(Bootstrap5MediaFormMixin, forms.Form):
+    """Form for the user lookup."""
 
     user = forms.ModelChoiceField(
         queryset=User.objects.all(),
