@@ -31,7 +31,6 @@ class UserLookupForm(Bootstrap5MediaFormMixin, forms.Form):
             url="users:autocomplete",
             attrs={"data-theme": "bootstrap-5"},
         ),
-        to_field_name="username",
         required=True,
         help_text="Enter either the name or username to search.",
     )
