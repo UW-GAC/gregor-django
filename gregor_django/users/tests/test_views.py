@@ -1,11 +1,10 @@
 import json
 
 import pytest
-from anvil_consortium_manager import models as acm_models
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser, Permission
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest
@@ -235,13 +234,8 @@ class UserLookupTest(TestCase):
         """Set up test class."""
         self.factory = RequestFactory()
         self.model_factory = UserFactory
-        # Create a user with both view and edit permission.
+        # Create a user.
         self.user = User.objects.create_user(username="test", password="test")
-        self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
-            )
-        )
 
     def get_url(self):
         """Get the url for the view being tested."""
@@ -275,7 +269,7 @@ class UserLookupTest(TestCase):
             email="user1@example.com",
         )
         self.client.force_login(self.user)
-        response = self.client.post(self.get_url(), {"user": "user1"})
+        response = self.client.post(self.get_url(), {"user": object.pk})
         self.assertRedirects(
             response,
             resolve_url(reverse("users:detail", kwargs={"username": object.username})),
