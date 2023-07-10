@@ -88,6 +88,8 @@ class UploadCycleDetail(
         tables.UploadWorkspaceTable,
         tables.CombinedConsortiumDataWorkspaceTable,
         tables.ReleaseWorkspaceTable,
+        tables.DCCProcessingWorkspaceTable,
+        tables.DCCProcessedDataWorkspaceTable,
     ]
 
     def get_tables_data(self):
@@ -100,7 +102,19 @@ class UploadCycleDetail(
         release_workspace_qs = Workspace.objects.filter(
             releaseworkspace__upload_cycle=self.object
         )
-        return [upload_workspace_qs, combined_workspace_qs, release_workspace_qs]
+        dcc_processing_workspace_qs = Workspace.objects.filter(
+            dccprocessingworkspace__upload_cycle=self.object,
+        )
+        dcc_processed_data_workspace_qs = Workspace.objects.filter(
+            dccprocesseddataworkspace__upload_cycle=self.object,
+        )
+        return [
+            upload_workspace_qs,
+            combined_workspace_qs,
+            release_workspace_qs,
+            dcc_processing_workspace_qs,
+            dcc_processed_data_workspace_qs,
+        ]
 
 
 class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):

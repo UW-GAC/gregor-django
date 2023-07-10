@@ -193,3 +193,33 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             # that all upload_workspaces have the same upload_cycle.
             if upload_cycle != upload_workspaces[0].upload_cycle:
                 raise ValidationError(self.ERROR_UPLOAD_CYCLE)
+
+        return cleaned_data
+
+
+class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a DCCProcessingWorkspace object."""
+
+    ERROR_UPLOAD_CYCLE = (
+        "upload_cycle must match upload_cycle of all upload_workspaces."
+    )
+
+    class Meta:
+        model = models.DCCProcessingWorkspace
+        fields = (
+            "upload_cycle",
+            "purpose",
+            "workspace",
+        )
+
+
+class DCCProcessedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a DCCProcessedDataWorkspace object."""
+
+    class Meta:
+        model = models.DCCProcessedDataWorkspace
+        fields = (
+            "upload_cycle",
+            "consent_group",
+            "workspace",
+        )
