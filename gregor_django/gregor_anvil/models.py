@@ -216,6 +216,9 @@ class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
     upload_workspaces = models.ManyToManyField(
         UploadWorkspace, help_text="Upload workspaces contributing to this workspace."
     )
+    purpose = models.TextField(
+        help_text="The type of processing that is done in this workspace."
+    )
 
 
 class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):

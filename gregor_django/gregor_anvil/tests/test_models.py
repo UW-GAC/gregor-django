@@ -579,6 +579,7 @@ class DCCProcessingWorkspaceTest(TestCase):
         upload_cycle = factories.UploadCycleFactory.create()
         instance = models.DCCProcessingWorkspace(
             upload_cycle=upload_cycle,
+            purpose="foo",
             workspace=workspace,
         )
         instance.save()
@@ -615,7 +616,7 @@ class DCCProcessingWorkspaceTest(TestCase):
         """Can only have one DCCProcessingWorkspace per UploadCycle."""
         dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
         workspace = WorkspaceFactory.create()
-        instance = models.DCCProcessingWorkspace(
+        instance = factories.DCCProcessingWorkspaceFactory.build(
             upload_cycle=dcc_processing_workspace.upload_cycle,
             workspace=workspace,
         )
@@ -657,7 +658,7 @@ class DCCProcessedDataWorkspaceTest(TestCase):
             factories.DCCProcessedDataWorkspaceFactory.create()
         )
         workspace = WorkspaceFactory.create()
-        instance = models.DCCProcessedDataWorkspace(
+        instance = factories.DCCProcessedDataWorkspaceFactory.build(
             dcc_processing_workspace=dcc_processed_data_workspace.dcc_processing_workspace,
             consent_group=dcc_processed_data_workspace.consent_group,
             workspace=workspace,

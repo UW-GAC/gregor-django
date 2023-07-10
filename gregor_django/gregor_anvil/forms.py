@@ -209,6 +209,7 @@ class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "upload_cycle",
             "upload_workspaces",
+            "purpose",
             "workspace",
         )
         widgets = {

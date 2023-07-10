@@ -132,6 +132,7 @@ class DCCProcessingWorkspaceFactory(DjangoModelFactory):
         model = models.DCCProcessingWorkspace
 
     upload_cycle = SubFactory(UploadCycleFactory)
+    purpose = Faker("paragraph")
     workspace = SubFactory(
         WorkspaceFactory,
         workspace_type="dcc_processing",
