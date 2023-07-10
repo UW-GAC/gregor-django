@@ -104,3 +104,29 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.ReleaseWorkspace
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
+
+
+class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for DCCProcessingWorkspace."""
+
+    type = "dcc_processing"
+    name = "DCC processing workspace"
+    description = "Workspaces used for DCC processing of data."
+    list_table_class = tables.DCCProcessingWorkspaceTable
+    workspace_data_model = models.DCCProcessingWorkspace
+    workspace_data_form_class = forms.DCCProcessingWorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/dccprocessingworkspace_detail.html"
+
+
+class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for DCCProcessedDataWorkspace."""
+
+    type = "dcc_processed_data"
+    name = "DCC processed data workspace"
+    description = "Workspaces containing data processed by the DCC and hosted by AnVIL."
+    list_table_class = tables.DCCProcessedDataWorkspaceTable
+    workspace_data_model = models.DCCProcessedDataWorkspace
+    workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
+    workspace_detail_template_name = (
+        "gregor_anvil/dccprocesseddataworkspace_detail.html"
+    )
