@@ -141,6 +141,14 @@ class UploadCycleTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "U01")
 
+    def test_model_order(self):
+        """Models are ordered by cycle."""
+        instance_1 = factories.UploadCycleFactory.create(cycle=2)
+        instance_2 = factories.UploadCycleFactory.create(cycle=1)
+        qs = models.UploadCycle.objects.all()
+        self.assertEqual(qs[0], instance_2)
+        self.assertEqual(qs[1], instance_1)
+
     def test_get_absolute_url(self):
         """The get_absolute_url() method works."""
         instance = factories.UploadCycleFactory()
@@ -560,3 +568,81 @@ class ReleaseWorkspaceTest(TestCase):
             dbgap_version=1, dbgap_participant_set=2
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs003047.v1.p2")
+
+
+class DCCProcessingWorkspaceTest(TestCase):
+    """Tests for the DCCProcessingWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance = models.DCCProcessingWorkspace(
+            upload_cycle=upload_cycle,
+            purpose="foo",
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DCCProcessingWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.DCCProcessingWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_two_workspaces_same_upload_cycle(self):
+        """Can have two workspaces with the same upload cycle."""
+        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = factories.DCCProcessingWorkspaceFactory.build(
+            upload_cycle=dcc_processing_workspace.upload_cycle,
+            workspace=workspace,
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertEqual(models.DCCProcessingWorkspace.objects.count(), 2)
+
+
+class DCCProcessedDataWorkspaceTest(TestCase):
+    """Tests for the DCCProcessedDataWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.DCCProcessedDataWorkspace(
+            consent_group=consent_group,
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DCCProcessedDataWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.DCCProcessedDataWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_unique(self):
+        """Cannot have two workspaces with the same upload cycle and consent group."""
+        dcc_processed_data_workspace = (
+            factories.DCCProcessedDataWorkspaceFactory.create()
+        )
+        workspace = WorkspaceFactory.create()
+        instance = factories.DCCProcessedDataWorkspaceFactory.build(
+            upload_cycle=dcc_processed_data_workspace.upload_cycle,
+            consent_group=dcc_processed_data_workspace.consent_group,
+            workspace=workspace,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        with self.assertRaises(IntegrityError):
+            instance.save()

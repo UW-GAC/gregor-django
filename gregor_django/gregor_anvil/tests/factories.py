@@ -123,3 +123,31 @@ class ReleaseWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type="release",
     )
+
+
+class DCCProcessingWorkspaceFactory(DjangoModelFactory):
+    """A factory for the class DCCProcessingWorkspace model."""
+
+    class Meta:
+        model = models.DCCProcessingWorkspace
+
+    upload_cycle = SubFactory(UploadCycleFactory)
+    purpose = Faker("paragraph")
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="dcc_processing",
+    )
+
+
+class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
+    """A factory for the class DCCProcessedDataWorkspace model."""
+
+    class Meta:
+        model = models.DCCProcessedDataWorkspace
+
+    consent_group = SubFactory(ConsentGroupFactory)
+    upload_cycle = SubFactory(UploadCycleFactory)
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type="dcc_processed_data",
+    )
