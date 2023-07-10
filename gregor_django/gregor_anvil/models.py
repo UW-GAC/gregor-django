@@ -204,3 +204,39 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         return "phs{phs:06d}.v{v}.p{p}".format(
             phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set
         )
+
+
+class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
+
+    upload_cycle = models.ForeignKey(
+        UploadCycle,
+        on_delete=models.PROTECT,
+        help_text="Upload cycle associated with this workspace.",
+    )
+    purpose = models.TextField(
+        help_text="The type of processing that is done in this workspace."
+    )
+
+
+class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A workspace to store DCC processed data, split by consent (e.g., re-aligned CRAMs and gVCFs)."""
+
+    upload_cycle = models.ForeignKey(
+        UploadCycle,
+        on_delete=models.PROTECT,
+        help_text="Upload cycle associated with this workspace.",
+    )
+    consent_group = models.ForeignKey(
+        ConsentGroup,
+        help_text="Consent group associated with this data.",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_dcc_processed_data_workspace",
+                fields=["upload_cycle", "consent_group"],
+            ),
+        ]
