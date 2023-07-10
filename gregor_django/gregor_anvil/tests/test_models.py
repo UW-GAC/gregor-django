@@ -612,21 +612,17 @@ class DCCProcessingWorkspaceTest(TestCase):
         self.assertIn(upload_workspace_1, instance.upload_workspaces.all())
         self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
 
-    def test_unique(self):
-        """Can only have one DCCProcessingWorkspace per UploadCycle."""
+    def test_two_workspaces_same_upload_cycle(self):
+        """Can have two workspaces with the same upload cycle."""
         dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
         workspace = WorkspaceFactory.create()
         instance = factories.DCCProcessingWorkspaceFactory.build(
             upload_cycle=dcc_processing_workspace.upload_cycle,
             workspace=workspace,
         )
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.error_dict), 1)
-        self.assertIn("upload_cycle", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["upload_cycle"]), 1)
-        with self.assertRaises(IntegrityError):
-            instance.save()
+        instance.full_clean()
+        instance.save()
+        self.assertEqual(models.DCCProcessingWorkspace.objects.count(), 2)
 
 
 class DCCProcessedDataWorkspaceTest(TestCase):

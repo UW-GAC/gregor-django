@@ -208,7 +208,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
 
 class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
 
-    upload_cycle = models.OneToOneField(
+    upload_cycle = models.ForeignKey(
         UploadCycle,
         on_delete=models.PROTECT,
         help_text="Upload cycle associated with this workspace.",
