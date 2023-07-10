@@ -213,9 +213,6 @@ class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
         on_delete=models.PROTECT,
         help_text="Upload cycle associated with this workspace.",
     )
-    upload_workspaces = models.ManyToManyField(
-        UploadWorkspace, help_text="Upload workspaces contributing to this workspace."
-    )
     purpose = models.TextField(
         help_text="The type of processing that is done in this workspace."
     )
@@ -224,10 +221,10 @@ class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
 class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A workspace to store DCC processed data, split by consent (e.g., re-aligned CRAMs and gVCFs)."""
 
-    dcc_processing_workspace = models.ForeignKey(
-        DCCProcessingWorkspace,
-        help_text="DCC processing workspace where data in this workspace were generated.",
+    upload_cycle = models.ForeignKey(
+        UploadCycle,
         on_delete=models.PROTECT,
+        help_text="Upload cycle associated with this workspace.",
     )
     consent_group = models.ForeignKey(
         ConsentGroup,
@@ -240,6 +237,6 @@ class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_dcc_processed_data_workspace",
-                fields=["dcc_processing_workspace", "consent_group"],
+                fields=["upload_cycle", "consent_group"],
             ),
         ]

@@ -856,9 +856,7 @@ class UploadCycleDetailTest(TestCase):
     def test_dcc_processed_data_workspace_table(self):
         """Contains a table of DCCProcessedDataWorkspaces from this upload cycle."""
         obj = self.model_factory.create()
-        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
-            dcc_processing_workspace__upload_cycle=obj
-        )
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=obj)
         other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))

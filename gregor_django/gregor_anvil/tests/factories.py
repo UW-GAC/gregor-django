@@ -138,18 +138,6 @@ class DCCProcessingWorkspaceFactory(DjangoModelFactory):
         workspace_type="dcc_processing",
     )
 
-    # Not used yet.
-    # @post_generation
-    # def upload_workspaces(self, create, extracted, **kwargs):
-    #     if not create:
-    #         # Simple build, do nothing.
-    #         return
-    #
-    #     if extracted:
-    #         # A list of groups were passed in, use them
-    #         for upload_workspace in extracted:
-    #             self.upload_workspaces.add(upload_workspace)
-
 
 class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
     """A factory for the class DCCProcessedDataWorkspace model."""
@@ -158,7 +146,7 @@ class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
         model = models.DCCProcessedDataWorkspace
 
     consent_group = SubFactory(ConsentGroupFactory)
-    dcc_processing_workspace = SubFactory(DCCProcessingWorkspaceFactory)
+    upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(
         WorkspaceFactory,
         workspace_type="dcc_processed_data",

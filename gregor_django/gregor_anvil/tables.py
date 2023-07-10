@@ -253,6 +253,6 @@ class DCCProcessedDataWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.
         fields = (
             "name",
             "dccprocesseddataworkspace__consent_group",
-            "dccprocesseddataworkspace__dcc_processing_workspace__upload_cycle",
+            "dccprocesseddataworkspace__upload_cycle",
             "is_shared",
         )

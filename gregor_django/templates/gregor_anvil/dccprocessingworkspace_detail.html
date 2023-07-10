@@ -3,10 +3,8 @@
 {% block workspace_data %}
   <hr>
   <dl class="row">
-    <dt class="col-sm-2">Upload workspaces</dt> <dd class="col-sm-10">
-      {% for upload_workspace in object.dccprocessingworkspace.upload_workspaces.all %}
-        <a href="{{upload_workspace.get_absolute_url }}">{{ upload_workspace }}</a><br>
-      {% endfor %}
+    <dt class="col-sm-2">Upload cycle</dt> <dd class="col-sm-10">
+        <a href="{{object.dccprocessingworkspace.upload_cycle.get_absolute_url }}">{{ object.dccprocessingworkspace.upload_cycle }}</a><br>
     </dd>
     <dt class="col-sm-2">Purpose</dt> <dd class="col-sm-10">
       {{ object.dccprocessingworkspace.purpose }}
