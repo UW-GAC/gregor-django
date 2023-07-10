@@ -14,12 +14,7 @@ from django.urls import reverse
 
 from gregor_django.users.forms import UserChangeForm, UserLookupForm
 from gregor_django.users.tests.factories import UserFactory
-from gregor_django.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-    user_lookup_view,
-)
+from gregor_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -127,10 +122,6 @@ class UserAutocompleteViewTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("users:autocomplete", args=args)
-
-    def get_view(self):
-        """Return the view being tested."""
-        return user_lookup_view
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
