@@ -684,6 +684,7 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "upload_workspaces": [upload_workspace],
             "upload_cycle": upload_workspace.upload_cycle,
+            "purpose": "foo",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -695,6 +696,7 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             # "workspace": self.workspace,
             "upload_workspaces": [upload_workspace],
             "upload_cycle": upload_workspace.upload_cycle,
+            "purpose": "foo",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -710,6 +712,7 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             # "upload_workspaces": [upload_workspace],
             "upload_cycle": upload_cycle,
+            "purpose": "foo",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -717,6 +720,44 @@ class DCCProcessingWorkspaceFormTest(TestCase):
         self.assertIn("upload_workspaces", form.errors)
         self.assertEqual(len(form.errors["upload_workspaces"]), 1)
         self.assertIn("required", form.errors["upload_workspaces"][0])
+
+    def test_invalid_missing_purpose(self):
+        """Form is invalid when missing purpose."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle
+        )
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace],
+            "upload_cycle": upload_cycle,
+            # "purpose": "foo",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("purpose", form.errors)
+        self.assertEqual(len(form.errors["purpose"]), 1)
+        self.assertIn("required", form.errors["purpose"][0])
+
+    def test_invalid_blank_purpose(self):
+        """Form is invalid when purpose is blank."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle
+        )
+        form_data = {
+            "workspace": self.workspace,
+            "upload_workspaces": [upload_workspace],
+            "upload_cycle": upload_cycle,
+            "purpose": "",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("purpose", form.errors)
+        self.assertEqual(len(form.errors["purpose"]), 1)
+        self.assertIn("required", form.errors["purpose"][0])
 
     def test_valid_two_upload_workspaces(self):
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
@@ -727,6 +768,7 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "upload_workspaces": [upload_workspace_1, upload_workspace_2],
             "upload_cycle": upload_workspace_1.upload_cycle,
+            "purpose": "foo",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -739,6 +781,7 @@ class DCCProcessingWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "upload_cycle": upload_cycle,
             "upload_workspaces": [upload_workspace],
+            "purpose": "foo",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
