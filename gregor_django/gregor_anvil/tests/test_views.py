@@ -785,7 +785,7 @@ class UploadCycleDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         self.assertIn("tables", response.context_data)
-        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertEqual(len(response.context_data["tables"]), 5)
         self.assertIsInstance(
             response.context_data["tables"][0], tables.UploadWorkspaceTable
         )
@@ -795,6 +795,12 @@ class UploadCycleDetailTest(TestCase):
         )
         self.assertIsInstance(
             response.context_data["tables"][2], tables.ReleaseWorkspaceTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][3], tables.DCCProcessingWorkspaceTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][4], tables.DCCProcessedDataWorkspaceTable
         )
 
     def test_upload_workspace_table(self):
@@ -831,6 +837,32 @@ class UploadCycleDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_dcc_processing_workspace_table(self):
+        """Contains a table of DCCProcessingWorkspaces from this upload cycle."""
+        obj = self.model_factory.create()
+        workspace = factories.DCCProcessingWorkspaceFactory.create(upload_cycle=obj)
+        other_workspace = factories.DCCProcessingWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][3]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_dcc_processed_data_workspace_table(self):
+        """Contains a table of DCCProcessedDataWorkspaces from this upload cycle."""
+        obj = self.model_factory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            dcc_processing_workspace__upload_cycle=obj
+        )
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][4]
         self.assertEqual(len(table.rows), 1)
         self.assertIn(workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
