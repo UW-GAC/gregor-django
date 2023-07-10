@@ -106,7 +106,7 @@ class UploadCycleDetail(
             dccprocessingworkspace__upload_cycle=self.object,
         )
         dcc_processed_data_workspace_qs = Workspace.objects.filter(
-            dccprocesseddataworkspace__dcc_processing_workspace__upload_cycle=self.object,
+            dccprocesseddataworkspace__upload_cycle=self.object,
         )
         return [
             upload_workspace_qs,

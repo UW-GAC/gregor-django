@@ -592,26 +592,6 @@ class DCCProcessingWorkspaceTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
 
-    def test_one_upload_workspace(self):
-        """Can link one upload workspace."""
-        instance = factories.DCCProcessingWorkspaceFactory.create()
-        instance.save()
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        instance.upload_workspaces.add(upload_workspace)
-        self.assertEqual(instance.upload_workspaces.count(), 1)
-        self.assertIn(upload_workspace, instance.upload_workspaces.all())
-
-    def test_two_upload_workspaces(self):
-        """Can link two upload workspaces."""
-        instance = factories.DCCProcessingWorkspaceFactory.create()
-        instance.save()
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
-        instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
-        self.assertEqual(instance.upload_workspaces.count(), 2)
-        self.assertIn(upload_workspace_1, instance.upload_workspaces.all())
-        self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
-
     def test_two_workspaces_same_upload_cycle(self):
         """Can have two workspaces with the same upload cycle."""
         dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
@@ -630,12 +610,12 @@ class DCCProcessedDataWorkspaceTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        dcc_processing_workspace = factories.DCCProcessingWorkspaceFactory.create()
+        upload_cycle = factories.UploadCycleFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         workspace = WorkspaceFactory.create()
         instance = models.DCCProcessedDataWorkspace(
             consent_group=consent_group,
-            dcc_processing_workspace=dcc_processing_workspace,
+            upload_cycle=upload_cycle,
             workspace=workspace,
         )
         instance.save()
@@ -655,7 +635,7 @@ class DCCProcessedDataWorkspaceTest(TestCase):
         )
         workspace = WorkspaceFactory.create()
         instance = factories.DCCProcessedDataWorkspaceFactory.build(
-            dcc_processing_workspace=dcc_processed_data_workspace.dcc_processing_workspace,
+            upload_cycle=dcc_processed_data_workspace.upload_cycle,
             consent_group=dcc_processed_data_workspace.consent_group,
             workspace=workspace,
         )
