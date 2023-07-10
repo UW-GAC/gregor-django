@@ -44,6 +44,7 @@ workspace_report_patterns = (
     ],
     "reports",
 )
+
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
