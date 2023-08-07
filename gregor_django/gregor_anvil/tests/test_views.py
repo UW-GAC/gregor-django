@@ -1,5 +1,6 @@
 import json
 from datetime import date, timedelta
+from unittest import skip
 
 import responses
 from anvil_consortium_manager import models as acm_models
@@ -1479,8 +1480,6 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
 
     def test_status_code(self):
         """Response has a status code of 200."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        self.object.upload_workspaces.add(upload_workspace)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
@@ -1488,6 +1487,58 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             )
         )
         self.assertEqual(response.status_code, 200)
+
+    @skip("Need to allow extra context in ACM.")
+    def test_contains_upload_workspaces(self):
+        """Response contains the upload workspaces."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.object.upload_cycle
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.object.upload_cycle
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertIn("upload_workspace_table", response.context_data)
+        self.assertIn(
+            upload_workspace_1, response.context_data["upload_workspace_table"].data
+        )
+        self.assertIn(
+            upload_workspace_2, response.context_data["upload_workspace_table"].data
+        )
+
+    @skip("Need to allow extra context in ACM.")
+    def test_contains_upload_workspaces_from_previous_cycles(self):
+        """Response contains the upload workspaces."""
+        upload_cycle_1 = factories.UploadCycleFactory.create(upload_cycle=1)
+        upload_cycle_2 = factories.UploadCycleFactory.create(upload_cycle=2)
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=upload_cycle_2
+        )
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle_1
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle_2
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                combined_workspace.workspace.billing_project.name,
+                combined_workspace.workspace.name,
+            )
+        )
+        self.assertIn("upload_workspace_table", response.context_data)
+        self.assertIn(
+            upload_workspace_1, response.context_data["upload_workspace_table"].data
+        )
+        self.assertIn(
+            upload_workspace_2, response.context_data["upload_workspace_table"].data
+        )
 
 
 class ReleaseWorkspaceDetailTest(TestCase):
@@ -1511,8 +1562,6 @@ class ReleaseWorkspaceDetailTest(TestCase):
 
     def test_status_code(self):
         """Response has a status code of 200."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        self.object.upload_workspaces.add(upload_workspace)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
@@ -1520,6 +1569,62 @@ class ReleaseWorkspaceDetailTest(TestCase):
             )
         )
         self.assertEqual(response.status_code, 200)
+
+    @skip("Need to allow extra context in ACM.")
+    def test_contains_upload_workspaces(self):
+        """Response contains the upload workspaces."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.object.upload_cycle
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.object.upload_cycle
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertIn("included_workspace_table", response.context_data)
+        self.assertIn(
+            upload_workspace_1.workspace,
+            response.context_data["included_workspace_table"].data,
+        )
+        self.assertIn(
+            upload_workspace_2.workspace,
+            response.context_data["included_workspace_table"].data,
+        )
+
+    @skip("Need to allow extra context in ACM.")
+    def test_contains_upload_workspaces_from_previous_cycles(self):
+        """Response contains the upload workspaces."""
+        upload_cycle_1 = factories.UploadCycleFactory.create(upload_cycle=1)
+        upload_cycle_2 = factories.UploadCycleFactory.create(upload_cycle=2)
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=upload_cycle_2
+        )
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle_1
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=upload_cycle_2
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                combined_workspace.workspace.billing_project.name,
+                combined_workspace.workspace.name,
+            )
+        )
+        self.assertIn("included_workspace_table", response.context_data)
+        self.assertIn(
+            upload_workspace_1.workspace,
+            response.context_data["included_workspace_table"].data,
+        )
+        self.assertIn(
+            upload_workspace_2.workspace,
+            response.context_data["included_workspace_table"].data,
+        )
 
 
 class WorkspaceReportTest(TestCase):
