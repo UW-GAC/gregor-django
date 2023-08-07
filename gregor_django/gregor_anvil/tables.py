@@ -80,26 +80,26 @@ class UploadCycleTable(tables.Table):
         return str(record)
 
 
-class WorkspaceSharedWithConsortiumTable(tables.Table):
+class WorkspaceConsortiumAccessTable(tables.Table):
     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
 
-    is_shared = tables.columns.Column(
+    consortium_access = tables.columns.Column(
         accessor="pk",
-        verbose_name="Shared with GREGoR?",
+        verbose_name="Consortium access?",
         orderable=False,
     )
 
-    def render_is_shared(self, record):
+    def render_consortium_access(self, record):
         try:
             group = ManagedGroup.objects.get(name="GREGOR_ALL")
         except ManagedGroup.DoesNotExist:
-            is_shared = False
+            has_consortium_access = False
         else:
-            is_shared = record.is_in_authorization_domain(group) and record.is_shared(
+            has_consortium_access = record.is_in_authorization_domain(
                 group
-            )
+            ) and record.is_shared(group)
 
-        if is_shared:
+        if has_consortium_access:
             icon = "check-circle-fill"
             color = "green"
             value = format_html(
@@ -110,7 +110,7 @@ class WorkspaceSharedWithConsortiumTable(tables.Table):
         return value
 
 
-class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class DefaultWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """Class to use for default workspace tables in GREGoR."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
@@ -128,12 +128,12 @@ class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "name",
             "billing_project",
             "number_groups",
-            "is_shared",
+            "consortium_access",
         )
         order_by = ("name",)
 
 
-class UploadWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class UploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from UploadWorkspace."""
 
     name = tables.columns.Column(linkify=True)
@@ -146,11 +146,11 @@ class UploadWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "uploadworkspace__upload_cycle",
             "uploadworkspace__research_center",
             "uploadworkspace__consent_group",
-            "is_shared",
+            "consortium_access",
         )
 
 
-class TemplateWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class TemplateWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from TemplateWorkspace."""
 
     name = tables.columns.Column(linkify=True)
@@ -160,7 +160,7 @@ class TemplateWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         fields = (
             "name",
             "templateworkspace__intended_use",
-            "is_shared",
+            "consortium_access",
         )
 
 
@@ -183,7 +183,7 @@ class WorkspaceReportTable(tables.Table):
 
 
 class CombinedConsortiumDataWorkspaceTable(
-    WorkspaceSharedWithConsortiumTable, tables.Table
+    WorkspaceConsortiumAccessTable, tables.Table
 ):
     """A table for Workspaces that includes fields from CombinedConsortiumDataWorkspace."""
 
@@ -230,7 +230,7 @@ class DCCProcessingWorkspaceTable(tables.Table):
         )
 
 
-class DCCProcessedDataWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class DCCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from DCCProcessedDataWorkspace."""
 
     name = tables.columns.Column(linkify=True)
@@ -242,5 +242,5 @@ class DCCProcessedDataWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.
             "name",
             "dccprocesseddataworkspace__upload_cycle",
             "dccprocesseddataworkspace__consent_group",
-            "is_shared",
+            "consortium_access",
         )
