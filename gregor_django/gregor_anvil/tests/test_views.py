@@ -961,6 +961,11 @@ class UploadWorkspaceDetailTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
         self.object = factories.UploadWorkspaceFactory.create()
 
     def get_url(self, *args):
@@ -976,6 +981,26 @@ class UploadWorkspaceDetailTest(TestCase):
             )
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_contains_share_with_auth_domain_button(self):
+        acm_factories.WorkspaceAuthorizationDomainFactory.create(
+            workspace=self.object.workspace, group__name="test_auth"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        url = reverse(
+            "anvil_consortium_manager:workspaces:sharing:new_by_group",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+                "test_auth",
+            ],
+        )
+        self.assertContains(response, url)
 
 
 class UploadWorkspaceListTest(TestCase):
@@ -1472,6 +1497,11 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
         self.object = factories.CombinedConsortiumDataWorkspaceFactory.create()
 
     def get_url(self, *args):
@@ -1539,6 +1569,26 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         self.assertIn(
             upload_workspace_2, response.context_data["upload_workspace_table"].data
         )
+
+    def test_contains_share_with_auth_domain_button(self):
+        acm_factories.WorkspaceAuthorizationDomainFactory.create(
+            workspace=self.object.workspace, group__name="test_auth"
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        url = reverse(
+            "anvil_consortium_manager:workspaces:sharing:new_by_group",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+                "test_auth",
+            ],
+        )
+        self.assertContains(response, url)
 
 
 class ReleaseWorkspaceDetailTest(TestCase):
