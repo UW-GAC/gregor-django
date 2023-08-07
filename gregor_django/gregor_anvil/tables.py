@@ -183,22 +183,13 @@ class CombinedConsortiumDataWorkspaceTable(
 
     name = tables.columns.Column(linkify=True)
     combinedconsortiumdataworkspace__upload_cycle = tables.columns.Column(linkify=True)
-    number_workspaces = tables.columns.Column(
-        accessor="pk",
-        verbose_name="Number of workspaces",
-        orderable=False,
-    )
 
     class Meta:
         model = Workspace
         fields = (
             "name",
             "combinedconsortiumdataworkspace__upload_cycle",
-            "number_workspaces",
         )
-
-    def render_number_workspaces(self, record):
-        return record.combinedconsortiumdataworkspace.upload_workspaces.count()
 
 
 class ReleaseWorkspaceTable(tables.Table):

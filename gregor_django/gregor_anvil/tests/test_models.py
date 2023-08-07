@@ -373,32 +373,6 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
 
-    def test_one_upload_workspace(self):
-        """Can link one upload workspace."""
-        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            upload_cycle=instance.upload_cycle
-        )
-        instance.save()
-        instance.upload_workspaces.add(upload_workspace)
-        self.assertEqual(instance.upload_workspaces.count(), 1)
-        self.assertIn(upload_workspace, instance.upload_workspaces.all())
-
-    def test_two_upload_workspaces(self):
-        """Can link two upload workspaces."""
-        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=instance.upload_cycle
-        )
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=instance.upload_cycle
-        )
-        instance.save()
-        instance.upload_workspaces.add(upload_workspace_1, upload_workspace_2)
-        self.assertEqual(instance.upload_workspaces.count(), 2)
-        self.assertIn(upload_workspace_1, instance.upload_workspaces.all())
-        self.assertIn(upload_workspace_2, instance.upload_workspaces.all())
-
 
 class ReleaseWorkspaceTest(TestCase):
     """Tests for the ReleaseWorkspace model."""

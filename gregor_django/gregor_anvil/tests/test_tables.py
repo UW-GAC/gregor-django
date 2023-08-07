@@ -175,20 +175,6 @@ class CombinedConsortiumDataWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
-    def test_number_workspaces(self):
-        self.model_factory.create()
-        workspace_1 = self.model_factory.create()
-        workspace_1.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        workspace_2 = self.model_factory.create()
-        workspace_2.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        workspace_2.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="combined_consortium")
-        )
-        self.assertEqual(table.rows[0].get_cell("number_workspaces"), 0)
-        self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
-        self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
-
 
 class ReleaseWorkspaceTableTest(TestCase):
     """Tests for the AccountTable in this app."""
