@@ -50,7 +50,7 @@ jobs:
         # ahead of planned upgrades we can add versions as
         # needed
         python-version: [3.8]
-        mariadb-version: ["10.3"]
+        mariadb-version: ["10.3", "10.4"]
 
     services:
       mysql:
