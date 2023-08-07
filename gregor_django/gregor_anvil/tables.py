@@ -1,6 +1,6 @@
 import django_tables2 as tables
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
-from anvil_consortium_manager.models import Account, Workspace
+from anvil_consortium_manager.models import Account, ManagedGroup, Workspace
 from django.utils.html import format_html
 
 from . import models
@@ -90,9 +90,15 @@ class WorkspaceSharedWithConsortiumTable(tables.Table):
     )
 
     def render_is_shared(self, record):
-        is_shared = record.workspacegroupsharing_set.filter(
-            group__name="GREGOR_ALL"
-        ).exists()
+        try:
+            group = ManagedGroup.objects.get(name="GREGOR_ALL")
+        except ManagedGroup.DoesNotExist:
+            is_shared = False
+        else:
+            is_shared = record.is_in_authorization_domain(group) and record.is_shared(
+                group
+            )
+
         if is_shared:
             icon = "check-circle-fill"
             color = "green"
