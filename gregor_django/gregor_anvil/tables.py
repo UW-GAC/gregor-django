@@ -197,11 +197,6 @@ class ReleaseWorkspaceTable(tables.Table):
 
     name = tables.columns.Column(linkify=True)
     releaseworkspace__upload_cycle = tables.columns.Column(linkify=True)
-    number_workspaces = tables.columns.Column(
-        accessor="pk",
-        verbose_name="Number of workspaces",
-        orderable=False,
-    )
 
     class Meta:
         model = Workspace
@@ -211,12 +206,8 @@ class ReleaseWorkspaceTable(tables.Table):
             "releaseworkspace__consent_group",
             "releaseworkspace__dbgap_version",
             "releaseworkspace__dbgap_participant_set",
-            "number_workspaces",
             "releaseworkspace__date_released",
         )
-
-    def render_number_workspaces(self, record):
-        return record.releaseworkspace.upload_workspaces.count()
 
 
 class DCCProcessingWorkspaceTable(tables.Table):

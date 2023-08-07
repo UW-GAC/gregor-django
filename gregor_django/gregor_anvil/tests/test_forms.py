@@ -3,7 +3,6 @@
 from datetime import date, timedelta
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from django.core.exceptions import NON_FIELD_ERRORS
 from django.test import TestCase
 
 from .. import forms
@@ -299,16 +298,16 @@ class ReleaseWorkspaceFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory()
+        self.upload_cycle = factories.UploadCycleFactory.create()
+        self.consent_group = factories.ConsentGroupFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
+            "consent_group": self.consent_group,
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
@@ -317,13 +316,11 @@ class ReleaseWorkspaceFormTest(TestCase):
 
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing research_center."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             # "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
+            "consent_group": self.consent_group,
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
@@ -336,13 +333,11 @@ class ReleaseWorkspaceFormTest(TestCase):
 
     def test_invalid_missing_upload_cycle(self):
         """Form is invalid when missing consent_group."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             "workspace": self.workspace,
-            # "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            # "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
+            "consent_group": self.consent_group,
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
@@ -354,35 +349,13 @@ class ReleaseWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["upload_cycle"]), 1)
         self.assertIn("required", form.errors["upload_cycle"][0])
 
-    def test_invalid_missing_upload_workspaces(self):
-        """Form is invalid when missing research_center."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            # "upload_workspaces": [upload_workspace],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("upload_workspaces", form.errors)
-        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
-        self.assertIn("required", form.errors["upload_workspaces"][0])
-
     def test_invalid_missing_consent_group(self):
         """Form is invalid when missing consent_group."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            # "consent_group": upload_workspace.consent_group,
+            # "consent_group": self.consent_group,
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
@@ -396,13 +369,11 @@ class ReleaseWorkspaceFormTest(TestCase):
 
     def test_invalid_missing_version(self):
         """Form is invalid when missing research_center."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
+            "consent_group": self.consent_group,
             # "dbgap_version": 1,
             "dbgap_participant_set": 1,
         }
@@ -415,13 +386,11 @@ class ReleaseWorkspaceFormTest(TestCase):
 
     def test_invalid_missing_dbgap_participant_set(self):
         """Form is invalid when missing research_center."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
         form_data = {
             "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            "upload_cycle": self.upload_cycle,
             "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
+            "consent_group": self.consent_group,
             "dbgap_version": 1,
             # "dbgap_participant_set": 1,
         }
@@ -435,14 +404,9 @@ class ReleaseWorkspaceFormTest(TestCase):
     def test_invalid_duplicate_object(self):
         """Form is invalid with a duplicated object."""
         release_workspace = factories.ReleaseWorkspaceFactory.create()
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            consent_group=release_workspace.consent_group,
-            upload_cycle=release_workspace.upload_cycle,
-        )
         form_data = {
             "workspace": self.workspace,
             "upload_cycle": release_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
             "full_data_use_limitations": "foo bar",
             "consent_group": release_workspace.consent_group,
             "dbgap_version": 1,
@@ -454,114 +418,6 @@ class ReleaseWorkspaceFormTest(TestCase):
         non_field_errors = form.non_field_errors()
         self.assertEqual(len(non_field_errors), 1)
         self.assertIn("already exists", non_field_errors[0])
-
-    def test_valid_two_upload_workspaces(self):
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            consent_group=upload_workspace_1.consent_group,
-            upload_cycle=upload_workspace_1.upload_cycle,
-        )
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_workspace_1.upload_cycle,
-            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace_1.consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
-
-    def test_invalid_upload_workspaces_have_different_consent_group(self):
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_workspace_1.upload_cycle
-        )
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_workspace_1.upload_cycle,
-            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace_1.consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("upload_workspaces", form.errors)
-        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
-        self.assertIn(
-            self.form_class.ERROR_UPLOAD_WORKSPACE_CONSENT,
-            form.errors["upload_workspaces"][0],
-        )
-
-    def test_invalid_upload_workspaces_have_different_upload_cycles(self):
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            consent_group=upload_workspace_1.consent_group
-        )
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_workspace_1.upload_cycle,
-            "upload_workspaces": [upload_workspace_1, upload_workspace_2],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace_1.consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("upload_workspaces", form.errors)
-        self.assertEqual(len(form.errors["upload_workspaces"]), 1)
-        self.assertIn(
-            self.form_class.ERROR_UPLOAD_CYCLE,
-            form.errors["upload_workspaces"][0],
-        )
-
-    def test_invalid_upload_workspace_consent_does_not_match_consent_group(self):
-        consent_group = factories.ConsentGroupFactory()
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_workspace.upload_cycle,
-            "upload_workspaces": [upload_workspace],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        non_field_errors = form.non_field_errors()
-        self.assertEqual(len(non_field_errors), 1)
-        self.assertIn(self.form_class.ERROR_CONSENT_DOES_NOT_MATCH, non_field_errors[0])
-
-    def test_clean(self):
-        """Form is invalid when upload_workspace upload cycle does not match upload_cycle."""
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        upload_cycle = factories.UploadCycleFactory.create()
-        form_data = {
-            "workspace": self.workspace,
-            "upload_cycle": upload_cycle,
-            "upload_workspaces": [upload_workspace],
-            "full_data_use_limitations": "foo bar",
-            "consent_group": upload_workspace.consent_group,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
-        self.assertIn(
-            self.form_class.ERROR_UPLOAD_CYCLE,
-            form.errors[NON_FIELD_ERRORS][0],
-        )
 
 
 class DCCProcessingWorkspaceFormTest(TestCase):
