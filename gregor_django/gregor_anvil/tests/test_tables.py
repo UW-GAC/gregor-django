@@ -2,6 +2,11 @@ from anvil_consortium_manager.models import Account, Workspace
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
+    ManagedGroupFactory,
+    WorkspaceAuthorizationDomainFactory,
+    WorkspaceFactory,
+    WorkspaceGroupSharingFactory,
 )
 from django.db.models import Count, Q
 from django.test import TestCase
@@ -112,6 +117,114 @@ class UploadCycleTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
 
+class WorkspaceConsortiumAccessTableTest(TestCase):
+    """Tests for the is_shared column."""
+
+    def setUp(self):
+        self.gregor_all = ManagedGroupFactory.create(name="GREGOR_ALL")
+
+    def test_is_shared_no_auth_domain_not_shared(self):
+        """Workspace has no auth domain and is not shared with GREGOR_ALL."""
+        workspace = WorkspaceFactory.create()
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_no_auth_domain_shared(self):
+        """Workspace has no auth domain and is shared with GREGOR_ALL."""
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_no_auth_domain_shared_other_group(self):
+        """Workspace has no auth domain and is shared with a different group."""
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_not_shared_not_in_auth_domain(self):
+        """GREGOR_ALL is not in auth domain and workspace is not shared."""
+        workspace = WorkspaceFactory.create()
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_not_shared_in_auth_domain(self):
+        """GREGOR_ALL is in auth domain and workspace is not shared."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group, child_group=self.gregor_all
+        )
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_different_group_in_auth_domain(self):
+        """GREGOR_ALL is in auth domain and workspace is shared with a different group."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group, child_group=self.gregor_all
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_with_gregor_all_not_in_auth_domain(self):
+        """GREGOR_ALL is not in auth domain and workspace is shared with GREGOR_ALL."""
+        workspace = WorkspaceFactory.create()
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_with_auth_domain_not_in_auth_domain(self):
+        """GREGOR_ALL is not in auth domain and workspace is shared with its auth domain."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace, group=auth_domain.group
+        )
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_with_gregor_all_in_auth_domain(self):
+        """GREGOR_ALL is in auth domain and workspace is shared with GREGOR_ALL."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group, child_group=self.gregor_all
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_with_auth_domain_in_auth_domain(self):
+        """GREGOR_ALL is in auth domain and workspace is shared with its auth domain."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group, child_group=self.gregor_all
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace, group=auth_domain.group
+        )
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertIn("check-circle-fill", table.render_consortium_access(workspace))
+
+    def test_is_shared_one_auth_domain_shared_with_different_group_in_auth_domain(self):
+        """GREGOR_ALL is in auth domain and workspace is shared with a different group."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group, child_group=self.gregor_all
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
+
+
 class UploadWorkspaceTableTest(TestCase):
     model = Workspace
     model_factory = factories.UploadWorkspaceFactory
@@ -175,20 +288,6 @@ class CombinedConsortiumDataWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
-    def test_number_workspaces(self):
-        self.model_factory.create()
-        workspace_1 = self.model_factory.create()
-        workspace_1.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        workspace_2 = self.model_factory.create()
-        workspace_2.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        workspace_2.upload_workspaces.add(factories.UploadWorkspaceFactory.create())
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="combined_consortium")
-        )
-        self.assertEqual(table.rows[0].get_cell("number_workspaces"), 0)
-        self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
-        self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
-
 
 class ReleaseWorkspaceTableTest(TestCase):
     """Tests for the AccountTable in this app."""
@@ -210,24 +309,6 @@ class ReleaseWorkspaceTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
-
-    def test_number_workspaces(self):
-        self.model_factory.create()
-        release_workspace_1 = self.model_factory.create()
-        release_workspace_1.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        release_workspace_2 = self.model_factory.create()
-        release_workspace_2.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        release_workspace_2.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        table = self.table_class(self.model.objects.filter(workspace_type="release"))
-        self.assertEqual(table.rows[0].get_cell("number_workspaces"), 0)
-        self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
-        self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
 
 
 class WorkspaceReportTableTest(TestCase):
