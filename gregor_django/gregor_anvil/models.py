@@ -151,9 +151,6 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
-    upload_workspaces = models.ManyToManyField(
-        UploadWorkspace, help_text="Upload workspaces"
-    )
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
@@ -168,10 +165,6 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         on_delete=models.PROTECT,
     )
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
-    upload_workspaces = models.ManyToManyField(
-        UploadWorkspace,
-        help_text="Upload workspaces contributing data to this workspace.",
-    )
     full_data_use_limitations = models.TextField(
         help_text="The full data use limitations for this workspace."
     )
