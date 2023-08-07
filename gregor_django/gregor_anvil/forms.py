@@ -63,51 +63,12 @@ class TemplateWorkspaceForm(forms.ModelForm):
 class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a CombinedConsortiumDataWorkspace object."""
 
-    ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH = (
-        "upload_cycle must match upload_cycle for upload_workspaces."
-    )
-
     class Meta:
         model = models.CombinedConsortiumDataWorkspace
-        fields = ("workspace", "upload_cycle", "upload_workspaces")
-        help_texts = {
-            "upload_workspaces": """Upload workspaces contributing to the combined workspace.
-                                    All upload workspaces must have the same version."""
-        }
-        widgets = {
-            "upload_workspaces": autocomplete.ModelSelect2Multiple(
-                url=reverse(
-                    "anvil_consortium_manager:workspaces:autocomplete_by_type",
-                    args=["upload"],
-                ),
-                attrs={"data-theme": "bootstrap-5"},
-                forward=["upload_cycle"],
-            ),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if "upload_cycle" in cleaned_data and "upload_workspaces" in cleaned_data:
-            upload_cycle = cleaned_data["upload_cycle"]
-            upload_workspace_cycles = set(
-                [x.upload_cycle for x in cleaned_data["upload_workspaces"]]
-            )
-            if len(upload_workspace_cycles) > 1:
-                raise ValidationError(self.ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH)
-            x = upload_workspace_cycles.pop()
-            if x != upload_cycle:
-                raise ValidationError(self.ERROR_UPLOAD_CYCLE_DOES_NOT_MATCH)
-
-    # def clean_upload_workspaces(self):
-    #     """Validate that all UploadWorkspaces have the same version."""
-    #     data = self.cleaned_data["upload_workspaces"]
-    #     versions = set([x.version for x in data])
-    #     if len(versions) > 1:
-    #         self.add_error(
-    #             "upload_workspaces",
-    #             ValidationError(self.ERROR_UPLOAD_VERSION_DOES_NOT_MATCH),
-    #         )
-    #     return data
+        fields = (
+            "workspace",
+            "upload_cycle",
+        )
 
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
