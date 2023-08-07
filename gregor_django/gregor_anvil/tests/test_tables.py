@@ -197,24 +197,6 @@ class ReleaseWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
-    def test_number_workspaces(self):
-        self.model_factory.create()
-        release_workspace_1 = self.model_factory.create()
-        release_workspace_1.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        release_workspace_2 = self.model_factory.create()
-        release_workspace_2.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        release_workspace_2.upload_workspaces.add(
-            factories.UploadWorkspaceFactory.create()
-        )
-        table = self.table_class(self.model.objects.filter(workspace_type="release"))
-        self.assertEqual(table.rows[0].get_cell("number_workspaces"), 0)
-        self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
-        self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
-
 
 class WorkspaceReportTableTest(TestCase):
     model = Workspace
