@@ -279,9 +279,7 @@ gregor_django/media/
 
 ### test db
 gregor_django.db
+*.db
 
 ### dbbackups
 dbbackups/
-
-
-
