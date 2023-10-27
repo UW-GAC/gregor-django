@@ -1,5 +1,6 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
+from anvil_consortium_manager.forms import WorkspaceForm
 from django.db.models import Q
 
 from . import forms, models, tables
@@ -36,6 +37,7 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = tables.UploadWorkspaceTable
     workspace_data_model = models.UploadWorkspace
     workspace_data_form_class = forms.UploadWorkspaceForm
+    workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
 
     def get_autocomplete_queryset(self, queryset, q, forwarded={}):
@@ -66,6 +68,7 @@ class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.ExampleWorkspace
     workspace_data_form_class = forms.ExampleWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_form_class = WorkspaceForm
 
 
 class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -78,6 +81,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/templateworkspace_detail.html"
+    workspace_form_class = WorkspaceForm
 
 
 class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -92,6 +96,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = (
         "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
     )
+    workspace_form_class = WorkspaceForm
 
 
 class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -104,6 +109,7 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.ReleaseWorkspace
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
+    workspace_form_class = WorkspaceForm
 
 
 class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -116,6 +122,7 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.DCCProcessingWorkspace
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/dccprocessingworkspace_detail.html"
+    workspace_form_class = WorkspaceForm
 
 
 class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -130,3 +137,4 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = (
         "gregor_anvil/dccprocesseddataworkspace_detail.html"
     )
+    workspace_form_class = WorkspaceForm
