@@ -1,5 +1,6 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
+from anvil_consortium_manager.filters import AccountListFilter
 from anvil_consortium_manager.forms import WorkspaceForm
 from django.db.models import Q
 
@@ -10,6 +11,7 @@ class AccountAdapter(BaseAccountAdapter):
     """Custom account adapter for PRIMED."""
 
     list_table_class = tables.AccountTable
+    list_filterset_class = AccountListFilter
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
