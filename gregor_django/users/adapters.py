@@ -23,15 +23,36 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest, sociallogin: Any):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
-    def update_user_name(self, user, extra_data: Dict):
+    def update_user_info(self, user, extra_data: Dict):
+        drupal_username = extra_data.get("preferred_username")
+        drupal_email = extra_data.get("email")
         first_name = extra_data.get("first_name")
         last_name = extra_data.get("last_name")
         full_name = " ".join(part for part in (first_name, last_name) if part)
+        user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user} name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_name] user {user} "
+                f"name updated from {user.name} to {full_name}"
             )
             user.name = full_name
+            user_changed = True
+        if user.username != drupal_username:
+            logger.info(
+                f"[SocialAccountAdatpter:update_user_name] user {user} "
+                f"username updated from {user.username} to {drupal_username}"
+            )
+            user.username = drupal_username
+            user_changed = True
+        if user.email != drupal_email:
+            logger.info(
+                f"[SocialAccountAdatpter:update_user_name] user {user}"
+                f" email updated from {user.email} to {drupal_email}"
+            )
+            user.email = drupal_email
+            user_changed = True
+
+        if user_changed is True:
             user.save()
 
     def update_user_partner_groups(self, user, extra_data: Dict):
@@ -172,7 +193,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         extra_data = sociallogin.account.extra_data
         user = sociallogin.user
 
-        self.update_user_name(user, extra_data)
+        self.update_user_info(user, extra_data)
         self.update_user_research_centers(user, extra_data)
         self.update_user_partner_groups(user, extra_data)
         self.update_user_groups(user, extra_data)
