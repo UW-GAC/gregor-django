@@ -36,6 +36,8 @@ class TestsUserSocialLoginAdapter(object):
         User = get_user_model()
         user = User()
         old_name = "Old Name"
+        old_username = "test"
+        old_email = "test@example.com"
         setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
         setattr(user, "name", "Old Name")
         setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
@@ -43,7 +45,12 @@ class TestsUserSocialLoginAdapter(object):
         account = SocialAccount(
             provider="drupal_oauth_provider",
             uid="123",
-            extra_data=dict(first_name="Old", last_name="Name"),
+            extra_data=dict(
+                first_name="Old",
+                last_name="Name",
+                email=old_email,
+                preferred_username=old_username,
+            ),
         )
         sociallogin = SocialLogin(user=user, account=account)
         complete_social_login(request, sociallogin)
@@ -51,21 +58,37 @@ class TestsUserSocialLoginAdapter(object):
         user = User.objects.get(**{account_settings.USER_MODEL_USERNAME_FIELD: "test"})
         assert SocialAccount.objects.filter(user=user, uid=account.uid).exists() is True
         assert user.name == old_name
+        assert user.username == old_username
+        assert user.email == old_email
 
-    def test_update_user_research_centers(self):
+    def test_update_user_info(self):
         adapter = SocialAccountAdapter()
 
         User = get_user_model()
         user = User()
-        new_name = "New Name"
+        new_first_name = "New"
+        new_last_name = "Name"
+        new_name = f"{new_first_name} {new_last_name}"
+        new_email = "newemail@example.com"
+        new_username = "newusername"
         setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
         setattr(user, "name", "Old Name")
         setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
 
         user.save()
 
-        adapter.update_user_name(user, dict(first_name="New", last_name="Name"))
+        adapter.update_user_info(
+            user,
+            dict(
+                first_name=new_first_name,
+                last_name=new_last_name,
+                email=new_email,
+                preferred_username=new_username,
+            ),
+        )
         assert user.name == new_name
+        assert user.email == new_email
+        assert user.username == new_username
 
     def test_update_user_research_centers_add(self):
         adapter = SocialAccountAdapter()
