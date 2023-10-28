@@ -948,6 +948,34 @@ class UploadCycleListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
 
+class AccountListTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def test_filter_by_name(self):
+        """Filtering by name works as expected."""
+        user = UserFactory.create(name="First Last")
+        account = acm_factories.AccountFactory.create(user=user)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("anvil_consortium_manager:accounts:list"),
+            {"user__name__icontains": "First"},
+        )
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        self.assertIn(account, response.context_data["table"].data)
+        self.assertNotIn(other_account, response.context_data["table"].data)
+
+
 class UploadWorkspaceDetailTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceDetail view using the UploadWorkspace adapter."""
 
