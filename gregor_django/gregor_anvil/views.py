@@ -1,5 +1,5 @@
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import Account, Workspace
@@ -68,7 +68,7 @@ class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class UploadCycleCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new UploadCycle object."""
 
