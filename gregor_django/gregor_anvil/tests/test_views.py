@@ -69,7 +69,7 @@ class HomeTest(TestCase):
         )
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -86,7 +86,7 @@ class HomeTest(TestCase):
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -554,7 +554,7 @@ class UploadCycleCreateTest(TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         # Data for forms
@@ -991,7 +991,7 @@ class UploadWorkspaceDetailTest(TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.object = factories.UploadWorkspaceFactory.create()
@@ -1078,7 +1078,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "upload"
@@ -1337,7 +1337,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "example"
@@ -1462,7 +1462,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "template"
@@ -1527,7 +1527,7 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.object = factories.CombinedConsortiumDataWorkspaceFactory.create()
