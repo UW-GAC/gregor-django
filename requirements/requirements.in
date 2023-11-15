@@ -30,4 +30,5 @@ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
 django-simple-history
 
 # mysql
-mysqlclient # https://github.com/PyMySQL/mysqlclient
+# Pinned because versions >=2.2 require pkg-config.
+mysqlclient<2.2 # https://github.com/PyMySQL/mysqlclient
