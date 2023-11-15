@@ -46,7 +46,7 @@ django==3.2.23
     #   django-model-utils
     #   django-redis
     #   django-tables2
-django-allauth==0.58.2
+django-allauth==0.55.2
     # via -r requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
     # via -r requirements.in
