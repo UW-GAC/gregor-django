@@ -28,7 +28,7 @@ click==8.1.7
     # via pip-tools
 crispy-bootstrap5==0.6
     # via django-anvil-consortium-manager
-cryptography==37.0.2
+cryptography==41.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
