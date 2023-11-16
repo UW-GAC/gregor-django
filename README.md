@@ -122,3 +122,14 @@ coverage report:
 - git push origin \<feature_branch_name\>
 - review or request review of changes in github
 - submit pull request in github
+
+## Compiling requirements files
+
+Requriements files must be compiled in the correct order to handle layering.
+
+```
+cd requirements/
+pip-compile requirements.in
+pip-compile test-requirements.in
+pip-compile dev-requirements.in
+```
