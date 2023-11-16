@@ -49,7 +49,7 @@ class HomeTest(TestCase):
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -64,12 +64,12 @@ class HomeTest(TestCase):
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -86,7 +86,7 @@ class HomeTest(TestCase):
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -108,7 +108,7 @@ class ConsentGroupDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -165,7 +165,7 @@ class ConsentGroupListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -242,7 +242,7 @@ class ResearchCenterDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -315,7 +315,7 @@ class ResearchCenterListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -398,7 +398,7 @@ class PartnerGroupDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -471,7 +471,7 @@ class PartnerGroupListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -549,12 +549,12 @@ class UploadCycleCreateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         # Data for forms
@@ -590,7 +590,7 @@ class UploadCycleCreateTest(TestCase):
         )
         user_with_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -727,7 +727,7 @@ class UploadCycleDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -878,7 +878,7 @@ class UploadCycleListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -956,7 +956,7 @@ class AccountListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -986,12 +986,12 @@ class UploadWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.object = factories.UploadWorkspaceFactory.create()
@@ -1041,7 +1041,7 @@ class UploadWorkspaceListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "upload"
@@ -1073,12 +1073,12 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "upload"
@@ -1143,7 +1143,7 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -1300,7 +1300,7 @@ class ExampleWorkspaceListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "example"
@@ -1332,12 +1332,12 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "example"
@@ -1395,7 +1395,7 @@ class TemplateWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.object = factories.TemplateWorkspaceFactory.create()
@@ -1425,7 +1425,7 @@ class TemplateWorkspaceListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "template"
@@ -1457,12 +1457,12 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "template"
@@ -1522,12 +1522,12 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.object = factories.CombinedConsortiumDataWorkspaceFactory.create()
@@ -1629,7 +1629,7 @@ class ReleaseWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.object = factories.ReleaseWorkspaceFactory.create()
@@ -1714,7 +1714,7 @@ class WorkspaceReportTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -1912,7 +1912,7 @@ class DCCProcessingWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.object = factories.DCCProcessingWorkspaceFactory.create()
@@ -1942,7 +1942,7 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.object = factories.DCCProcessedDataWorkspaceFactory.create()
