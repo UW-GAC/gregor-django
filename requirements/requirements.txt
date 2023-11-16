@@ -103,7 +103,7 @@ oauthlib==3.2.1
     #   requests-oauthlib
 packaging==21.3
     # via build
-pillow==9.3.0
+pillow==10.0.1
     # via -r requirements.in
 pip-tools==7.3.0
     # via -r requirements.in
