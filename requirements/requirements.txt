@@ -8,8 +8,10 @@ argon2-cffi==21.3.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-asgiref==3.5.1
-    # via django
+asgiref==3.7.2
+    # via
+    #   -r requirements/requirements.in
+    #   django
 async-timeout==4.0.2
     # via redis
 build==1.0.3
@@ -76,7 +78,7 @@ django-model-utils==4.2.0
     # via -r requirements/requirements.in
 django-redis==5.4.0
     # via -r requirements/requirements.in
-django-simple-history==3.1.1
+django-simple-history==3.4.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
@@ -167,6 +169,8 @@ tomli==2.0.1
     #   build
     #   pip-tools
     #   pyproject-hooks
+typing-extensions==4.8.0
+    # via asgiref
 urllib3==1.26.9
     # via requests
 wheel==0.41.3
