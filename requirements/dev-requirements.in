@@ -1,0 +1,30 @@
+-c requirements.txt
+-c test-requirements.txt
+
+Werkzeug # https://github.com/pallets/werkzeug
+ipdb  # https://github.com/gotcha/ipdb
+
+# Testing
+# ------------------------------------------------------------------------------
+mypy  # https://github.com/python/mypy
+django-stubs  # https://github.com/typeddjango/django-stubs
+
+# Documentation
+# ------------------------------------------------------------------------------
+# 7.2 drops support for Python 3.8
+sphinx  # https://github.com/sphinx-doc/sphinx
+sphinx-autobuild # https://github.com/GaretJax/sphinx-autobuild
+
+# Code quality
+# ------------------------------------------------------------------------------
+flake8  # https://github.com/PyCQA/flake8
+flake8-isort  # https://github.com/gforcada/flake8-isort
+black  # https://github.com/psf/black
+pylint-django  # https://github.com/PyCQA/pylint-django
+pre-commit  # https://github.com/pre-commit/pre-commit
+
+# Security
+# ------------------------------------------------------------------------------
+safety  # https://github.com/pyupio/safety
+
+django-debug-toolbar  # https://github.com/jazzband/django-debug-toolbar
