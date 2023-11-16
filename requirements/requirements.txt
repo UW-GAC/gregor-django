@@ -85,7 +85,7 @@ google-auth[requests]==2.11.0
     # via
     #   django-anvil-consortium-manager
     #   google-auth
-hiredis==2.0.0
+hiredis==2.2.3
     # via -r requirements/requirements.in
 idna==3.3
     # via requests
