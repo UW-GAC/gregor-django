@@ -1,4 +1,5 @@
 -c requirements.txt
+-c test-requirements.txt
 
 Werkzeug # https://github.com/pallets/werkzeug
 ipdb  # https://github.com/gotcha/ipdb
@@ -7,10 +8,6 @@ ipdb  # https://github.com/gotcha/ipdb
 # ------------------------------------------------------------------------------
 mypy  # https://github.com/python/mypy
 django-stubs  # https://github.com/typeddjango/django-stubs
-types-requests
-pytest  # https://github.com/pytest-dev/pytest
-pytest-sugar  # https://github.com/Frozenball/pytest-sugar
-responses  # https://github.com/getsentry/responses - for mocking HTTP responses
 
 # Documentation
 # ------------------------------------------------------------------------------
@@ -22,7 +19,6 @@ sphinx-autobuild # https://github.com/GaretJax/sphinx-autobuild
 # ------------------------------------------------------------------------------
 flake8  # https://github.com/PyCQA/flake8
 flake8-isort  # https://github.com/gforcada/flake8-isort
-coverage  # https://github.com/nedbat/coveragepy
 black  # https://github.com/psf/black
 pylint-django  # https://github.com/PyCQA/pylint-django
 pre-commit  # https://github.com/pre-commit/pre-commit
@@ -31,16 +27,4 @@ pre-commit  # https://github.com/pre-commit/pre-commit
 # ------------------------------------------------------------------------------
 safety  # https://github.com/pyupio/safety
 
-# Django
-# ------------------------------------------------------------------------------
-factory-boy  # https://github.com/FactoryBoy/factory_boy
-
 django-debug-toolbar  # https://github.com/jazzband/django-debug-toolbar
-django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
-pytest-django  # https://github.com/pytest-dev/pytest-django
-
-
-
-# Other testing
-# ------------------------------------------------------------------------------
-django_test_migrations
