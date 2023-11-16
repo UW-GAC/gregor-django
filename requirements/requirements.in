@@ -24,6 +24,8 @@ django-redis  # https://github.com/jazzband/django-redis
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
 django-dbbackup # https://github.com/jazzband/django-dbbackup
 django-extensions  # https://github.com/django-extensions/django-extensions
+# Bootstrap5 templates for crispy-forms
+crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5
 
 git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
 
