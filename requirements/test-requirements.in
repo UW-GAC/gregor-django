@@ -1,0 +1,13 @@
+-c requirements.txt
+
+# Testing
+# ------------------------------------------------------------------------------
+types-requests
+pytest  # https://github.com/pytest-dev/pytest
+pytest-sugar  # https://github.com/Frozenball/pytest-sugar
+responses  # https://github.com/getsentry/responses - for mocking HTTP responses
+factory-boy  # https://github.com/FactoryBoy/factory_boy
+coverage  # https://github.com/nedbat/coveragepy
+django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
+pytest-django  # https://github.com/pytest-dev/pytest-django
+django_test_migrations
