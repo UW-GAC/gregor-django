@@ -1,6 +1,6 @@
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
-    AnVILConsortiumManagerViewRequired,
+    AnVILConsortiumManagerStaffEditRequired,
+    AnVILConsortiumManagerStaffViewRequired,
 )
 from anvil_consortium_manager.models import Account, Workspace
 from django.contrib.auth import get_user_model
@@ -16,13 +16,13 @@ from . import forms, models, tables
 User = get_user_model()
 
 
-class ConsentGroupDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class ConsentGroupDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show details about a `ConsentGroups`."""
 
     model = models.ConsentGroup
 
 
-class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class ConsentGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `ConsentGroups`."""
 
     model = models.ConsentGroup
@@ -30,7 +30,7 @@ class ConsentGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class ResearchCenterDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `ResearchCenter`."""
 
@@ -41,7 +41,7 @@ class ResearchCenterDetail(
         return UserTable(User.objects.filter(research_centers=self.object))
 
 
-class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class ResearchCenterList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `ResearchCenters`."""
 
     model = models.ResearchCenter
@@ -49,7 +49,7 @@ class ResearchCenterList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class PartnerGroupDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `PartnerGroup`."""
 
@@ -60,7 +60,7 @@ class PartnerGroupDetail(
         return UserTable(User.objects.filter(partner_groups=self.object))
 
 
-class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class PartnerGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `PartnerGroups`."""
 
     model = models.PartnerGroup
@@ -68,7 +68,7 @@ class PartnerGroupList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class UploadCycleCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new UploadCycle object."""
 
@@ -78,7 +78,7 @@ class UploadCycleCreate(
 
 
 class UploadCycleDetail(
-    AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
 ):
     """View to show details about an `UploadCycle`."""
 
@@ -117,14 +117,14 @@ class UploadCycleDetail(
         ]
 
 
-class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class UploadCycleList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `UploadCycle` objects."""
 
     model = models.UploadCycle
     table_class = tables.UploadCycleTable
 
 
-class WorkspaceReport(AnVILConsortiumManagerViewRequired, TemplateView):
+class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show report on workspaces"""
 
     template_name = "gregor_anvil/workspace_report.html"
