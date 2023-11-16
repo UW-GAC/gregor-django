@@ -32,8 +32,8 @@ jobs:
           python-version: 3.9
           cache: pip
           cache-dependency-path: |
-            requirements/base.txt
-            requirements/local.txt
+            requirements/requirements.txt
+            requirements/test-requirements.txt
 
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
@@ -75,29 +75,30 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: |
-            requirements/base.txt
-            requirements/local.txt
+            requirements/requirements.txt
+            requirements/test-requirements.txt
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/local.txt
+          pip install pip-tools
+          pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Run tests
         run:  coverage run -p -m pytest
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-      
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
           path: .coverage.*
-  
+
   pytest-sqlite:
     runs-on: ubuntu-latest
-   
+
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4.1.1
@@ -108,26 +109,27 @@ jobs:
           python-version: 3.8
           cache: pip
           cache-dependency-path: |
-            requirements/base.txt
-            requirements/local.txt
+            requirements/requirements.txt
+            requirements/test-requirements.txt
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/local.txt
+          pip install pip-tools
+          pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Run tests
         run:  coverage run -p -m pytest
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-      
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
           path: .coverage.*
-  
+
   coverage:
     needs:
       - pytest-mariadb
@@ -159,4 +161,3 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          
