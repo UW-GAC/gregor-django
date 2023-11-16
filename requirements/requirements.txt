@@ -127,7 +127,7 @@ pyproject-hooks==1.0.0
     # via build
 python-fsutil==0.11.0
     # via django-maintenance-mode
-python-slugify==6.1.2
+python-slugify==8.0.1
     # via -r requirements/requirements.in
 python3-openid==3.2.0
     # via django-allauth
