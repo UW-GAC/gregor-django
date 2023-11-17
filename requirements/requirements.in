@@ -43,3 +43,4 @@ asgiref>=3.6
 # Temporary fixes to handle dependabot not reading django-anvil-consortium-manager dependencies
 certifi>=2023.7.22
 pyjwt>=2.4.0
+urllib3>=1.26.18
