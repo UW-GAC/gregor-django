@@ -124,10 +124,10 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt[crypto]==2.3.0
+pyjwt[crypto]==2.8.0
     # via
+    #   -r requirements/requirements.in
     #   django-allauth
-    #   pyjwt
 pyparsing==3.0.8
     # via packaging
 pyproject-hooks==1.0.0
