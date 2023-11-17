@@ -14,3 +14,6 @@ updates:
     # Check for updates to GitHub Actions every weekday
     schedule:
       interval: "daily"
+    allow:
+      # Allow both direct and indirect updates for all packages
+      - dependency-type: "all"
