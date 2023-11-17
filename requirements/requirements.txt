@@ -100,7 +100,7 @@ importlib-metadata==6.8.0
     # via build
 mysqlclient==2.1.0
     # via -r requirements/requirements.in
-networkx==3.0
+networkx==3.1
     # via django-anvil-consortium-manager
 numpy==1.24.2
     # via django-anvil-consortium-manager
