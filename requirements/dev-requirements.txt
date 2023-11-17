@@ -257,7 +257,7 @@ typing-extensions==4.8.0
     #   ipython
     #   mypy
     #   pylint
-urllib3==1.26.9
+urllib3==2.1.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
