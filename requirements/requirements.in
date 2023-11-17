@@ -14,6 +14,9 @@ oauthlib  # https://github.com/oauthlib/oauthlib
 # Django
 # ------------------------------------------------------------------------------
 django>=3.2,<4.0  # pyup: < 3.3  # https://www.djangoproject.com/
+# Note that django-environ introduces a bug where secret keys are truncated if they have a #
+# for now just update the requirements file manually, instead of pinning here.
+# https://github.com/joke2k/django-environ/issues/497
 django-environ  # https://github.com/joke2k/django-environ
 django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
 django-model-utils  # https://github.com/jazzband/django-model-utils
@@ -24,8 +27,10 @@ django-redis  # https://github.com/jazzband/django-redis
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
 django-dbbackup # https://github.com/jazzband/django-dbbackup
 django-extensions  # https://github.com/django-extensions/django-extensions
+# Bootstrap5 templates for crispy-forms
+crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5
 
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
 
 # Simple history - model history tracking
 django-simple-history
@@ -33,3 +38,13 @@ django-simple-history
 # mysql
 # Pinned because versions >=2.2 require pkg-config.
 mysqlclient # https://github.com/PyMySQL/mysqlclient
+
+# Required for django < 4.2 and django-simple-history is updated.
+# See issue https://github.com/jazzband/django-simple-history/issues/1255
+asgiref>=3.6
+
+# Temporary fixes to handle dependabot not reading django-anvil-consortium-manager dependencies
+certifi>=2023.7.22
+pyjwt>=2.4.0
+urllib3>=1.26.18
+sqlparse>=0.4.4
