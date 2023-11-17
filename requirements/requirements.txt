@@ -173,8 +173,10 @@ tomli==2.0.1
     #   pyproject-hooks
 typing-extensions==4.8.0
     # via asgiref
-urllib3==1.26.9
-    # via requests
+urllib3==2.1.0
+    # via
+    #   -r requirements/requirements.in
+    #   requests
 wheel==0.41.3
     # via pip-tools
 whitenoise==6.6.0
