@@ -18,8 +18,10 @@ build==1.0.3
     # via pip-tools
 cachetools==5.2.0
     # via google-auth
-certifi==2021.10.8
-    # via requests
+certifi==2023.7.22
+    # via
+    #   -r requirements/requirements.in
+    #   requests
 cffi==1.15.0
     # via
     #   argon2-cffi-bindings
