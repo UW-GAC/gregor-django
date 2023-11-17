@@ -44,3 +44,4 @@ asgiref>=3.6
 certifi>=2023.7.22
 pyjwt>=2.4.0
 urllib3>=1.26.18
+sqlparse>=0.4.4
