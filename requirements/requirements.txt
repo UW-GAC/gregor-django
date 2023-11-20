@@ -64,7 +64,7 @@ django-crispy-forms==2.0
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==4.0.1
+django-dbbackup==4.0.2
     # via -r requirements/requirements.in
 django-environ==0.10.0
     # via -r requirements/requirements.in
