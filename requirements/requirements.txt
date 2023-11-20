@@ -14,6 +14,8 @@ asgiref==3.7.2
     #   django
 async-timeout==4.0.2
     # via redis
+backports-zoneinfo==0.2.1
+    # via django
 build==1.0.3
     # via pip-tools
 cachetools==5.2.0
@@ -38,7 +40,7 @@ cryptography==41.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==3.2.23
+django==4.2.7
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -141,7 +143,6 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/requirements.in
-    #   django
     #   django-anvil-consortium-manager
     #   django-dbbackup
 redis==4.5.4
