@@ -20,6 +20,10 @@ babel==2.13.1
     # via sphinx
 backcall==0.2.0
     # via ipython
+backports-zoneinfo==0.2.1
+    # via
+    #   -c requirements/requirements.txt
+    #   django
 black==22.12.0
     # via -r requirements/dev-requirements.in
 certifi==2023.7.22
@@ -49,7 +53,7 @@ dill==0.3.7
     # via pylint
 distlib==0.3.7
     # via virtualenv
-django==3.2.23
+django==4.2.7
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -173,7 +177,6 @@ pytz==2023.3.post1
     # via
     #   -c requirements/requirements.txt
     #   babel
-    #   django
 pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
