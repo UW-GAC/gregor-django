@@ -147,7 +147,7 @@ pytz==2023.3.post1
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
     #   django-dbbackup
-redis==4.5.4
+redis==5.0.1
     # via
     #   -r requirements/requirements.in
     #   django-redis
