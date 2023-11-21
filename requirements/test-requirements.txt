@@ -72,10 +72,8 @@ tomli==2.0.1
     # via
     #   -c requirements/requirements.txt
     #   pytest
-types-requests==2.31.0.6
+types-requests==2.31.0.10
     # via -r requirements/test-requirements.in
-types-urllib3==1.26.25.14
-    # via types-requests
 typing-extensions==4.8.0
     # via
     #   -c requirements/requirements.txt
@@ -86,3 +84,4 @@ urllib3==2.1.0
     #   -c requirements/requirements.txt
     #   requests
     #   responses
+    #   types-requests
