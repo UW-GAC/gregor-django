@@ -59,7 +59,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.9.4
     # via django-anvil-consortium-manager
-django-crispy-forms==2.0
+django-crispy-forms==2.1
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
