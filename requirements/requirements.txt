@@ -120,7 +120,7 @@ pip-tools==7.3.0
     # via -r requirements/requirements.in
 plotly==5.18.0
     # via django-anvil-consortium-manager
-pyasn1==0.4.8
+pyasn1==0.5.1
     # via
     #   pyasn1-modules
     #   rsa
