@@ -68,7 +68,7 @@ django-dbbackup==4.0.2
     # via -r requirements/requirements.in
 django-environ==0.10.0
     # via -r requirements/requirements.in
-django-extensions==3.2.1
+django-extensions==3.2.3
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
