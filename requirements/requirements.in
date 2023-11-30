@@ -2,7 +2,6 @@
 pip-tools
 
 # Other
-python-slugify  # https://github.com/un33k/python-slugify
 whitenoise  # https://github.com/evansd/whitenoise
 oauthlib  # https://github.com/oauthlib/oauthlib
 
