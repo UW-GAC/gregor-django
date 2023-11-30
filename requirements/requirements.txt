@@ -77,7 +77,7 @@ django-simple-history==3.4.0
     #   django-anvil-consortium-manager
 django-tables2==2.6.0
     # via django-anvil-consortium-manager
-fontawesomefree==6.2.0
+fontawesomefree==6.5.0
     # via django-anvil-consortium-manager
 google-auth[requests]==2.11.0
     # via
