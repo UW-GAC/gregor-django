@@ -6,8 +6,6 @@ pytz  # https://github.com/stub42/pytz
 python-slugify  # https://github.com/un33k/python-slugify
 argon2-cffi  # https://github.com/hynek/argon2_cffi
 whitenoise  # https://github.com/evansd/whitenoise
-redis  # https://github.com/andymccurdy/redis-py
-hiredis  # https://github.com/redis/hiredis-py
 oauthlib  # https://github.com/oauthlib/oauthlib
 
 # Django
@@ -22,7 +20,6 @@ django-model-utils  # https://github.com/jazzband/django-model-utils
 # 0.56 adds requirement for middleware - we can update later.
 django-allauth  # https://github.com/pennersr/django-allauth
 django-crispy-forms  # https://github.com/django-crispy-forms/django-crispy-forms
-django-redis  # https://github.com/jazzband/django-redis
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
 django-dbbackup # https://github.com/jazzband/django-dbbackup
 django-extensions  # https://github.com/django-extensions/django-extensions
