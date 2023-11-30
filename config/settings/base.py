@@ -362,7 +362,7 @@ DCC_CONTACT_EMAIL = "gregorconsortium@uw.edu"
 # django-tables2
 # ------------------------------------------------------------------------------
 # https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
-DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
