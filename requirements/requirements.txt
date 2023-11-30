@@ -114,8 +114,6 @@ packaging==21.3
     # via
     #   build
     #   plotly
-pillow==10.1.0
-    # via -r requirements/requirements.in
 pip-tools==7.3.0
     # via -r requirements/requirements.in
 plotly==5.18.0
