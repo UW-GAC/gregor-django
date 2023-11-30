@@ -1,31 +1,30 @@
 # For dependency management
 pip-tools
 
-# Other
-pytz  # https://github.com/stub42/pytz
-python-slugify  # https://github.com/un33k/python-slugify
-Pillow  # https://github.com/python-pillow/Pillow
-argon2-cffi  # https://github.com/hynek/argon2_cffi
+# Middleware for whitenoise/static files.
 whitenoise  # https://github.com/evansd/whitenoise
-redis  # https://github.com/andymccurdy/redis-py
-hiredis  # https://github.com/redis/hiredis-py
+# Login via oauth
 oauthlib  # https://github.com/oauthlib/oauthlib
 
-# Django
-# ------------------------------------------------------------------------------
 django>=4.2,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
-# Note that django-environ introduces a bug where secret keys are truncated if they have a #
-# for now just update the requirements file manually, instead of pinning here.
+# Read from .env files
+# Note that django-environ 0.11+ introduces a bug where secret keys are truncated if they have a #
 # https://github.com/joke2k/django-environ/issues/497
-django-environ  # https://github.com/joke2k/django-environ
+django-environ<0.11.0  # https://github.com/joke2k/django-environ
+# Turn on and off maintenance mode
 django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
+# Model utilities
 django-model-utils  # https://github.com/jazzband/django-model-utils
+# login/auth via Drupal or other Social Application
 # 0.56 adds requirement for middleware - we can update later.
 django-allauth  # https://github.com/pennersr/django-allauth
+# Nicer forms
 django-crispy-forms  # https://github.com/django-crispy-forms/django-crispy-forms
-django-redis  # https://github.com/jazzband/django-redis
+# Protect all iews behind LoginRequired
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
+# Back up the database before migrations/updates
 django-dbbackup # https://github.com/jazzband/django-dbbackup
+# Time stamped models.
 django-extensions  # https://github.com/django-extensions/django-extensions
 # Bootstrap5 templates for crispy-forms
 crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5

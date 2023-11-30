@@ -3,11 +3,19 @@
 # Testing
 # ------------------------------------------------------------------------------
 types-requests
+# Pytest
 pytest  # https://github.com/pytest-dev/pytest
+# Pytest improvements - progress bar, etc.
 pytest-sugar  # https://github.com/Frozenball/pytest-sugar
+# Mock HTTP responses
 responses  # https://github.com/getsentry/responses - for mocking HTTP responses
+# Factories to create Django objects in tests
 factory-boy  # https://github.com/FactoryBoy/factory_boy
+# Test covarage
 coverage  # https://github.com/nedbat/coveragepy
+# Coverage of django templates
 django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
+# Django plugin for pytest
 pytest-django  # https://github.com/pytest-dev/pytest-django
+# Test migrations
 django_test_migrations
