@@ -3,7 +3,6 @@ pip-tools
 
 # Other
 python-slugify  # https://github.com/un33k/python-slugify
-argon2-cffi  # https://github.com/hynek/argon2_cffi
 whitenoise  # https://github.com/evansd/whitenoise
 oauthlib  # https://github.com/oauthlib/oauthlib
 
