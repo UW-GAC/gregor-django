@@ -86,7 +86,7 @@ django-simple-history==3.4.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-django-tables2==2.4.1
+django-tables2==2.6.0
     # via django-anvil-consortium-manager
 fontawesomefree==6.2.0
     # via django-anvil-consortium-manager
