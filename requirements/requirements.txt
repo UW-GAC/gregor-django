@@ -4,6 +4,10 @@
 #
 #    pip-compile requirements/requirements.in
 #
+argon2-cffi==23.1.0
+    # via -r requirements/requirements.in
+argon2-cffi-bindings==21.2.0
+    # via argon2-cffi
 asgiref==3.7.2
     # via
     #   -r requirements/requirements.in
@@ -19,7 +23,9 @@ certifi==2023.7.22
     #   -r requirements/requirements.in
     #   requests
 cffi==1.16.0
-    # via cryptography
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 charset-normalizer==2.0.12
     # via requests
 click==8.1.7
