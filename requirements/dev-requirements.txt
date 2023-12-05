@@ -250,7 +250,7 @@ urllib3==2.1.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   requests
-virtualenv==20.24.7
+virtualenv==20.25.0
     # via pre-commit
 wcwidth==0.2.12
     # via prompt-toolkit
