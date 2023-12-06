@@ -89,7 +89,7 @@ google-auth[requests]==2.11.0
     # via
     #   django-anvil-consortium-manager
     #   google-auth
-idna==3.3
+idna==3.6
     # via requests
 importlib-metadata==6.8.0
     # via build

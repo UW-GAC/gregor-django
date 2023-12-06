@@ -76,7 +76,7 @@ flake8-isort==6.1.1
     # via -r requirements/dev-requirements.in
 identify==2.5.32
     # via pre-commit
-idna==3.3
+idna==3.6
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
