@@ -103,7 +103,7 @@ oauthlib==3.2.2
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
-packaging==21.3
+packaging==23.2
     # via
     #   build
     #   plotly
@@ -123,8 +123,6 @@ pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/requirements.in
     #   django-allauth
-pyparsing==3.0.8
-    # via packaging
 pyproject-hooks==1.0.0
     # via build
 python-fsutil==0.11.0

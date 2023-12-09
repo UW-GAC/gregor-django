@@ -119,7 +119,7 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.8.0
     # via pre-commit
-packaging==21.3
+packaging==23.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -161,11 +161,6 @@ pylint-django==2.5.5
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
-pyparsing==3.0.8
-    # via
-    #   -c requirements/requirements.txt
-    #   -c requirements/test-requirements.txt
-    #   packaging
 pytz==2023.3.post1
     # via
     #   -c requirements/requirements.txt
