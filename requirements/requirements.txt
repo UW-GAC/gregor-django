@@ -50,7 +50,7 @@ django==4.2.8
     #   django-filter
     #   django-model-utils
     #   django-tables2
-django-allauth==0.54.0
+django-allauth==0.58.2
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
     # via -r requirements/requirements.in
