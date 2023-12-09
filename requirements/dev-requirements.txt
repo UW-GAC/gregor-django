@@ -225,7 +225,7 @@ tomlkit==0.12.3
     # via pylint
 tornado==6.4
     # via livereload
-traitlets==5.13.0
+traitlets==5.14.0
     # via
     #   ipython
     #   matplotlib-inline
