@@ -153,7 +153,7 @@ pygments==2.17.2
     # via
     #   ipython
     #   sphinx
-pylint==3.0.2
+pylint==3.0.3
     # via
     #   pylint-django
     #   pylint-plugin-utils
