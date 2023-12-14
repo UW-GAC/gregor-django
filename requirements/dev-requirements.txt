@@ -14,7 +14,7 @@ astroid==3.0.1
     # via pylint
 asttokens==2.4.1
     # via stack-data
-babel==2.13.1
+babel==2.14.0
     # via sphinx
 backcall==0.2.0
     # via ipython
