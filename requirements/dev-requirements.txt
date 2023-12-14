@@ -128,7 +128,7 @@ parso==0.8.3
     # via jedi
 pathspec==0.12.1
     # via black
-pexpect==4.8.0
+pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
