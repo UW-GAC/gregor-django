@@ -66,7 +66,6 @@ class UploadWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.UploadWorkspace
-        django_get_or_create = ["research_center", "consent_group"]
 
 
 class PartnerUploadWorkspaceFactory(DjangoModelFactory):
@@ -79,7 +78,6 @@ class PartnerUploadWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.PartnerUploadWorkspace
-        django_get_or_create = ["partner_group", "consent_group"]
 
 
 class ExampleWorkspaceFactory(DjangoModelFactory):
