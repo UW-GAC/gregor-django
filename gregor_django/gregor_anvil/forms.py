@@ -41,6 +41,19 @@ class UploadWorkspaceForm(forms.ModelForm):
         )
 
 
+class PartnerUploadWorkspaceForm(forms.ModelForm):
+    """Form for a PartnerUploadWorkspace object."""
+
+    class Meta:
+        model = models.PartnerUploadWorkspace
+        fields = (
+            "partner_group",
+            "consent_group",
+            "version",
+            "workspace",
+        )
+
+
 class ExampleWorkspaceForm(forms.ModelForm):
     """Form for a ExampleWorkspace object."""
 

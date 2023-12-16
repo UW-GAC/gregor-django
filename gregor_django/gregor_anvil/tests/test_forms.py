@@ -182,6 +182,104 @@ class UploadWorkspaceFormTest(TestCase):
         self.assertIn("already exists", non_field_errors[0])
 
 
+class PartnerUploadWorkspaceFormTest(TestCase):
+    """Tests for the PartnerUploadWorkspace class."""
+
+    form_class = forms.PartnerUploadWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory()
+        self.partner_group = factories.PartnerGroupFactory()
+        self.consent_group = factories.ConsentGroupFactory()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "partner_group": self.partner_group,
+            "consent_group": self.consent_group,
+            "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_partner_group(self):
+        """Form is invalid when missing partner_group."""
+        form_data = {
+            # "partner_group": self.partner_group,
+            "consent_group": self.consent_group,
+            "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("partner_group", form.errors)
+        self.assertEqual(len(form.errors["partner_group"]), 1)
+        self.assertIn("required", form.errors["partner_group"][0])
+
+    def test_invalid_missing_consent_group(self):
+        """Form is invalid when missing consent_group."""
+        form_data = {
+            "partner_group": self.partner_group,
+            # "consent_group": self.consent_group,
+            "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("consent_group", form.errors)
+        self.assertEqual(len(form.errors["consent_group"]), 1)
+        self.assertIn("required", form.errors["consent_group"][0])
+
+    def test_invalid_missing_version(self):
+        """Form is invalid when missing research_center."""
+        form_data = {
+            "partner_group": self.partner_group,
+            "consent_group": self.consent_group,
+            # "version": 1,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("version", form.errors)
+        self.assertEqual(len(form.errors["version"]), 1)
+        self.assertIn("required", form.errors["version"][0])
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing research_center."""
+        form_data = {
+            "partner_group": self.partner_group,
+            "consent_group": self.consent_group,
+            "version": 1,
+            # "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_duplicate_object(self):
+        """Form is invalid with a duplicated object."""
+        instance = factories.PartnerUploadWorkspaceFactory.create()
+        form_data = {
+            "partner_group": instance.partner_group,
+            "consent_group": instance.consent_group,
+            "version": instance.version,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        non_field_errors = form.non_field_errors()
+        self.assertEqual(len(non_field_errors), 1)
+        self.assertIn("already exists", non_field_errors[0])
+
+
 class ExampleWorkspaceFormTest(TestCase):
 
     form_class = forms.ExampleWorkspaceForm
