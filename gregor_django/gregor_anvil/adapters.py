@@ -57,6 +57,19 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
         return queryset
 
 
+class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for PartnerUploadWorkspaces."""
+
+    type = "partner_upload"
+    name = "Partner upload workspace"
+    description = "Workspaces that contain data uploaded by a Partner Group "
+    list_table_class = tables.PartnerUploadWorkspaceTable
+    workspace_data_model = models.PartnerUploadWorkspace
+    workspace_data_form_class = forms.PartnerUploadWorkspaceForm
+    workspace_form_class = WorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
+
+
 class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ExampleWorkspaces."""
 

@@ -1,0 +1,47 @@
+{% extends "anvil_consortium_manager/workspace_detail.html" %}
+
+{% block workspace_data %}
+  <hr>
+  <dl class="row">
+    <dt class="col-sm-2">Partner Group</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.partner_group.get_absolute_url }}">{{ workspace_data_object.partner_group }}</a></dd>
+    <dt class="col-sm-2">Consent group</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.consent_group.get_absolute_url }}">{{ workspace_data_object.consent_group }}</a></dd>
+    <dt class="col-sm-2">Version</dt> <dd class="col-sm-10">{{ workspace_data_object.version }}"</dd>
+    <dt class="col-sm-2">Date completed</dt> <dd class="col-sm-10">{{ workspace_data_object.date_completed }}"</dd>
+  </dl>
+{% endblock workspace_data %}
+
+{% block after_panel %}
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsDUL">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDUL">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDUL" aria-expanded="true" aria-controls="collapseDUL">
+          <span class="fa-solid fa-list-check mx-2"></span>
+          Full data use limitations
+        </button>
+      </h2>
+      <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
+        <div class="accordion-body">
+          {{ workspace_data_object.consent_group.data_use_limitations }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ block.super }}
+{% endblock after_panel %}
+
+{% block action_buttons %}
+{% if show_edit_links %}
+  {% if object.authorization_domains.first %}
+  <p>
+  <a href="{% url 'anvil_consortium_manager:workspaces:sharing:new_by_group' billing_project_slug=object.billing_project.name workspace_slug=object.name group_slug=object.authorization_domains.first.name %}" class="btn btn-primary" role="button">Share with auth domain</a>
+</p>
+  {% else %}
+  <p>no auth domain</p>
+  {% endif %}
+{% endif %}
+
+{{ block.super }}
+{% endblock action_buttons %}
