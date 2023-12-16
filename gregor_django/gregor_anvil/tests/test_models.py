@@ -208,6 +208,123 @@ class UploadCycleTest(TestCase):
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
+    def test_get_partner_upload_workspaces_no_date_completed(self):
+        """PartnerUploadWorkspace with no date_completed is not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        factories.PartnerUploadWorkspaceFactory.create(date_completed=None)
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 0)
+
+    def test_get_partner_uplod_workspaces_with_date_completed(self):
+        """PartnerUploadWorkspace with date_completed before UploadCycle end_date is included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace, included_workspaces)
+
+    def test_get_partner_upload_workspaces_with_date_completed_after_end_date(self):
+        """PartnerUploadWorkspace with date_completed after UploadCycle end_date is not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=upload_cycle.end_date + timedelta(days=4)
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 0)
+
+    def test_get_partner_upload_workspaces_with_date_completed_equal_to_end_date(self):
+        """PartnerUploadWorkspace with date_completed equal to UploadCycle end_date is included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=upload_cycle.end_date
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace, included_workspaces)
+
+    def test_get_partner_upload_workspaces_higher_versions_with_date_completed(self):
+        """Only the highest version is included when two PartnerUploadWorkspaces have date_completed."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=workspace_1.partner_group,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertNotIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+
+    def test_get_partner_upload_workspaces_higher_version_no_date_completed(self):
+        """PartnerUploadWorkspaces with higher versions and no date_completed are not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=workspace_1.partner_group,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=None,
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace_1, included_workspaces)
+        self.assertNotIn(workspace_2, included_workspaces)
+
+    def test_get_partner_upload_workspaces_different_partner_groups(self):
+        """PartnerUploadWorkspaces with different PartnerGroups are both included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 2)
+        self.assertIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+
+    def test_get_partner_upload_workspaces_different_consent_groups(self):
+        """PartnerUploadWorkspaces with different ConsentGroups are both included."""
+
+    def test_get_partner_upload_workspaces_full_test(self):
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=workspace_1.partner_group,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        workspace_3 = factories.PartnerUploadWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=2)
+        )
+        workspace_4 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=workspace_3.partner_group,
+            consent_group=workspace_3.consent_group,
+            version=2,
+            date_completed=None,
+        )
+        # import ipdb; ipdb.set_trace()
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 2)
+        self.assertNotIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+        self.assertIn(workspace_3, included_workspaces)
+        self.assertNotIn(workspace_4, included_workspaces)
+
 
 class UploadWorkspaceTest(TestCase):
     """Tests for the UploadWorkspace model."""

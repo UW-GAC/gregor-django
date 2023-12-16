@@ -109,8 +109,9 @@ class UploadCycleDetail(
         dcc_processed_data_workspace_qs = Workspace.objects.filter(
             dccprocesseddataworkspace__upload_cycle=self.object,
         )
+        partner_workspaces = self.object.get_partner_upload_workspaces()
         partner_workspace_qs = Workspace.objects.filter(
-            partneruploadworkspace__date_completed__lte=self.object.end_date,
+            partneruploadworkspace__in=partner_workspaces
         )
         return [
             upload_workspace_qs,
