@@ -372,6 +372,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.ExampleWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.PartnerUploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.CombinedConsortiumDataWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.ReleaseWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.DCCProcessingWorkspaceAdapter",
