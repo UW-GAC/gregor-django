@@ -137,6 +137,35 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         ]
 
 
+class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track additional data about a partner workspace."""
+
+    partner_group = models.ForeignKey(PartnerGroup, on_delete=models.PROTECT)
+    """The PartnerGroup providing data for this Workspace."""
+
+    consent_group = models.ForeignKey(ConsentGroup, on_delete=models.PROTECT)
+    """The ConsentGroup associated with this workspace."""
+
+    version = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The version of this workspace for this PartnerGroup and ConsentGroup.",
+    )
+    date_completed = models.DateField(
+        help_text="The date when uploads to this workspace and data validation were completed.",
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_partner_upload_workspace_data",
+                fields=["partner_group", "consent_group", "version"],
+            ),
+        ]
+
+
 class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
 

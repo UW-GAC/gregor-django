@@ -315,6 +315,119 @@ class UploadWorkspaceTest(TestCase):
             instance_2.save()
 
 
+class PartnerUploadWorkspaceTest(TestCase):
+    """Tests for the PartnerUploadWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        partner_group = factories.PartnerGroupFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.PartnerUploadWorkspace(
+            partner_group=partner_group,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=1,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.PartnerUploadWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.PartnerUploadWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_date_completed(self):
+        instance = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=date.today()
+        )
+        instance.save()
+        self.assertIsNotNone(instance.date_completed)
+
+    def test_unique_constraint(self):
+        """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
+        instance_1 = factories.PartnerUploadWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.PartnerUploadWorkspaceFactory.build(
+            partner_group=instance_1.partner_group,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            version=instance_1.version,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance_2.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+    def test_different_partner_group(self):
+        """Can save two instances with different PartnerGroups and the same version/consent_group."""
+        instance_1 = factories.PartnerUploadWorkspaceFactory.create()
+        partner_group = factories.PartnerGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.PartnerUploadWorkspaceFactory.build(
+            partner_group=partner_group,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            version=instance_1.version,
+        )
+        instance_2.full_clean()
+        instance_2.save()
+        self.assertEqual(models.PartnerUploadWorkspace.objects.count(), 2)
+
+    def test_different_consent_group(self):
+        """Can save two instances with different ConsentGroups and the same version and partner group."""
+        instance_1 = factories.PartnerUploadWorkspaceFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.PartnerUploadWorkspaceFactory.build(
+            partner_group=instance_1.partner_group,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=instance_1.version,
+        )
+        instance_2.full_clean()
+        instance_2.save()
+        self.assertEqual(models.PartnerUploadWorkspace.objects.count(), 2)
+
+    def test_different_upload_cycle(self):
+        """Can save two instances models with different versions and the same partner group and consent group."""
+        instance_1 = factories.PartnerUploadWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.PartnerUploadWorkspaceFactory.build(
+            partner_group=instance_1.partner_group,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            version=instance_1.version + 1,
+        )
+        instance_2.full_clean()
+        instance_2.save()
+        self.assertEqual(models.PartnerUploadWorkspace.objects.count(), 2)
+
+    def test_duplicated_workspace(self):
+        """One workspace cannot be associated with two PartnerUploadWorkspace models."""
+        instance_1 = factories.PartnerUploadWorkspaceFactory.create()
+        partner_group = factories.PartnerGroupFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        instance_2 = factories.PartnerUploadWorkspaceFactory.build(
+            partner_group=partner_group,
+            consent_group=consent_group,
+            workspace=instance_1.workspace,
+            version=instance_1.version + 1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance_2.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("workspace", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["workspace"]), 1)
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+
 class ExampleWorkspaceTest(TestCase):
     """Tests for the ExampleWorkspace model."""
 
