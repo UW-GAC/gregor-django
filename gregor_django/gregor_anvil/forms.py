@@ -50,6 +50,7 @@ class PartnerUploadWorkspaceForm(forms.ModelForm):
             "partner_group",
             "consent_group",
             "version",
+            "date_completed",
             "workspace",
         )
 
