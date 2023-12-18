@@ -73,7 +73,7 @@ django-filter==23.5
     # via django-anvil-consortium-manager
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
-django-maintenance-mode==0.19.0
+django-maintenance-mode==0.21.0
     # via -r requirements/requirements.in
 django-model-utils==4.3.1
     # via -r requirements/requirements.in
@@ -125,7 +125,7 @@ pyjwt[crypto]==2.8.0
     #   django-allauth
 pyproject-hooks==1.0.0
     # via build
-python-fsutil==0.11.0
+python-fsutil==0.12.0
     # via django-maintenance-mode
 python3-openid==3.2.0
     # via django-allauth
