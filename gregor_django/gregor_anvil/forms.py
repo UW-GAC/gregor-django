@@ -53,6 +53,12 @@ class PartnerUploadWorkspaceForm(forms.ModelForm):
             "date_completed",
             "workspace",
         )
+        help_texts = {
+            "date_completed": "Do not select a date until validation has been completed in this workspace.",
+        }
+        widgets = {
+            "date_completed": CustomDateInput(),
+        }
 
 
 class ExampleWorkspaceForm(forms.ModelForm):
