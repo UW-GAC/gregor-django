@@ -66,7 +66,18 @@ class UploadWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.UploadWorkspace
-        django_get_or_create = ["research_center", "consent_group"]
+
+
+class PartnerUploadWorkspaceFactory(DjangoModelFactory):
+    """A factory for the UploadWorkspace model."""
+
+    partner_group = SubFactory(PartnerGroupFactory)
+    consent_group = SubFactory(ConsentGroupFactory)
+    version = Faker("random_int", min=1)
+    workspace = SubFactory(WorkspaceFactory, workspace_type="partner_upload")
+
+    class Meta:
+        model = models.PartnerUploadWorkspace
 
 
 class ExampleWorkspaceFactory(DjangoModelFactory):

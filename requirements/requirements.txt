@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/requirements.in
 #
-argon2-cffi==21.3.0
+argon2-cffi==23.1.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
@@ -12,17 +12,17 @@ asgiref==3.7.2
     # via
     #   -r requirements/requirements.in
     #   django
-async-timeout==4.0.2
-    # via redis
+backports-zoneinfo==0.2.1
+    # via django
 build==1.0.3
     # via pip-tools
-cachetools==5.2.0
+cachetools==5.3.2
     # via google-auth
 certifi==2023.7.22
     # via
     #   -r requirements/requirements.in
     #   requests
-cffi==1.15.0
+cffi==1.16.0
     # via
     #   argon2-cffi-bindings
     #   cryptography
@@ -30,15 +30,15 @@ charset-normalizer==2.0.12
     # via requests
 click==8.1.7
     # via pip-tools
-crispy-bootstrap5==0.6
+crispy-bootstrap5==2023.10
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==41.0.4
+cryptography==41.0.7
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==3.2.23
+django==4.2.8
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -49,7 +49,6 @@ django==3.2.23
     #   django-extensions
     #   django-filter
     #   django-model-utils
-    #   django-redis
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
@@ -57,12 +56,12 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.9.4
     # via django-anvil-consortium-manager
-django-crispy-forms==2.0
+django-crispy-forms==2.1
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==4.0.1
+django-dbbackup==4.0.2
     # via -r requirements/requirements.in
 django-environ==0.10.0
     # via -r requirements/requirements.in
@@ -70,31 +69,27 @@ django-extensions==3.2.1
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-django-filter==23.3
+django-filter==23.5
     # via django-anvil-consortium-manager
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.19.0
     # via -r requirements/requirements.in
-django-model-utils==4.2.0
-    # via -r requirements/requirements.in
-django-redis==5.4.0
+django-model-utils==4.3.1
     # via -r requirements/requirements.in
 django-simple-history==3.4.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-django-tables2==2.4.1
+django-tables2==2.7.0
     # via django-anvil-consortium-manager
-fontawesomefree==6.2.0
+fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
 google-auth[requests]==2.11.0
     # via
     #   django-anvil-consortium-manager
     #   google-auth
-hiredis==2.2.3
-    # via -r requirements/requirements.in
-idna==3.3
+idna==3.6
     # via requests
 importlib-metadata==6.8.0
     # via build
@@ -102,25 +97,25 @@ mysqlclient==2.1.0
     # via -r requirements/requirements.in
 networkx==3.1
     # via django-anvil-consortium-manager
-numpy==1.24.2
+numpy==1.24.4
     # via django-anvil-consortium-manager
 oauthlib==3.2.2
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
-packaging==21.3
-    # via build
-pillow==10.0.1
-    # via -r requirements/requirements.in
+packaging==23.2
+    # via
+    #   build
+    #   plotly
 pip-tools==7.3.0
     # via -r requirements/requirements.in
-plotly==5.13.0
+plotly==5.18.0
     # via django-anvil-consortium-manager
 pyasn1==0.4.8
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.2.8
+pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
@@ -128,26 +123,16 @@ pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/requirements.in
     #   django-allauth
-pyparsing==3.0.8
-    # via packaging
 pyproject-hooks==1.0.0
     # via build
 python-fsutil==0.11.0
     # via django-maintenance-mode
-python-slugify==8.0.1
-    # via -r requirements/requirements.in
 python3-openid==3.2.0
     # via django-allauth
 pytz==2023.3.post1
     # via
-    #   -r requirements/requirements.in
-    #   django
     #   django-anvil-consortium-manager
     #   django-dbbackup
-redis==4.5.4
-    # via
-    #   -r requirements/requirements.in
-    #   django-redis
 requests==2.31.0
     # via
     #   django-allauth
@@ -164,10 +149,8 @@ sqlparse==0.4.4
     # via
     #   -r requirements/requirements.in
     #   django
-tenacity==8.2.1
+tenacity==8.2.3
     # via plotly
-text-unidecode==1.3
-    # via python-slugify
 tomli==2.0.1
     # via
     #   build

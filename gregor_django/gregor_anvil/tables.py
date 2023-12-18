@@ -150,6 +150,24 @@ class UploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
         )
 
 
+class PartnerUploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
+    """A table for Workspaces that includes fields from PartnerUploadWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    partneruploadworkspace__partner_group = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "partneruploadworkspace__partner_group",
+            "partneruploadworkspace__consent_group",
+            "partneruploadworkspace__version",
+            "partneruploadworkspace__date_completed",
+            "consortium_access",
+        )
+
+
 class TemplateWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from TemplateWorkspace."""
 
