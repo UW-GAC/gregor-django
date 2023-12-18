@@ -162,7 +162,7 @@ urllib3==2.1.0
     # via
     #   -r requirements/requirements.in
     #   requests
-wheel==0.41.3
+wheel==0.42.0
     # via pip-tools
 whitenoise==6.6.0
     # via -r requirements/requirements.in
