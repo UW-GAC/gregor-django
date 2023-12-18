@@ -91,7 +91,7 @@ ipdb==0.13.13
     # via -r requirements/dev-requirements.in
 ipython==8.12.3
     # via ipdb
-isort==5.13.1
+isort==5.13.2
     # via
     #   flake8-isort
     #   pylint
