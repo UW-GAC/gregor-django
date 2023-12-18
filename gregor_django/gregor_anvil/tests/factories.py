@@ -74,7 +74,7 @@ class PartnerUploadWorkspaceFactory(DjangoModelFactory):
     partner_group = SubFactory(PartnerGroupFactory)
     consent_group = SubFactory(ConsentGroupFactory)
     version = Faker("random_int", min=1)
-    workspace = SubFactory(WorkspaceFactory, workspace_type="upload")
+    workspace = SubFactory(WorkspaceFactory, workspace_type="partner_upload")
 
     class Meta:
         model = models.PartnerUploadWorkspace
