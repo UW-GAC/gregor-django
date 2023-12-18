@@ -41,6 +41,26 @@ class UploadWorkspaceForm(forms.ModelForm):
         )
 
 
+class PartnerUploadWorkspaceForm(forms.ModelForm):
+    """Form for a PartnerUploadWorkspace object."""
+
+    class Meta:
+        model = models.PartnerUploadWorkspace
+        fields = (
+            "partner_group",
+            "consent_group",
+            "version",
+            "date_completed",
+            "workspace",
+        )
+        help_texts = {
+            "date_completed": "Do not select a date until validation has been completed in this workspace.",
+        }
+        widgets = {
+            "date_completed": CustomDateInput(),
+        }
+
+
 class ExampleWorkspaceForm(forms.ModelForm):
     """Form for a ExampleWorkspace object."""
 
