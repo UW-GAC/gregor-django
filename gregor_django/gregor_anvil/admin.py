@@ -98,6 +98,30 @@ class UploadWorkspaceAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.PartnerUploadWorkspace)
+class PartnerUploadWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the PartnerUploadWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "partner_group",
+        "consent_group",
+        "version",
+    )
+    list_filter = (
+        "partner_group",
+        "consent_group",
+        "version",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+        "partner_group",
+        "version",
+    )
+
+
 @admin.register(models.ExampleWorkspace)
 class ExampleWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the ExampleWorkspace model."""
