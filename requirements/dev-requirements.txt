@@ -10,7 +10,7 @@ asgiref==3.7.2
     # via
     #   -c requirements/requirements.txt
     #   django
-astroid==3.0.1
+astroid==3.0.2
     # via pylint
 asttokens==2.4.1
     # via stack-data
