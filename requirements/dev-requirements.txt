@@ -111,7 +111,7 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
-mypy==1.7.0
+mypy==1.8.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via
