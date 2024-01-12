@@ -24,7 +24,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test-requirements.in
-faker==21.0.0
+faker==22.0.0
     # via factory-boy
 idna==3.6
     # via
