@@ -15,7 +15,8 @@ django>=4.2,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
 # https://github.com/joke2k/django-environ/issues/497
 django-environ<0.11.0  # https://github.com/joke2k/django-environ
 # Turn on and off maintenance mode
-django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
+# 0.21.1 fixes a bug with permissions of the maintenance mode file.
+django-maintenance-mode>=0.21.1 # https://github.com/fabiocaccamo/django-maintenance-mode
 # Model utilities
 django-model-utils  # https://github.com/jazzband/django-model-utils
 # login/auth via Drupal or other Social Application
