@@ -10,11 +10,11 @@ asgiref==3.7.2
     # via
     #   -c requirements/requirements.txt
     #   django
-astroid==3.0.1
+astroid==3.0.2
     # via pylint
 asttokens==2.4.1
     # via stack-data
-babel==2.13.1
+babel==2.14.0
     # via sphinx
 backcall==0.2.0
     # via ipython
@@ -22,7 +22,7 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-black==22.12.0
+black==24.1.1
     # via -r requirements/dev-requirements.in
 certifi==2023.7.22
     # via
@@ -31,7 +31,7 @@ certifi==2023.7.22
     #   requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==2.0.12
+charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -46,11 +46,11 @@ decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-dill==0.3.7
+dill==0.3.8
     # via pylint
-distlib==0.3.7
+distlib==0.3.8
     # via virtualenv
-django==4.2.8
+django==4.2.9
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -68,13 +68,13 @@ executing==2.0.1
     # via stack-data
 filelock==3.13.1
     # via virtualenv
-flake8==6.1.0
+flake8==7.0.0
     # via
     #   -r requirements/dev-requirements.in
     #   flake8-isort
 flake8-isort==6.1.1
     # via -r requirements/dev-requirements.in
-identify==2.5.32
+identify==2.5.33
     # via pre-commit
 idna==3.6
     # via
@@ -91,17 +91,17 @@ ipdb==0.13.13
     # via -r requirements/dev-requirements.in
 ipython==8.12.3
     # via ipdb
-isort==5.13.1
+isort==5.13.2
     # via
     #   flake8-isort
     #   pylint
 jedi==0.19.1
     # via ipython
-jinja2==3.1.2
+jinja2==3.1.3
     # via sphinx
 livereload==2.6.3
     # via sphinx-autobuild
-markupsafe==2.1.3
+markupsafe==2.1.4
     # via
     #   jinja2
     #   werkzeug
@@ -111,7 +111,7 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
-mypy==1.7.0
+mypy==1.8.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via
@@ -123,6 +123,7 @@ packaging==23.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
+    #   black
     #   sphinx
 parso==0.8.3
     # via jedi
@@ -139,7 +140,7 @@ platformdirs==4.1.0
     #   virtualenv
 pre-commit==3.5.0
     # via -r requirements/dev-requirements.in
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
@@ -147,7 +148,7 @@ pure-eval==0.2.2
     # via stack-data
 pycodestyle==2.11.1
     # via flake8
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
 pygments==2.17.2
     # via
@@ -220,7 +221,7 @@ tomlkit==0.12.3
     # via pylint
 tornado==6.4
     # via livereload
-traitlets==5.14.0
+traitlets==5.14.1
     # via
     #   ipython
     #   matplotlib-inline
@@ -247,7 +248,7 @@ urllib3==2.1.0
     #   requests
 virtualenv==20.25.0
     # via pre-commit
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.1
     # via -r requirements/dev-requirements.in
