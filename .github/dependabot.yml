@@ -4,7 +4,8 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
 
   # Enable version updates for Python/Pip - Production
   - package-ecosystem: "pip"
@@ -13,7 +14,10 @@ updates:
     directory: "/"
     # Check for updates to GitHub Actions every weekday
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
     allow:
       # Allow both direct and indirect updates for all packages
       - dependency-type: "all"
+    # Allow up to 10 dependencies for pip dependencies
+    open-pull-requests-limit: 10
