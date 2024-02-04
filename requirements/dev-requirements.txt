@@ -133,7 +133,7 @@ pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-platformdirs==4.1.0
+platformdirs==4.2.0
     # via
     #   black
     #   pylint
