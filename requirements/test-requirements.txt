@@ -46,7 +46,7 @@ pytest==8.0.0
     #   pytest-sugar
 pytest-django==4.8.0
     # via -r requirements/test-requirements.in
-pytest-sugar==0.9.7
+pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via faker
