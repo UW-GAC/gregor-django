@@ -44,7 +44,7 @@ pytest==8.0.0
     #   -r requirements/test-requirements.in
     #   pytest-django
     #   pytest-sugar
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r requirements/test-requirements.in
 pytest-sugar==0.9.7
     # via -r requirements/test-requirements.in
