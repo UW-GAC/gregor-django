@@ -129,7 +129,7 @@ python-fsutil==0.13.1
     # via django-maintenance-mode
 python3-openid==3.2.0
     # via django-allauth
-pytz==2023.3.post1
+pytz==2023.4
     # via
     #   django-anvil-consortium-manager
     #   django-dbbackup
