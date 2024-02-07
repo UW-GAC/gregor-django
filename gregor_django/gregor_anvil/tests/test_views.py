@@ -5,6 +5,7 @@ from unittest import skip
 import responses
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
+from anvil_consortium_manager.tables import WorkspaceTable
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
@@ -1981,3 +1982,134 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
             )
         )
         self.assertEqual(response.status_code, 200)
+
+
+class ExchangeWorkspaceDetailTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceDetail view using the ExchangeWorkspace adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.object = factories.ExchangeWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:detail", args=args)
+
+    def test_status_code(self):
+        """Response has a status code of 200."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+
+class ExchangeWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.workspace_type = "exchange"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], WorkspaceTable)
+
+
+class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with extra ExchangeWorkspace model."""
+
+    api_success_code = 201
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.workspace_type = "exchange"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:new", args=args)
+
+    def test_creates_upload_workspace(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        research_center = factories.ResearchCenterFactory.create()
+        billing_project = acm_factories.BillingProjectFactory.create(
+            name="test-billing-project"
+        )
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        self.anvil_response_mock.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-research_center": research_center.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # The workspace is created.
+        new_workspace = acm_models.Workspace.objects.latest("pk")
+        # Workspace data is added.
+        self.assertEqual(models.ExchangeWorkspace.objects.count(), 1)
+        new_workspace_data = models.ExchangeWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.workspace, new_workspace)
+        self.assertEqual(new_workspace_data.research_center, research_center)
