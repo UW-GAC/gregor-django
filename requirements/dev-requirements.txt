@@ -162,7 +162,7 @@ pylint-django==2.5.5
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
-pytz==2023.3.post1
+pytz==2023.4
     # via
     #   -c requirements/requirements.txt
     #   babel

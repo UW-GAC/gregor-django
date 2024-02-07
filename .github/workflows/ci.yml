@@ -60,9 +60,12 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
 
+
     env:
       # mysql://user:password@host:port/database
       DATABASE_URL: "mysql://root:root@127.0.0.1:3306/mysql"
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
     steps:
 
@@ -84,6 +87,9 @@ jobs:
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
+
       - name: Run tests
         run:  coverage run -p -m pytest
         env:
@@ -98,6 +104,10 @@ jobs:
 
   pytest-sqlite:
     runs-on: ubuntu-latest
+
+    env:
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
     steps:
       - name: Checkout Code Repository
@@ -117,6 +127,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
+
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
         run:  coverage run -p -m pytest
