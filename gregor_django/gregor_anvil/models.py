@@ -287,10 +287,8 @@ class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
 class ExchangeWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A workspace to be used to exchange data with a ResearchCenter."""
 
-    research_center = models.ForeignKey(
+    research_center = models.OneToOneField(
         ResearchCenter,
         on_delete=models.PROTECT,
-        # Set unique=True instead of using a OneToOneField in case we ant to relax this restriction later.
-        unique=True,
         help_text="The ResearchCenter associated with this workspace.",
     )
