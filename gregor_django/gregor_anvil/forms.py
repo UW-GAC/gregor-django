@@ -137,3 +137,14 @@ class DCCProcessedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "consent_group",
             "workspace",
         )
+
+
+class ExchangeWorkspaceForm(forms.ModelForm):
+    """Form for a ExchangeWorkspace object."""
+
+    class Meta:
+        model = models.ExchangeWorkspace
+        fields = (
+            "research_center",
+            "workspace",
+        )

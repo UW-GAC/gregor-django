@@ -1,0 +1,8 @@
+{% extends "anvil_consortium_manager/workspace_detail.html" %}
+
+{% block workspace_data %}
+  <hr>
+  <dl class="row">
+    <dt class="col-sm-2">Research Center</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.research_center.get_absolute_url }}">{{ workspace_data_object.research_center }}</a></dd>
+  </dl>
+{% endblock workspace_data %}

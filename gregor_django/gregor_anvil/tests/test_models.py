@@ -824,3 +824,51 @@ class DCCProcessedDataWorkspaceTest(TestCase):
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         with self.assertRaises(IntegrityError):
             instance.save()
+
+
+class ExchangeWorkspaceTest(TestCase):
+    """Tests for the ExchangeWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        research_center = factories.ResearchCenterFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.ExchangeWorkspace(
+            research_center=research_center,
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.ExchangeWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.ExchangeWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_unique_constraint(self):
+        """Cannot save two instances with the same ResearchCenter."""
+        instance_1 = factories.ExchangeWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.ExchangeWorkspaceFactory.build(
+            research_center=instance_1.research_center,
+            workspace=workspace,
+        )
+        with self.assertRaises(ValidationError):
+            instance_2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+    def test_duplicated_workspace(self):
+        """One workspace cannot be associated with two UploadWorkspace models."""
+        instance_1 = factories.ExchangeWorkspaceFactory.create()
+        research_center = factories.ResearchCenterFactory.create()
+        instance_2 = factories.ExchangeWorkspaceFactory.build(
+            research_center=research_center,
+            workspace=instance_1.workspace,
+        )
+        with self.assertRaises(ValidationError):
+            instance_2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
