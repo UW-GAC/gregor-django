@@ -1,7 +1,6 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
-from anvil_consortium_manager.tables import WorkspaceTable
 from django.db.models import Q
 
 from . import filters, forms, models, tables
@@ -161,7 +160,7 @@ class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "exchange"
     name = "Exchange workspace"
     description = "Workspaces for exchanging data with a Research Center outside of an upload cycle"
-    list_table_class = WorkspaceTable
+    list_table_class = tables.ExchangeWorkspaceTable
     workspace_data_model = models.ExchangeWorkspace
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm

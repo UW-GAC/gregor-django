@@ -5,7 +5,6 @@ from unittest import skip
 import responses
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
-from anvil_consortium_manager.tables import WorkspaceTable
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
@@ -2043,7 +2042,9 @@ class ExchangeWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], WorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["table"], tables.ExchangeWorkspaceTable
+        )
 
 
 class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
