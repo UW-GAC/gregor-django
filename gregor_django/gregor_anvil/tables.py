@@ -262,3 +262,16 @@ class DCCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Tabl
             "dccprocesseddataworkspace__consent_group",
             "consortium_access",
         )
+
+
+class ExchangeWorkspaceTable(tables.Table):
+    """Class to use for ExchangeWorkspace tables."""
+
+    name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column(linkify=True)
+    exchangeworkspace__research_center = tables.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = ("name", "billing_project", "exchangeworkspace__research_center")
+        order_by = ("name",)

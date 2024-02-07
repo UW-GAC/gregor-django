@@ -24,7 +24,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test-requirements.in
-faker==22.5.1
+faker==22.7.0
     # via factory-boy
 idna==3.6
     # via
@@ -44,9 +44,9 @@ pytest==8.0.0
     #   -r requirements/test-requirements.in
     #   pytest-django
     #   pytest-sugar
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r requirements/test-requirements.in
-pytest-sugar==0.9.7
+pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via faker

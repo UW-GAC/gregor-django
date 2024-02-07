@@ -162,3 +162,13 @@ class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type="dcc_processed_data",
     )
+
+
+class ExchangeWorkspaceFactory(DjangoModelFactory):
+    """A factory for the ExchangeWorkspace model."""
+
+    research_center = SubFactory(ResearchCenterFactory)
+    workspace = SubFactory(WorkspaceFactory, workspace_type="exchange")
+
+    class Meta:
+        model = models.ExchangeWorkspace
