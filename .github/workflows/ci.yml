@@ -87,6 +87,9 @@ jobs:
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
+
       - name: Run tests
         run:  coverage run -p -m pytest
         env:
@@ -124,6 +127,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
+
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
         run:  coverage run -p -m pytest
