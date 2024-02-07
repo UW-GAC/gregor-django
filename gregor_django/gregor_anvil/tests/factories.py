@@ -168,7 +168,7 @@ class ExchangeWorkspaceFactory(DjangoModelFactory):
     """A factory for the ExchangeWorkspace model."""
 
     research_center = SubFactory(ResearchCenterFactory)
-    workspace = SubFactory(WorkspaceFactory, workspace_type="upload")
+    workspace = SubFactory(WorkspaceFactory, workspace_type="exchange")
 
     class Meta:
         model = models.ExchangeWorkspace
