@@ -1,6 +1,7 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
+from anvil_consortium_manager.tables import WorkspaceTable
 from django.db.models import Q
 
 from . import filters, forms, models, tables
@@ -131,7 +132,7 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "dcc_processing"
     name = "DCC processing workspace"
-    description = "Workspaces used for DCC processing of data."
+    description = "Workspaces used for DCC processing of data"
     list_table_class = tables.DCCProcessingWorkspaceTable
     workspace_data_model = models.DCCProcessingWorkspace
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
@@ -144,7 +145,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "dcc_processed_data"
     name = "DCC processed data workspace"
-    description = "Workspaces containing data processed by the DCC and hosted by AnVIL."
+    description = "Workspaces containing data processed by the DCC and hosted by AnVIL"
     list_table_class = tables.DCCProcessedDataWorkspaceTable
     workspace_data_model = models.DCCProcessedDataWorkspace
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
@@ -152,3 +153,16 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
         "gregor_anvil/dccprocesseddataworkspace_detail.html"
     )
     workspace_form_class = WorkspaceForm
+
+
+class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for ExchangeWorkspaces."""
+
+    type = "exchange"
+    name = "Exchange workspace"
+    description = "Workspaces for exchanging data with a Research Center outside of an upload cycle"
+    list_table_class = WorkspaceTable
+    workspace_data_model = models.ExchangeWorkspace
+    workspace_data_form_class = forms.ExchangeWorkspaceForm
+    workspace_form_class = WorkspaceForm
+    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
