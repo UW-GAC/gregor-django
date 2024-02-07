@@ -164,4 +164,4 @@ class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.ExchangeWorkspace
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = "gregor_anvil/exchangeworkspace_detail.html"
