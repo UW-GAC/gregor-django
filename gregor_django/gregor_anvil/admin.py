@@ -187,3 +187,14 @@ class ReleaseWorkspaceAdmin(SimpleHistoryAdmin):
         "upload_cycle",
         "consent_group",
     )
+
+
+@admin.register(models.ExchangeWorkspace)
+class ExchangeWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ExchangeWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "research_center",
+    )

@@ -282,3 +282,13 @@ class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
                 fields=["upload_cycle", "consent_group"],
             ),
         ]
+
+
+class ExchangeWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A workspace to be used to exchange data with a ResearchCenter."""
+
+    research_center = models.OneToOneField(
+        ResearchCenter,
+        on_delete=models.PROTECT,
+        help_text="The ResearchCenter associated with this workspace.",
+    )

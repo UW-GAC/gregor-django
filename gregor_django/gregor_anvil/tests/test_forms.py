@@ -645,3 +645,61 @@ class DCCProcessedDataWorkspaceFormTest(TestCase):
         self.assertIn("consent_group", form.errors)
         self.assertEqual(len(form.errors["consent_group"]), 1)
         self.assertIn("required", form.errors["consent_group"][0])
+
+
+class ExchangeWorkspaceFormTest(TestCase):
+    """Tests for the ExchangeWorkspace class."""
+
+    form_class = forms.ExchangeWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        research_center = factories.ResearchCenterFactory()
+        form_data = {
+            "research_center": research_center,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_research_center(self):
+        """Form is invalid when missing research_center."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("research_center", form.errors)
+        self.assertEqual(len(form.errors["research_center"]), 1)
+        self.assertIn("required", form.errors["research_center"][0])
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing research_center."""
+        research_center = factories.ResearchCenterFactory()
+        form_data = {
+            "research_center": research_center,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_duplicate_object(self):
+        """Form is invalid with a duplicated object."""
+        exchange_workspace = factories.ExchangeWorkspaceFactory.create()
+        form_data = {
+            "research_center": exchange_workspace.research_center,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("research_center", form.errors)
+        self.assertEqual(len(form.errors["research_center"]), 1)
+        self.assertIn("already exists", form.errors["research_center"][0])
