@@ -107,7 +107,7 @@ packaging==23.2
     # via
     #   build
     #   plotly
-pip-tools==7.3.0
+pip-tools==7.4.0
     # via -r requirements/requirements.in
 plotly==5.18.0
     # via django-anvil-consortium-manager
@@ -124,7 +124,9 @@ pyjwt[crypto]==2.8.0
     #   -r requirements/requirements.in
     #   django-allauth
 pyproject-hooks==1.0.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 python-fsutil==0.13.1
     # via django-maintenance-mode
 python3-openid==3.2.0
