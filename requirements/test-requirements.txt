@@ -39,7 +39,7 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.4.0
     # via pytest
-pytest==8.0.0
+pytest==8.0.1
     # via
     #   -r requirements/test-requirements.in
     #   pytest-django
