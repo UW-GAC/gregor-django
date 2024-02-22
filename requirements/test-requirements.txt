@@ -24,7 +24,7 @@ exceptiongroup==1.2.0
     # via pytest
 factory-boy==3.3.0
     # via -r requirements/test-requirements.in
-faker==22.7.0
+faker==23.2.1
     # via factory-boy
 idna==3.6
     # via
@@ -39,7 +39,7 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.4.0
     # via pytest
-pytest==8.0.0
+pytest==8.0.1
     # via
     #   -r requirements/test-requirements.in
     #   pytest-django
@@ -68,7 +68,7 @@ tomli==2.0.1
     # via
     #   -c requirements/requirements.txt
     #   pytest
-types-requests==2.31.0.20240125
+types-requests==2.31.0.20240218
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via

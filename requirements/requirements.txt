@@ -34,7 +34,7 @@ crispy-bootstrap5==2023.10
     # via
     #   -r requirements.in
     #   django-anvil-consortium-manager
-cryptography==42.0.2
+cryptography==42.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
@@ -75,7 +75,7 @@ django-login-required-middleware==0.9.0
     # via -r requirements.in
 django-maintenance-mode==0.21.1
     # via -r requirements.in
-django-model-utils==4.3.1
+django-model-utils==4.4.0
     # via -r requirements.in
 django-simple-history==3.4.0
     # via
@@ -93,7 +93,7 @@ idna==3.6
     # via requests
 importlib-metadata==6.8.0
     # via build
-mysqlclient==2.2.3
+mysqlclient==2.2.4
     # via -r requirements.in
 networkx==3.1
     # via django-anvil-consortium-manager
@@ -107,9 +107,9 @@ packaging==23.2
     # via
     #   build
     #   plotly
-pip-tools==7.3.0
+pip-tools==7.4.0
     # via -r requirements.in
-plotly==5.18.0
+plotly==5.19.0
     # via django-anvil-consortium-manager
 pyasn1==0.4.8
     # via
@@ -124,7 +124,9 @@ pyjwt[crypto]==2.8.0
     #   -r requirements.in
     #   django-allauth
 pyproject-hooks==1.0.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 python-fsutil==0.13.1
     # via django-maintenance-mode
 python3-openid==3.2.0
