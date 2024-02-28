@@ -17,7 +17,7 @@ updates:
       interval: "weekly"
       day: "sunday"
     allow:
-      # Allow both direct and indirect updates for all packages
-      - dependency-type: "all"
-    # Allow up to 10 dependencies for pip dependencies
-    open-pull-requests-limit: 10
+      # Allow only direct dependencies - should be ok with pip-sync?
+      - dependency-type: "direct"
+    # Allow up to 20 dependencies for pip dependencies
+    open-pull-requests-limit: 20
