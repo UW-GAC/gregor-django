@@ -31,7 +31,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via pip-tools
-crispy-bootstrap5==2023.10
+crispy-bootstrap5==2024.2
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
