@@ -39,7 +39,7 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.4.0
     # via pytest
-pytest==8.0.2
+pytest==8.1.1
     # via
     #   -r requirements/test-requirements.in
     #   pytest-django
@@ -68,7 +68,7 @@ tomli==2.0.1
     # via
     #   -c requirements/requirements.txt
     #   pytest
-types-requests==2.31.0.20240218
+types-requests==2.31.0.20240310
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via

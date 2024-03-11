@@ -39,7 +39,7 @@ cryptography==42.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.10
+django==4.2.11
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -109,7 +109,7 @@ packaging==23.2
     # via
     #   build
     #   plotly
-pip-tools==7.4.0
+pip-tools==7.4.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
