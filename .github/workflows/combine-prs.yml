@@ -22,4 +22,5 @@ jobs:
         with:
           labels: combined-pr # Optional: add a label to the combined PR
           ci_required: true # require all checks to pass before combining
-          select_labels: dependencies # Optional: only combine PRs with this label
+          select_label: dependencies # Optional: only combine PRs with this label
+          autoclose: false # do not close the source PRs - dependabot should handle it.
