@@ -12,7 +12,7 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   requests
-coverage==7.4.3
+coverage==7.4.4
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
@@ -68,7 +68,7 @@ tomli==2.0.1
     # via
     #   -c requirements/requirements.txt
     #   pytest
-types-requests==2.31.0.20240310
+types-requests==2.31.0.20240311
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
