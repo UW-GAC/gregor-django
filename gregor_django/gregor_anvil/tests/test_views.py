@@ -7,6 +7,7 @@ from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from constance.test import override_config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -95,6 +96,26 @@ class HomeTest(TestCase):
         self.assertNotIn(
             reverse("anvil_consortium_manager:index"), response.rendered_content
         )
+
+    def test_site_announcement_no_text(self):
+        user = User.objects.create_user(username="test-none", password="test-none")
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(response, """id="alert-announcement""")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text(self):
+        user = User.objects.create_user(username="test-none", password="test-none")
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text_unauthenticated_user(self):
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
 
 
 class ConsentGroupDetailTest(TestCase):
