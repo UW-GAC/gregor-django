@@ -84,6 +84,7 @@ THIRD_PARTY_APPS = [
     "dal_select2",
     "fontawesomefree",
     "simple_history",
+    "constance",
 ]
 
 LOCAL_APPS = [
@@ -198,6 +199,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
+                "constance.context_processors.config",
                 "gregor_django.utils.context_processors.settings_context",
             ],
         },
@@ -361,6 +363,17 @@ DCC_CONTACT_EMAIL = "gregorconsortium@uw.edu"
 # ------------------------------------------------------------------------------
 # https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
+
+# django-constance
+# ------------------------------------------------------------------------------
+CONSTANCE_CONFIG = {
+    "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
+}
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
+# CONSTANCE_DATABASE_CACHE_BACKEND = "default"
+CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
