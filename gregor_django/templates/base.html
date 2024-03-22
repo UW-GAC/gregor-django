@@ -104,16 +104,25 @@
       </div>
     </nav>
 
-    {% block extra_navbar %}
-    {% endblock %}
     <main class="flex-shrink-0">
     <div class="container">
+
+      {% if config.ANNOUNCEMENT_TEXT %}
+        <div class="alert alert-info my-3" role="alert" id="alert-announcement">
+          <i class="bi bi-megaphone-fill me-1"></i>
+          {{ config.ANNOUNCEMENT_TEXT }}
+        </div>
+      {% endif %}
 
       {% if messages %}
           {% for message in messages %}
               <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
           {% endfor %}
       {% endif %}
+
+      {% block extra_navbar %}
+      {% endblock %}
+
 
       {% block content %}
 
