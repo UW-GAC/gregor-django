@@ -4,6 +4,8 @@ GREGoR Dynamic Web Apps Oauth Client Site
 
 [![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/UW-GAC/gregor-django/main.svg)](https://results.pre-commit.ci/latest/github/UW-GAC/gregor-django/main)
+
 [![image](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/pydanny/cookiecutter-django/)
