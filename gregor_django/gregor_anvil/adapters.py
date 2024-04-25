@@ -35,7 +35,8 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "upload"
     name = "Upload workspace"
     description = "Workspaces that contain data uploaded by RCs in a given upload cycle"
-    list_table_class = tables.UploadWorkspaceTable
+    list_table_class_view = tables.UploadWorkspaceTable
+    list_table_class_staff_view = tables.UploadWorkspaceTable
     workspace_data_model = models.UploadWorkspace
     workspace_data_form_class = forms.UploadWorkspaceForm
     workspace_form_class = WorkspaceForm
@@ -63,7 +64,9 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "partner_upload"
     name = "Partner upload workspace"
     description = "Workspaces that contain data uploaded by a Partner Group "
-    list_table_class = tables.PartnerUploadWorkspaceTable
+    list_table_class_view = tables.PartnerUploadWorkspaceTable
+    list_table_class_staff_view = tables.PartnerUploadWorkspaceTable
+
     workspace_data_model = models.PartnerUploadWorkspace
     workspace_data_form_class = forms.PartnerUploadWorkspaceForm
     workspace_form_class = WorkspaceForm
@@ -76,7 +79,8 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "resource"
     name = "Resource workspace"
     description = "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
-    list_table_class = tables.DefaultWorkspaceTable
+    list_table_class_view = tables.DefaultWorkspaceTable
+    list_table_class_staff_view = tables.DefaultWorkspaceTable
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
@@ -89,7 +93,8 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "template"
     name = "Template workspace"
     description = "Template workspaces that can be cloned to create other workspaces"
-    list_table_class = tables.TemplateWorkspaceTable
+    list_table_class_view = tables.TemplateWorkspaceTable
+    list_table_class_staff_view = tables.TemplateWorkspaceTable
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/templateworkspace_detail.html"
@@ -102,7 +107,8 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "combined_consortium"
     name = "Combined consortium data workspace"
     description = "Workspaces for internal consortium use that contain data tables combined across upload workspaces"
-    list_table_class = tables.CombinedConsortiumDataWorkspaceTable
+    list_table_class_view = tables.CombinedConsortiumDataWorkspaceTable
+    list_table_class_staff_view = tables.CombinedConsortiumDataWorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = (
@@ -117,7 +123,8 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "release"
     name = "Release workspace"
     description = "Workspaces for release to the general scientific community via dbGaP"
-    list_table_class = tables.ReleaseWorkspaceTable
+    list_table_class_view = tables.ReleaseWorkspaceTable
+    list_table_class_staff_view = tables.ReleaseWorkspaceTable
     workspace_data_model = models.ReleaseWorkspace
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
@@ -130,7 +137,8 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "dcc_processing"
     name = "DCC processing workspace"
     description = "Workspaces used for DCC processing of data"
-    list_table_class = tables.DCCProcessingWorkspaceTable
+    list_table_class_view = tables.DCCProcessingWorkspaceTable
+    list_table_class_staff_view = tables.DCCProcessingWorkspaceTable
     workspace_data_model = models.DCCProcessingWorkspace
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/dccprocessingworkspace_detail.html"
@@ -143,7 +151,8 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "dcc_processed_data"
     name = "DCC processed data workspace"
     description = "Workspaces containing data processed by the DCC and hosted by AnVIL"
-    list_table_class = tables.DCCProcessedDataWorkspaceTable
+    list_table_class_view = tables.DCCProcessedDataWorkspaceTable
+    list_table_class_staff_view = tables.DCCProcessedDataWorkspaceTable
     workspace_data_model = models.DCCProcessedDataWorkspace
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
     workspace_detail_template_name = (
@@ -158,7 +167,8 @@ class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "exchange"
     name = "Exchange workspace"
     description = "Workspaces for exchanging data with a Research Center outside of an upload cycle"
-    list_table_class = tables.ExchangeWorkspaceTable
+    list_table_class_view = tables.ExchangeWorkspaceTable
+    list_table_class_staff_view = tables.ExchangeWorkspaceTable
     workspace_data_model = models.ExchangeWorkspace
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm
