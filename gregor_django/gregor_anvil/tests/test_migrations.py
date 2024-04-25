@@ -22,10 +22,8 @@ class PopulateUploadCycleTest(MigratorTestCase):
         ResearchCenter = self.old_state.apps.get_model("gregor_anvil", "ResearchCenter")
         ConsentGroup = self.old_state.apps.get_model("gregor_anvil", "ConsentGroup")
         UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
-        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
         CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
         ReleaseWorkspace = self.old_state.apps.get_model("gregor_anvil", "ReleaseWorkspace")
-        upload_cycle = factory.create(UploadCycle)
         # Make FKs.
         consent_group = factory.create(ConsentGroup, FACTORY_CLASS=factories.ConsentGroupFactory)
         # First upload workspace - version 1
@@ -206,7 +204,6 @@ class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
     def test_workspace_updates(self):
         """Test updates to the workspace model."""
         Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
-        ResourceWorkspace = self.new_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
         workspace = Workspace.objects.get(pk=self.workspace_1.pk)
         self.assertEqual(workspace.workspace_type, "resource")
         workspace.full_clean()
@@ -219,7 +216,6 @@ class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
 
     def test_resource_workspace_updates(self):
         """Test updates to the ResourceWorkspace model."""
-        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
         ResourceWorkspace = self.new_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
         resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_1.pk)
         resource_workspace.full_clean()
@@ -284,7 +280,6 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
     def test_workspace_updates(self):
         """Test updates to the workspace model."""
         Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
-        ExampleWorkspace = self.new_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
         workspace = Workspace.objects.get(pk=self.workspace_1.pk)
         self.assertEqual(workspace.workspace_type, "example")
         workspace.full_clean()
@@ -297,7 +292,6 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
 
     def test_resource_workspace_updates(self):
         """Test updates to the ResourceWorkspace model."""
-        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
         ExampleWorkspace = self.new_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
         example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_1.pk)
         example_workspace.full_clean()
