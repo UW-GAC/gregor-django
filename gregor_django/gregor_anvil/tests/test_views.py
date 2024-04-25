@@ -1332,8 +1332,8 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         self.assertNotIn(other_workspace_2.pk, returned_ids)
 
 
-class ExampleWorkspaceListTest(TestCase):
-    """Tests of the anvil_consortium_manager WorkspaceList view using the ExampleWorkspace adapter."""
+class ResourceWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using the ResourceWorkspace adapter."""
 
     def setUp(self):
         """Set up test class."""
@@ -1361,8 +1361,8 @@ class ExampleWorkspaceListTest(TestCase):
         )
 
 
-class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests of the WorkspaceCreate view from ACM with extra ExampleWorkspace model."""
+class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with extra ResourceWorkspace model."""
 
     api_success_code = 201
 
@@ -1422,8 +1422,8 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # The workspace is created.
         new_workspace = acm_models.Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
-        new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
+        self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
+        new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
@@ -1841,9 +1841,9 @@ class WorkspaceReportTest(TestCase):
         """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         factories.UploadWorkspaceFactory.create_batch(2)
-        example_workspace_1 = factories.ExampleWorkspaceFactory.create()
-        example_workspace_2 = factories.ExampleWorkspaceFactory.create()
-        factories.ExampleWorkspaceFactory.create_batch(3)
+        example_workspace_1 = factories.ResourceWorkspaceFactory.create()
+        example_workspace_2 = factories.ResourceWorkspaceFactory.create()
+        factories.ResourceWorkspaceFactory.create_batch(3)
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
         acm_factories.WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace_1.workspace, group=group

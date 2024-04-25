@@ -80,8 +80,8 @@ class PartnerUploadWorkspaceFactory(DjangoModelFactory):
         model = models.PartnerUploadWorkspace
 
 
-class ExampleWorkspaceFactory(DjangoModelFactory):
-    """A factory for the ExampleWorkspace model."""
+class ResourceWorkspaceFactory(DjangoModelFactory):
+    """A factory for the ResourceWorkspace model."""
 
     workspace = SubFactory(
         WorkspaceFactory,
@@ -89,7 +89,7 @@ class ExampleWorkspaceFactory(DjangoModelFactory):
     )
 
     class Meta:
-        model = models.ExampleWorkspace
+        model = models.ResourceWorkspace
 
 
 class TemplateWorkspaceFactory(DjangoModelFactory):

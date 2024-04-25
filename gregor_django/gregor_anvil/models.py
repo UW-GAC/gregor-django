@@ -186,8 +186,8 @@ class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         ]
 
 
-class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
-    """A model to track example workspaces."""
+class ResourceWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track resource workspaces."""
 
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):

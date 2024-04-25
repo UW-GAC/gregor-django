@@ -280,9 +280,9 @@ class PartnerUploadWorkspaceFormTest(TestCase):
         self.assertIn("already exists", non_field_errors[0])
 
 
-class ExampleWorkspaceFormTest(TestCase):
+class ResourceWorkspaceFormTest(TestCase):
 
-    form_class = forms.ExampleWorkspaceForm
+    form_class = forms.ResourceWorkspaceForm
 
     def setUp(self):
         """Create a workspace for use in the form."""

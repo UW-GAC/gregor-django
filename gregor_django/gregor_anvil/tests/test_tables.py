@@ -363,7 +363,7 @@ class WorkspaceReportTableTest(TestCase):
 
     def test_row_count_with_two_workspace_types(self):
         factories.UploadWorkspaceFactory.create()
-        factories.ExampleWorkspaceFactory.create_batch(2)
+        factories.ResourceWorkspaceFactory.create_batch(2)
         table = self.table_class(self.get_qs())
         self.assertEqual(len(table.rows), 2)
 
