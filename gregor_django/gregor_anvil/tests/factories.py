@@ -85,7 +85,7 @@ class ResourceWorkspaceFactory(DjangoModelFactory):
 
     workspace = SubFactory(
         WorkspaceFactory,
-        workspace_type="example",
+        workspace_type="resource",
     )
 
     class Meta:

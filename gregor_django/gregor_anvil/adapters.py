@@ -73,7 +73,7 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
 class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
-    type = "example"
+    type = "resource"
     name = "Resource workspace"
     description = (
         "Workspaces that contain examples of using AnVIL, working with data, etc."

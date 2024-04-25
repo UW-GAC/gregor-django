@@ -1345,7 +1345,7 @@ class ResourceWorkspaceListTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1382,7 +1382,7 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1864,7 +1864,7 @@ class WorkspaceReportTest(TestCase):
             {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
         )
         self.assertIn(
-            {"workspace_type": "example", "n_total": 5, "n_shared": 2}, table.data
+            {"workspace_type": "resource", "n_total": 5, "n_shared": 2}, table.data
         )
 
     def test_workspace_count_table_one_workspace_shared_twice(self):
