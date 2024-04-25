@@ -1416,6 +1416,7 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-brief_description": "Test use",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -1425,6 +1426,7 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
         new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        self.assertEqual(new_workspace_data.brief_description, "Test use")
 
 
 class TemplateWorkspaceDetailTest(TestCase):

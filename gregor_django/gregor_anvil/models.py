@@ -189,6 +189,8 @@ class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
 class ResourceWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track resource workspaces."""
 
+    brief_description = models.TextField()
+
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""

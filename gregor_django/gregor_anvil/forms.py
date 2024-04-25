@@ -66,7 +66,10 @@ class ResourceWorkspaceForm(forms.ModelForm):
 
     class Meta:
         model = models.ResourceWorkspace
-        fields = ("workspace",)
+        fields = (
+            "workspace",
+            "brief_description",
+        )
 
 
 class TemplateWorkspaceForm(forms.ModelForm):
