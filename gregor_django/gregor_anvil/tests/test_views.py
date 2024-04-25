@@ -1332,6 +1332,47 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         self.assertNotIn(other_workspace_2.pk, returned_ids)
 
 
+class ResourceWorkspaceDetailTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceDetail view using the TemplateWorkspace adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.object = factories.ResourceWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:detail", args=args)
+
+    def test_status_code(self):
+        """Response has a status code of 200."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_brief_description(self):
+        self.object.brief_description = "testing brief description in template"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertContains(response, "testing brief description in template")
+
+
 class ResourceWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using the ResourceWorkspace adapter."""
 

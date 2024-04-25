@@ -79,7 +79,7 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = tables.DefaultWorkspaceTable
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
     workspace_form_class = WorkspaceForm
 
 
