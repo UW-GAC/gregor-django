@@ -75,9 +75,7 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "resource"
     name = "Resource workspace"
-    description = (
-        "Workspaces that contain examples of using AnVIL, working with data, etc."
-    )
+    description = "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
     list_table_class = tables.DefaultWorkspaceTable
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
