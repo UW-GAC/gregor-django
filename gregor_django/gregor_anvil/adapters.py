@@ -70,7 +70,7 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
 
 
-class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
