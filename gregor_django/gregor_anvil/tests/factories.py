@@ -87,6 +87,7 @@ class ResourceWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type="resource",
     )
+    brief_description = Faker("sentence")
 
     class Meta:
         model = models.ResourceWorkspace
