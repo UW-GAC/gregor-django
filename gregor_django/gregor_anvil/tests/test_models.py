@@ -545,21 +545,21 @@ class PartnerUploadWorkspaceTest(TestCase):
             instance_2.save()
 
 
-class ExampleWorkspaceTest(TestCase):
-    """Tests for the ExampleWorkspace model."""
+class ResourceWorkspaceTest(TestCase):
+    """Tests for the ResourceWorkspace model."""
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.ExampleWorkspace(workspace=workspace)
+        instance = models.ResourceWorkspace(workspace=workspace)
         instance.save()
-        self.assertIsInstance(instance, models.ExampleWorkspace)
+        self.assertIsInstance(instance, models.ResourceWorkspace)
 
     def test_str_method(self):
         workspace = WorkspaceFactory.create(
             billing_project__name="test-bp", name="test-ws"
         )
-        instance = factories.ExampleWorkspaceFactory.create(workspace=workspace)
+        instance = factories.ResourceWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
 

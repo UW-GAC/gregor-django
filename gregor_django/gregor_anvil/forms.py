@@ -61,12 +61,15 @@ class PartnerUploadWorkspaceForm(forms.ModelForm):
         }
 
 
-class ExampleWorkspaceForm(forms.ModelForm):
-    """Form for a ExampleWorkspace object."""
+class ResourceWorkspaceForm(forms.ModelForm):
+    """Form for a ResourceWorkspace object."""
 
     class Meta:
-        model = models.ExampleWorkspace
-        fields = ("workspace",)
+        model = models.ResourceWorkspace
+        fields = (
+            "workspace",
+            "brief_description",
+        )
 
 
 class TemplateWorkspaceForm(forms.ModelForm):

@@ -1332,8 +1332,8 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         self.assertNotIn(other_workspace_2.pk, returned_ids)
 
 
-class ExampleWorkspaceListTest(TestCase):
-    """Tests of the anvil_consortium_manager WorkspaceList view using the ExampleWorkspace adapter."""
+class ResourceWorkspaceDetailTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceDetail view using the TemplateWorkspace adapter."""
 
     def setUp(self):
         """Set up test class."""
@@ -1345,7 +1345,48 @@ class ExampleWorkspaceListTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "example"
+        self.object = factories.ResourceWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:detail", args=args)
+
+    def test_status_code(self):
+        """Response has a status code of 200."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_brief_description(self):
+        self.object.brief_description = "testing brief description in template"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.object.workspace.billing_project.name, self.object.workspace.name
+            )
+        )
+        self.assertContains(response, "testing brief description in template")
+
+
+class ResourceWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using the ResourceWorkspace adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1361,8 +1402,8 @@ class ExampleWorkspaceListTest(TestCase):
         )
 
 
-class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests of the WorkspaceCreate view from ACM with extra ExampleWorkspace model."""
+class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with extra ResourceWorkspace model."""
 
     api_success_code = 201
 
@@ -1382,7 +1423,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1416,15 +1457,17 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-brief_description": "Test use",
             },
         )
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
         new_workspace = acm_models.Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
-        new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
+        self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
+        new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        self.assertEqual(new_workspace_data.brief_description, "Test use")
 
 
 class TemplateWorkspaceDetailTest(TestCase):
@@ -1841,9 +1884,9 @@ class WorkspaceReportTest(TestCase):
         """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         factories.UploadWorkspaceFactory.create_batch(2)
-        example_workspace_1 = factories.ExampleWorkspaceFactory.create()
-        example_workspace_2 = factories.ExampleWorkspaceFactory.create()
-        factories.ExampleWorkspaceFactory.create_batch(3)
+        example_workspace_1 = factories.ResourceWorkspaceFactory.create()
+        example_workspace_2 = factories.ResourceWorkspaceFactory.create()
+        factories.ResourceWorkspaceFactory.create_batch(3)
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
         acm_factories.WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace_1.workspace, group=group
@@ -1864,7 +1907,7 @@ class WorkspaceReportTest(TestCase):
             {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
         )
         self.assertIn(
-            {"workspace_type": "example", "n_total": 5, "n_shared": 2}, table.data
+            {"workspace_type": "resource", "n_total": 5, "n_shared": 2}, table.data
         )
 
     def test_workspace_count_table_one_workspace_shared_twice(self):

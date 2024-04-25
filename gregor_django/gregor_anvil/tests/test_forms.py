@@ -280,9 +280,9 @@ class PartnerUploadWorkspaceFormTest(TestCase):
         self.assertIn("already exists", non_field_errors[0])
 
 
-class ExampleWorkspaceFormTest(TestCase):
+class ResourceWorkspaceFormTest(TestCase):
 
-    form_class = forms.ExampleWorkspaceForm
+    form_class = forms.ResourceWorkspaceForm
 
     def setUp(self):
         """Create a workspace for use in the form."""
@@ -292,19 +292,34 @@ class ExampleWorkspaceFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "workspace": self.workspace,
+            "brief_description": "Test use",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
-        form_data = {}
+        form_data = {
+            "brief_description": "Test use",
+        }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
         self.assertIn("workspace", form.errors)
         self.assertEqual(len(form.errors["workspace"]), 1)
         self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_intended_use(self):
+        """Form is invalid when missing intended_use."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("brief_description", form.errors)
+        self.assertEqual(len(form.errors["brief_description"]), 1)
+        self.assertIn("required", form.errors["brief_description"][0])
 
 
 class TemplateWorkspaceFormTest(TestCase):

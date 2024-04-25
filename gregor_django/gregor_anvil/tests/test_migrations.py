@@ -7,6 +7,7 @@ import factory
 
 from . import factories
 
+
 class PopulateUploadCycleTest(MigratorTestCase):
     """Tests for the populate_upload_cycle migration."""
 
@@ -161,3 +162,159 @@ class PopulateUploadCycleTest(MigratorTestCase):
         workspace = ReleaseWorkspace.objects.get(pk=self.r_2.pk)
         self.assertEqual(workspace.upload_cycle.cycle, 2)
         workspace.full_clean()
+
+
+class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
+    """Tests for the migrations associated with renaming the ExampleWorkspace to ResourceWorkspace."""
+
+    migrate_from = ("gregor_anvil", "0020_alter_exchangeworkspace_research_center")
+    migrate_to = ("gregor_anvil", "0022_update_exampleworkspace_workspace_type_field")
+
+    def prepare(self):
+        """Prepare some example workspaces to be migrated."""
+        # Get model definition from the old state.
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ExampleWorkspace = self.old_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
+        # Create required fks.
+        # requester = User.objects.create()
+        billing_project = BillingProject.objects.create(name="bp", has_app_as_user=True)
+        # Create some example workspaces for testing.
+        self.workspace_1 = Workspace.objects.create(
+            billing_project=billing_project,
+            name="example-workspace-1",
+            workspace_type="example",
+        )
+        self.example_workspace_1 = ExampleWorkspace.objects.create(
+            workspace=self.workspace_1,
+        )
+        self.workspace_2 = Workspace.objects.create(
+            billing_project=billing_project,
+            name="example-workspace-2",
+            workspace_type="example",
+        )
+        self.example_workspace_2 = ExampleWorkspace.objects.create(
+            workspace=self.workspace_2,
+        )
+        # Create a workspace with a different type.
+        self.other_workspace = Workspace.objects.create(
+            billing_project=billing_project,
+            name="other-workspace",
+            workspace_type="upload",
+        )
+
+    def test_workspace_updates(self):
+        """Test updates to the workspace model."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResourceWorkspace = self.new_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
+        workspace = Workspace.objects.get(pk=self.workspace_1.pk)
+        self.assertEqual(workspace.workspace_type, "resource")
+        workspace.full_clean()
+        workspace = Workspace.objects.get(pk=self.workspace_2.pk)
+        self.assertEqual(workspace.workspace_type, "resource")
+        workspace.full_clean()
+        # Check the other workspace.
+        other_workspace = Workspace.objects.get(pk=self.other_workspace.pk)
+        self.assertEqual(other_workspace.workspace_type, "upload")
+
+    def test_resource_workspace_updates(self):
+        """Test updates to the ResourceWorkspace model."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResourceWorkspace = self.new_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
+        resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_1.pk)
+        resource_workspace.full_clean()
+        resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_2.pk)
+        resource_workspace.full_clean()
+
+    def test_relationships(self):
+        """relationships and reverse relationships are correct after migration."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResourceWorkspace = self.new_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
+        workspace = Workspace.objects.get(pk=self.workspace_1.pk)
+        resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_1.pk)
+        self.assertTrue(hasattr(workspace, "resourceworkspace"))
+        self.assertIsInstance(workspace.resourceworkspace, ResourceWorkspace)
+        self.assertEqual(workspace.resourceworkspace, resource_workspace)
+        workspace = Workspace.objects.get(pk=self.workspace_2.pk)
+        resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_2.pk)
+        self.assertTrue(hasattr(workspace, "resourceworkspace"))
+        self.assertIsInstance(workspace.resourceworkspace, ResourceWorkspace)
+        self.assertEqual(workspace.resourceworkspace, resource_workspace)
+
+
+class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
+    """Tests for the reverse migrations associated with renaming the ExampleWorkspace to ResourceWorkspace."""
+
+    migrate_from = ("gregor_anvil", "0022_update_exampleworkspace_workspace_type_field")
+    migrate_to = ("gregor_anvil", "0020_alter_exchangeworkspace_research_center")
+
+    def prepare(self):
+        """Prepare some example workspaces to be migrated."""
+        # Get model definition from the old state.
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResourceWorkspace = self.old_state.apps.get_model("gregor_anvil", "ResourceWorkspace")
+        # Create required fks.
+        # requester = User.objects.create()
+        billing_project = BillingProject.objects.create(name="bp", has_app_as_user=True)
+        # Create some example workspaces for testing.
+        self.workspace_1 = Workspace.objects.create(
+            billing_project=billing_project,
+            name="resource-workspace-1",
+            workspace_type="resource",
+        )
+        self.resource_workspace_1 = ResourceWorkspace.objects.create(
+            workspace=self.workspace_1,
+        )
+        self.workspace_2 = Workspace.objects.create(
+            billing_project=billing_project,
+            name="resource-workspace-2",
+            workspace_type="resource",
+        )
+        self.resource_workspace_2 = ResourceWorkspace.objects.create(
+            workspace=self.workspace_2,
+        )
+        # Create a workspace with a different type.
+        self.other_workspace = Workspace.objects.create(
+            billing_project=billing_project,
+            name="other-workspace",
+            workspace_type="upload",
+        )
+
+    def test_workspace_updates(self):
+        """Test updates to the workspace model."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ExampleWorkspace = self.new_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
+        workspace = Workspace.objects.get(pk=self.workspace_1.pk)
+        self.assertEqual(workspace.workspace_type, "example")
+        workspace.full_clean()
+        workspace = Workspace.objects.get(pk=self.workspace_2.pk)
+        self.assertEqual(workspace.workspace_type, "example")
+        workspace.full_clean()
+        # Check the other workspace.
+        other_workspace = Workspace.objects.get(pk=self.other_workspace.pk)
+        self.assertEqual(other_workspace.workspace_type, "upload")
+
+    def test_resource_workspace_updates(self):
+        """Test updates to the ResourceWorkspace model."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ExampleWorkspace = self.new_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
+        example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_1.pk)
+        example_workspace.full_clean()
+        example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_2.pk)
+        example_workspace.full_clean()
+
+    def test_relationships(self):
+        """relationships and reverse relationships are correct after migration."""
+        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ExampleWorkspace = self.new_state.apps.get_model("gregor_anvil", "ExampleWorkspace")
+        workspace = Workspace.objects.get(pk=self.workspace_1.pk)
+        example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_1.pk)
+        self.assertTrue(hasattr(workspace, "exampleworkspace"))
+        self.assertIsInstance(workspace.exampleworkspace, ExampleWorkspace)
+        self.assertEqual(workspace.exampleworkspace, example_workspace)
+        workspace = Workspace.objects.get(pk=self.workspace_2.pk)
+        example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_2.pk)
+        self.assertTrue(hasattr(workspace, "exampleworkspace"))
+        self.assertIsInstance(workspace.exampleworkspace, ExampleWorkspace)
+        self.assertEqual(workspace.exampleworkspace, example_workspace)

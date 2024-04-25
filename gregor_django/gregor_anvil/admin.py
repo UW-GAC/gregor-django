@@ -122,9 +122,9 @@ class PartnerUploadWorkspaceAdmin(SimpleHistoryAdmin):
     )
 
 
-@admin.register(models.ExampleWorkspace)
-class ExampleWorkspaceAdmin(SimpleHistoryAdmin):
-    """Admin class for the ExampleWorkspace model."""
+@admin.register(models.ResourceWorkspace)
+class ResourceWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the ResourceWorkspace model."""
 
     list_display = (
         "id",

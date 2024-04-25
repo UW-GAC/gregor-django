@@ -70,18 +70,16 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
 
 
-class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
-    """Adapter for ExampleWorkspaces."""
+class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for ResourceWorkspaces."""
 
-    type = "example"
-    name = "Example workspace"
-    description = (
-        "Workspaces that contain examples of using AnVIL, working with data, etc."
-    )
+    type = "resource"
+    name = "Resource workspace"
+    description = "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
     list_table_class = tables.DefaultWorkspaceTable
-    workspace_data_model = models.ExampleWorkspace
-    workspace_data_form_class = forms.ExampleWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_data_model = models.ResourceWorkspace
+    workspace_data_form_class = forms.ResourceWorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
     workspace_form_class = WorkspaceForm
 
 
