@@ -154,9 +154,7 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is in auth domain and workspace is not shared."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group, child_group=self.gregor_all
-        )
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
 
@@ -164,9 +162,7 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is in auth domain and workspace is shared with a different group."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group, child_group=self.gregor_all
-        )
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
         WorkspaceGroupSharingFactory.create(workspace=workspace)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
@@ -183,9 +179,7 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is not in auth domain and workspace is shared with its auth domain."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        WorkspaceGroupSharingFactory.create(
-            workspace=workspace, group=auth_domain.group
-        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=auth_domain.group)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
 
@@ -193,9 +187,7 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is in auth domain and workspace is shared with GREGOR_ALL."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group, child_group=self.gregor_all
-        )
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
         WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertIn("check-circle-fill", table.render_consortium_access(workspace))
@@ -204,12 +196,8 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is in auth domain and workspace is shared with its auth domain."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group, child_group=self.gregor_all
-        )
-        WorkspaceGroupSharingFactory.create(
-            workspace=workspace, group=auth_domain.group
-        )
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=auth_domain.group)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertIn("check-circle-fill", table.render_consortium_access(workspace))
 
@@ -217,9 +205,7 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         """GREGOR_ALL is in auth domain and workspace is shared with a different group."""
         workspace = WorkspaceFactory.create()
         auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace)
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group, child_group=self.gregor_all
-        )
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
         WorkspaceGroupSharingFactory.create(workspace=workspace)
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
@@ -374,24 +360,18 @@ class DCCProcessingWorkspaceTableTest(TestCase):
     table_class = tables.DCCProcessingWorkspaceTable
 
     def test_row_count_with_no_objects(self):
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processing")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processing"))
         self.assertEqual(len(table.rows), 0)
 
     def test_row_count_with_one_object(self):
         self.model_factory.create()
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processing")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processing"))
         self.assertEqual(len(table.rows), 1)
 
     def test_row_count_with_two_objects(self):
         # These values are coded into the model, so need to create separately.
         self.model_factory.create_batch(2)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processing")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processing"))
         self.assertEqual(len(table.rows), 2)
 
 
@@ -401,24 +381,18 @@ class DCCProcessedDataWorkspaceTableTest(TestCase):
     table_class = tables.DCCProcessedDataWorkspaceTable
 
     def test_row_count_with_no_objects(self):
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processed_data")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processed_data"))
         self.assertEqual(len(table.rows), 0)
 
     def test_row_count_with_one_object(self):
         self.model_factory.create()
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processed_data")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processed_data"))
         self.assertEqual(len(table.rows), 1)
 
     def test_row_count_with_two_objects(self):
         # These values are coded into the model, so need to create separately.
         self.model_factory.create_batch(2)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="dcc_processed_data")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="dcc_processed_data"))
         self.assertEqual(len(table.rows), 2)
 
 

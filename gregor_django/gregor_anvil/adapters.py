@@ -15,9 +15,7 @@ class AccountAdapter(BaseAccountAdapter):
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
         if q:
-            queryset = queryset.filter(
-                Q(email__icontains=q) | Q(user__name__icontains=q)
-            )
+            queryset = queryset.filter(Q(email__icontains=q) | Q(user__name__icontains=q))
         return queryset
 
     def get_autocomplete_label(self, account):
@@ -78,7 +76,9 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "resource"
     name = "Resource workspace"
-    description = "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
+    description = (
+        "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
+    )
     list_table_class_view = tables.DefaultWorkspaceTable
     list_table_class_staff_view = tables.DefaultWorkspaceTable
     workspace_data_model = models.ResourceWorkspace
@@ -111,9 +111,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class_staff_view = tables.CombinedConsortiumDataWorkspaceTable
     workspace_data_model = models.CombinedConsortiumDataWorkspace
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
-    workspace_detail_template_name = (
-        "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
-    )
+    workspace_detail_template_name = "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
 
 
@@ -155,9 +153,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class_staff_view = tables.DCCProcessedDataWorkspaceTable
     workspace_data_model = models.DCCProcessedDataWorkspace
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
-    workspace_detail_template_name = (
-        "gregor_anvil/dccprocesseddataworkspace_detail.html"
-    )
+    workspace_detail_template_name = "gregor_anvil/dccprocesseddataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
 
 

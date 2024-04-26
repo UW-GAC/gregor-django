@@ -103,15 +103,15 @@ class UploadCycle(TimeStampedModel, models.Model):
     def __str__(self):
         return "U{cycle:02d}".format(cycle=self.cycle)
 
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
+
     def clean(self):
         """Custom cleaning methods."""
         # End date must be after start date.
         if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
-
-    def get_absolute_url(self):
-        """Return the absolute url for this object."""
-        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
 
     def get_partner_upload_workspaces(self):
         """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
@@ -119,16 +119,12 @@ class UploadCycle(TimeStampedModel, models.Model):
         For a given PartnerGroup and ConsentGroup, the workspace with the highest version that also has a date_completed
         that is before the end_date of this upload cycle is included.
         """
-        qs = PartnerUploadWorkspace.objects.filter(
-            date_completed__lte=self.end_date
-        ).order_by("-version")
+        qs = PartnerUploadWorkspace.objects.filter(date_completed__lte=self.end_date).order_by("-version")
         # This is not ideal, but we can't use .distinct on fields.
         pks_to_keep = []
         for partner_group in PartnerGroup.objects.all():
             for consent_group in ConsentGroup.objects.all():
-                instance = qs.filter(
-                    partner_group=partner_group, consent_group=consent_group
-                ).first()
+                instance = qs.filter(partner_group=partner_group, consent_group=consent_group).first()
                 if instance:
                     pks_to_keep.append(instance.pk)
         return qs.filter(pk__in=pks_to_keep)
@@ -216,9 +212,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         on_delete=models.PROTECT,
     )
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
-    full_data_use_limitations = models.TextField(
-        help_text="The full data use limitations for this workspace."
-    )
+    full_data_use_limitations = models.TextField(help_text="The full data use limitations for this workspace.")
     dbgap_version = models.IntegerField(
         verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
@@ -245,21 +239,16 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         ]
 
     def get_dbgap_accession(self):
-        return "phs{phs:06d}.v{v}.p{p}".format(
-            phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set
-        )
+        return "phs{phs:06d}.v{v}.p{p}".format(phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set)
 
 
 class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
-
     upload_cycle = models.ForeignKey(
         UploadCycle,
         on_delete=models.PROTECT,
         help_text="Upload cycle associated with this workspace.",
     )
-    purpose = models.TextField(
-        help_text="The type of processing that is done in this workspace."
-    )
+    purpose = models.TextField(help_text="The type of processing that is done in this workspace.")
 
 
 class DCCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):

@@ -117,9 +117,7 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
 class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a DCCProcessingWorkspace object."""
 
-    ERROR_UPLOAD_CYCLE = (
-        "upload_cycle must match upload_cycle of all upload_workspaces."
-    )
+    ERROR_UPLOAD_CYCLE = "upload_cycle must match upload_cycle of all upload_workspaces."
 
     class Meta:
         model = models.DCCProcessingWorkspace

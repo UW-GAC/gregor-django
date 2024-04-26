@@ -281,7 +281,6 @@ class PartnerUploadWorkspaceFormTest(TestCase):
 
 
 class ResourceWorkspaceFormTest(TestCase):
-
     form_class = forms.ResourceWorkspaceForm
 
     def setUp(self):
@@ -323,7 +322,6 @@ class ResourceWorkspaceFormTest(TestCase):
 
 
 class TemplateWorkspaceFormTest(TestCase):
-
     form_class = forms.TemplateWorkspaceForm
 
     def setUp(self):
@@ -376,9 +374,7 @@ class CombinedConsortiumDataWorkspaceFormTest(TestCase):
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
         upload_cycle = factories.UploadCycleFactory.create()
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_cycle
-        )
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle)
         form_data = {
             "upload_cycle": upload_cycle,
             "upload_workspaces": [upload_workspace],
