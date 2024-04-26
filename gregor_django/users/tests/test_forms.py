@@ -1,6 +1,7 @@
 """
 Module for all Form Tests.
 """
+
 import pytest
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
@@ -42,7 +43,6 @@ class TestUserCreationForm:
 
 
 class UserLookupFormTest(TestCase):
-
     form_class = UserLookupForm
 
     def test_valid(self):

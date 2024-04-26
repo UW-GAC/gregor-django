@@ -41,44 +41,32 @@ class HomeTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertNotIn(
-            reverse("anvil_consortium_manager:index"), response.rendered_content
-        )
+        self.assertNotIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
 
     def test_acm_link_with_view_permission(self):
         """ACM link shows up if you have view permission."""
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertIn(
-            reverse("anvil_consortium_manager:index"), response.rendered_content
-        )
+        self.assertIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
 
     def test_acm_link_with_view_and_edit_permission(self):
         """ACM link shows up if you have view and edit permission."""
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertIn(
-            reverse("anvil_consortium_manager:index"), response.rendered_content
-        )
+        self.assertIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
 
     def test_acm_link_with_edit_but_not_view_permission(self):
         """ACM link does not show up if you only have edit permission.
@@ -86,16 +74,12 @@ class HomeTest(TestCase):
         This is something that shouldn't happen but could if admin only gave EDIT but not VIEW permission."""
         user = User.objects.create_user(username="test-none", password="test-none")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertNotIn(
-            reverse("anvil_consortium_manager:index"), response.rendered_content
-        )
+        self.assertNotIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
 
     def test_site_announcement_no_text(self):
         user = User.objects.create_user(username="test-none", password="test-none")
@@ -128,9 +112,7 @@ class ConsentGroupDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -145,9 +127,7 @@ class ConsentGroupDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -158,9 +138,7 @@ class ConsentGroupDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -185,9 +163,7 @@ class ConsentGroupListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -202,9 +178,7 @@ class ConsentGroupListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -214,9 +188,7 @@ class ConsentGroupListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -262,9 +234,7 @@ class ResearchCenterDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -279,9 +249,7 @@ class ResearchCenterDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -292,9 +260,7 @@ class ResearchCenterDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -335,9 +301,7 @@ class ResearchCenterListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -352,9 +316,7 @@ class ResearchCenterListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -364,9 +326,7 @@ class ResearchCenterListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -377,9 +337,7 @@ class ResearchCenterListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.ResearchCenterTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.ResearchCenterTable)
 
     def test_view_with_no_objects(self):
         """The table has no rows when there are no ResearchCenter objects."""
@@ -418,9 +376,7 @@ class PartnerGroupDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -435,9 +391,7 @@ class PartnerGroupDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -448,9 +402,7 @@ class PartnerGroupDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -491,9 +443,7 @@ class PartnerGroupListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -508,9 +458,7 @@ class PartnerGroupListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -520,9 +468,7 @@ class PartnerGroupListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -569,14 +515,10 @@ class UploadCycleCreateTest(TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Data for forms
         self.start_date = date.today()
@@ -594,9 +536,7 @@ class UploadCycleCreateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -606,13 +546,9 @@ class UploadCycleCreateTest(TestCase):
 
     def test_access_with_view_permission(self):
         """Raises permission denied if user has only view permission."""
-        user_with_view_perm = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
         user_with_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_with_view_perm
@@ -621,9 +557,7 @@ class UploadCycleCreateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -747,9 +681,7 @@ class UploadCycleDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -764,9 +696,7 @@ class UploadCycleDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -777,9 +707,7 @@ class UploadCycleDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -808,25 +736,15 @@ class UploadCycleDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.cycle))
         self.assertIn("tables", response.context_data)
         self.assertEqual(len(response.context_data["tables"]), 6)
-        self.assertIsInstance(
-            response.context_data["tables"][0], tables.UploadWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["tables"][0], tables.UploadWorkspaceTable)
         self.assertIsInstance(
             response.context_data["tables"][1],
             tables.CombinedConsortiumDataWorkspaceTable,
         )
-        self.assertIsInstance(
-            response.context_data["tables"][2], tables.ReleaseWorkspaceTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][3], tables.DCCProcessingWorkspaceTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][4], tables.DCCProcessedDataWorkspaceTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][5], tables.PartnerUploadWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["tables"][2], tables.ReleaseWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][3], tables.DCCProcessingWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][4], tables.DCCProcessedDataWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][5], tables.PartnerUploadWorkspaceTable)
 
     def test_upload_workspace_table(self):
         """Contains a table of UploadWorkspaces from this upload cycle."""
@@ -843,9 +761,7 @@ class UploadCycleDetailTest(TestCase):
     def test_combined_workspace_table(self):
         """Contains a table of CombinedConsortiumDataWorkspaces from this upload cycle."""
         obj = self.model_factory.create()
-        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
-            upload_cycle=obj
-        )
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=obj)
         other_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
@@ -895,9 +811,7 @@ class UploadCycleDetailTest(TestCase):
         obj = self.model_factory.create()
         obj.end_date
         # Make sure the partner upload workspace has an end date before the end of this upload cycle.
-        workspace = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=obj.end_date - timedelta(days=1)
-        )
+        workspace = factories.PartnerUploadWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
         other_workspace = factories.PartnerUploadWorkspaceFactory.create(
             date_completed=obj.end_date + timedelta(days=1)
         )
@@ -919,9 +833,7 @@ class UploadCycleListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -936,9 +848,7 @@ class UploadCycleListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -948,9 +858,7 @@ class UploadCycleListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -997,9 +905,7 @@ class AccountListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_filter_by_name(self):
@@ -1027,14 +933,10 @@ class UploadWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.object = factories.UploadWorkspaceFactory.create()
 
@@ -1045,11 +947,7 @@ class UploadWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
     def test_contains_share_with_auth_domain_button(self):
@@ -1057,11 +955,7 @@ class UploadWorkspaceDetailTest(TestCase):
             workspace=self.object.workspace, group__name="test_auth"
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
             "anvil_consortium_manager:workspaces:sharing:new_by_group",
             args=[
@@ -1082,9 +976,7 @@ class UploadWorkspaceListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.workspace_type = "upload"
 
@@ -1097,9 +989,7 @@ class UploadWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.UploadWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.UploadWorkspaceTable)
 
 
 class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -1114,14 +1004,10 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "upload"
 
@@ -1134,9 +1020,7 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         research_center = factories.ResearchCenterFactory.create()
         consent_group = factories.ConsentGroupFactory.create()
         upload_cycle = factories.UploadCycleFactory.create()
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="test-billing-project"
-        )
+        billing_project = acm_factories.BillingProjectFactory.create(name="test-billing-project")
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
@@ -1184,86 +1068,59 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
         # Create a user with the correct permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse(
-            "anvil_consortium_manager:workspaces:autocomplete_by_type", args=args
-        )
+        return reverse("anvil_consortium_manager:workspaces:autocomplete_by_type", args=args)
 
     def test_returns_all_objects(self):
         """Queryset returns all objects when there is no query."""
         workspaces = factories.UploadWorkspaceFactory.create_batch(10)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url("upload"))
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 10)
         self.assertEqual(sorted(returned_ids), sorted([x.pk for x in workspaces]))
 
     def test_returns_correct_object_match(self):
         """Queryset returns the correct objects when query matches the name."""
         factories.UploadWorkspaceFactory.create(workspace__name="other")
-        workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test-workspace"
-        )
+        workspace = factories.UploadWorkspaceFactory.create(workspace__name="test-workspace")
         self.client.force_login(self.user)
         response = self.client.get(self.get_url("upload"), {"q": "test-workspace"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], workspace.pk)
 
     def test_returns_correct_object_starting_with_query(self):
         """Queryset returns the correct objects when query matches the beginning of the name."""
         factories.UploadWorkspaceFactory.create(workspace__name="other")
-        workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test-workspace"
-        )
+        workspace = factories.UploadWorkspaceFactory.create(workspace__name="test-workspace")
         self.client.force_login(self.user)
         response = self.client.get(self.get_url("upload"), {"q": "test"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], workspace.pk)
 
     def test_returns_correct_object_containing_query(self):
         """Queryset returns the correct objects when the name contains the query."""
         factories.UploadWorkspaceFactory.create(workspace__name="other")
-        workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test-workspace"
-        )
+        workspace = factories.UploadWorkspaceFactory.create(workspace__name="test-workspace")
         self.client.force_login(self.user)
         response = self.client.get(self.get_url("upload"), {"q": "work"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], workspace.pk)
 
     def test_returns_correct_object_case_insensitive(self):
         """Queryset returns the correct objects when query matches the beginning of the name."""
         factories.UploadWorkspaceFactory.create(workspace__name="other")
-        workspace = factories.UploadWorkspaceFactory.create(
-            workspace__name="test-workspace"
-        )
+        workspace = factories.UploadWorkspaceFactory.create(workspace__name="test-workspace")
         self.client.force_login(self.user)
         response = self.client.get(self.get_url("upload"), {"q": "TEST-WORKSPACE"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], workspace.pk)
 
@@ -1276,10 +1133,7 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
             self.get_url("upload"),
             {"forward": json.dumps({"consent_group": workspace.consent_group.pk})},
         )
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertIn(workspace.pk, returned_ids)
         self.assertNotIn(other_workspace.pk, returned_ids)
@@ -1293,10 +1147,7 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
             self.get_url("upload"),
             {"forward": json.dumps({"upload_cycle": workspace.upload_cycle.pk})},
         )
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertIn(workspace.pk, returned_ids)
         self.assertNotIn(other_workspace.pk, returned_ids)
@@ -1304,12 +1155,8 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
     def test_forwarded_consent_group_and_upload_cycle(self):
         """Queryset is filtered to upload_cycle and consent_groups matching the forwarded value if specified."""
         workspace = factories.UploadWorkspaceFactory.create()
-        other_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=workspace.upload_cycle
-        )
-        other_workspace_2 = factories.UploadWorkspaceFactory.create(
-            consent_group=workspace.consent_group
-        )
+        other_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=workspace.upload_cycle)
+        other_workspace_2 = factories.UploadWorkspaceFactory.create(consent_group=workspace.consent_group)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url("upload"),
@@ -1322,18 +1169,15 @@ class UploadWorkspaceAutocompleteByTypeTest(TestCase):
                 )
             },
         )
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertIn(workspace.pk, returned_ids)
         self.assertNotIn(other_workspace_1.pk, returned_ids)
         self.assertNotIn(other_workspace_2.pk, returned_ids)
 
 
-class ExampleWorkspaceListTest(TestCase):
-    """Tests of the anvil_consortium_manager WorkspaceList view using the ExampleWorkspace adapter."""
+class ResourceWorkspaceDetailTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceDetail view using the TemplateWorkspace adapter."""
 
     def setUp(self):
         """Set up test class."""
@@ -1341,11 +1185,40 @@ class ExampleWorkspaceListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
-        self.workspace_type = "example"
+        self.object = factories.ResourceWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:detail", args=args)
+
+    def test_status_code(self):
+        """Response has a status code of 200."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertEqual(response.status_code, 200)
+
+    def test_brief_description(self):
+        self.object.brief_description = "testing brief description in template"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertContains(response, "testing brief description in template")
+
+
+class ResourceWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using the ResourceWorkspace adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1356,13 +1229,11 @@ class ExampleWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.DefaultWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.DefaultWorkspaceTable)
 
 
-class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests of the WorkspaceCreate view from ACM with extra ExampleWorkspace model."""
+class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with extra ResourceWorkspace model."""
 
     api_success_code = 201
 
@@ -1373,16 +1244,12 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1390,9 +1257,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="test-billing-project"
-        )
+        billing_project = acm_factories.BillingProjectFactory.create(name="test-billing-project")
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
@@ -1416,15 +1281,17 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-brief_description": "Test use",
             },
         )
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
         new_workspace = acm_models.Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
-        new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
+        self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
+        new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        self.assertEqual(new_workspace_data.brief_description, "Test use")
 
 
 class TemplateWorkspaceDetailTest(TestCase):
@@ -1436,9 +1303,7 @@ class TemplateWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.TemplateWorkspaceFactory.create()
 
@@ -1449,11 +1314,7 @@ class TemplateWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
 
@@ -1466,9 +1327,7 @@ class TemplateWorkspaceListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
 
@@ -1481,9 +1340,7 @@ class TemplateWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.TemplateWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.TemplateWorkspaceTable)
 
 
 class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -1498,14 +1355,10 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
 
@@ -1515,9 +1368,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="test-billing-project"
-        )
+        billing_project = acm_factories.BillingProjectFactory.create(name="test-billing-project")
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
@@ -1563,14 +1414,10 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.object = factories.CombinedConsortiumDataWorkspaceFactory.create()
 
@@ -1581,50 +1428,28 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
     @skip("Need to allow extra context in ACM.")
     def test_contains_upload_workspaces(self):
         """Response contains the upload workspaces."""
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=self.object.upload_cycle
-        )
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=self.object.upload_cycle
-        )
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertIn("upload_workspace_table", response.context_data)
-        self.assertIn(
-            upload_workspace_1, response.context_data["upload_workspace_table"].data
-        )
-        self.assertIn(
-            upload_workspace_2, response.context_data["upload_workspace_table"].data
-        )
+        self.assertIn(upload_workspace_1, response.context_data["upload_workspace_table"].data)
+        self.assertIn(upload_workspace_2, response.context_data["upload_workspace_table"].data)
 
     @skip("Need to allow extra context in ACM.")
     def test_contains_upload_workspaces_from_previous_cycles(self):
         """Response contains the upload workspaces."""
         upload_cycle_1 = factories.UploadCycleFactory.create(upload_cycle=1)
         upload_cycle_2 = factories.UploadCycleFactory.create(upload_cycle=2)
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
-            upload_cycle=upload_cycle_2
-        )
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_cycle_1
-        )
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_cycle_2
-        )
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=upload_cycle_2)
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_1)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_2)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
@@ -1633,23 +1458,15 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             )
         )
         self.assertIn("upload_workspace_table", response.context_data)
-        self.assertIn(
-            upload_workspace_1, response.context_data["upload_workspace_table"].data
-        )
-        self.assertIn(
-            upload_workspace_2, response.context_data["upload_workspace_table"].data
-        )
+        self.assertIn(upload_workspace_1, response.context_data["upload_workspace_table"].data)
+        self.assertIn(upload_workspace_2, response.context_data["upload_workspace_table"].data)
 
     def test_contains_share_with_auth_domain_button(self):
         acm_factories.WorkspaceAuthorizationDomainFactory.create(
             workspace=self.object.workspace, group__name="test_auth"
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
             "anvil_consortium_manager:workspaces:sharing:new_by_group",
             args=[
@@ -1670,9 +1487,7 @@ class ReleaseWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.ReleaseWorkspaceFactory.create()
 
@@ -1683,28 +1498,16 @@ class ReleaseWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
     @skip("Need to allow extra context in ACM.")
     def test_contains_upload_workspaces(self):
         """Response contains the upload workspaces."""
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=self.object.upload_cycle
-        )
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=self.object.upload_cycle
-        )
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertIn("included_workspace_table", response.context_data)
         self.assertIn(
             upload_workspace_1.workspace,
@@ -1720,15 +1523,9 @@ class ReleaseWorkspaceDetailTest(TestCase):
         """Response contains the upload workspaces."""
         upload_cycle_1 = factories.UploadCycleFactory.create(upload_cycle=1)
         upload_cycle_2 = factories.UploadCycleFactory.create(upload_cycle=2)
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
-            upload_cycle=upload_cycle_2
-        )
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_cycle_1
-        )
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
-            upload_cycle=upload_cycle_2
-        )
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=upload_cycle_2)
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_1)
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_2)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
@@ -1755,9 +1552,7 @@ class WorkspaceReportTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1778,15 +1573,11 @@ class WorkspaceReportTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1805,18 +1596,14 @@ class WorkspaceReportTest(TestCase):
         """Response includes no workspace shared with the consortium in context when workspace is not shared with the consortium"""  # noqa: E501
         upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="group1")
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group
-        )
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=upload_workspace.workspace, group=group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         # workspace table
         self.assertIn("workspace_count_table", response.context_data)
         table = response.context_data["workspace_count_table"]
         self.assertEqual(len(table.data), 1)
-        self.assertIn(
-            {"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data
-        )
+        self.assertIn({"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data)
 
     def test_workspace_count_table_one_workspace_type_some_shared(self):
         """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
@@ -1824,48 +1611,34 @@ class WorkspaceReportTest(TestCase):
         # Workspaces that won't be shared.
         factories.UploadWorkspaceFactory.create_batch(2)
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace_1.workspace, group=group
-        )
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=upload_workspace_1.workspace, group=group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         # workspace table
         self.assertIn("workspace_count_table", response.context_data)
         table = response.context_data["workspace_count_table"]
         self.assertEqual(len(table.data), 1)
-        self.assertIn(
-            {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
-        )
+        self.assertIn({"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data)
 
     def test_workspace_count_table_two_workspace_types_some_shared(self):
         """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         factories.UploadWorkspaceFactory.create_batch(2)
-        example_workspace_1 = factories.ExampleWorkspaceFactory.create()
-        example_workspace_2 = factories.ExampleWorkspaceFactory.create()
-        factories.ExampleWorkspaceFactory.create_batch(3)
+        example_workspace_1 = factories.ResourceWorkspaceFactory.create()
+        example_workspace_2 = factories.ResourceWorkspaceFactory.create()
+        factories.ResourceWorkspaceFactory.create_batch(3)
         group = acm_factories.ManagedGroupFactory.create(name="GREGOR_ALL")
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace_1.workspace, group=group
-        )
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=example_workspace_1.workspace, group=group
-        )
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=example_workspace_2.workspace, group=group
-        )
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=upload_workspace_1.workspace, group=group)
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=example_workspace_1.workspace, group=group)
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=example_workspace_2.workspace, group=group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         # workspace table
         self.assertIn("workspace_count_table", response.context_data)
         table = response.context_data["workspace_count_table"]
         self.assertEqual(len(table.data), 2)
-        self.assertIn(
-            {"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data
-        )
-        self.assertIn(
-            {"workspace_type": "example", "n_total": 5, "n_shared": 2}, table.data
-        )
+        self.assertIn({"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data)
+        self.assertIn({"workspace_type": "resource", "n_total": 5, "n_shared": 2}, table.data)
 
     def test_workspace_count_table_one_workspace_shared_twice(self):
         """Workspace table includes correct values for one workspace  that has been shared twice."""  # noqa: E501
@@ -1875,32 +1648,24 @@ class WorkspaceReportTest(TestCase):
             workspace=upload_workspace_1.workspace, group__name="GREGOR_ALL"
         )
         # Create a sharing record with another group.
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace_1.workspace
-        )
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=upload_workspace_1.workspace)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         # workspace table
         self.assertIn("workspace_count_table", response.context_data)
         table = response.context_data["workspace_count_table"]
         self.assertEqual(len(table.data), 1)
-        self.assertIn(
-            {"workspace_type": "upload", "n_total": 1, "n_shared": 1}, table.data
-        )
+        self.assertIn({"workspace_type": "upload", "n_total": 1, "n_shared": 1}, table.data)
 
     def test_has_no_workspace_when_shared_with_different_group_in_context(self):
         upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create(name="ANOTHER_GROUP")
-        acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group
-        )
+        acm_factories.WorkspaceGroupSharingFactory.create(workspace=upload_workspace.workspace, group=group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["workspace_count_table"]
         self.assertEqual(len(table.data), 1)
-        self.assertIn(
-            {"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data
-        )
+        self.assertIn({"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data)
 
     def test_no_consortium_members_with_access_to_workspaces_in_context(self):
         """Response includes no consortium members with access to any workspaces in context"""
@@ -1920,9 +1685,7 @@ class WorkspaceReportTest(TestCase):
     def test_two_consortium_members_with_access_to_workspaces_in_context(self):
         """Response includes two consortium members with access to any workspaces in context"""
         acm_factories.AccountFactory.create(user=self.user, verified=True)
-        another_user = User.objects.create_user(
-            username="another_user", password="another_user"
-        )
+        another_user = User.objects.create_user(username="another_user", password="another_user")
         acm_factories.AccountFactory.create(user=another_user, verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -1934,9 +1697,7 @@ class WorkspaceReportTest(TestCase):
     ):
         """Response includes only verified linked account in context"""
         acm_factories.AccountFactory.create(user=self.user, verified=True)
-        another_user = User.objects.create_user(
-            username="another_user", password="another_user"
-        )
+        another_user = User.objects.create_user(username="another_user", password="another_user")
         acm_factories.AccountFactory.create(user=another_user, verified=False)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -1953,9 +1714,7 @@ class DCCProcessingWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.DCCProcessingWorkspaceFactory.create()
 
@@ -1966,11 +1725,7 @@ class DCCProcessingWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
 
@@ -1983,9 +1738,7 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.DCCProcessedDataWorkspaceFactory.create()
 
@@ -1996,11 +1749,7 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
 
@@ -2013,14 +1762,10 @@ class ExchangeWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.object = factories.ExchangeWorkspaceFactory.create()
 
@@ -2031,11 +1776,7 @@ class ExchangeWorkspaceDetailTest(TestCase):
     def test_status_code(self):
         """Response has a status code of 200."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                self.object.workspace.billing_project.name, self.object.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
 
@@ -2048,9 +1789,7 @@ class ExchangeWorkspaceListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.workspace_type = "exchange"
 
@@ -2063,9 +1802,7 @@ class ExchangeWorkspaceListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.ExchangeWorkspaceTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.ExchangeWorkspaceTable)
 
 
 class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -2080,14 +1817,10 @@ class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "exchange"
 
@@ -2098,9 +1831,7 @@ class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         research_center = factories.ResearchCenterFactory.create()
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="test-billing-project"
-        )
+        billing_project = acm_factories.BillingProjectFactory.create(name="test-billing-project")
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",

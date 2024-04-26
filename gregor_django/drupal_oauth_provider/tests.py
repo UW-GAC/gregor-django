@@ -167,6 +167,4 @@ class TestProviderConfig(TestCase):
             }
         ]
         with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            CustomProvider(request).get_provider_managed_scope_status(
-                scopes_granted=["X"]
-            )
+            CustomProvider(request).get_provider_managed_scope_status(scopes_granted=["X"])

@@ -24,7 +24,6 @@ class CustomAccount(ProviderAccount):
 
 
 class CustomProvider(OAuth2Provider):
-
     id = DRUPAL_PROVIDER_ID
     name = OVERRIDE_NAME
     account_class = CustomAccount

@@ -6,7 +6,7 @@
 #
 alabaster==0.7.13
     # via sphinx
-asgiref==3.7.2
+asgiref==3.8.1
     # via
     #   -c requirements/requirements.txt
     #   django
@@ -22,7 +22,7 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-black==24.3.0
+black==24.4.0
     # via -r requirements/dev-requirements.in
 certifi==2023.7.22
     # via
@@ -175,6 +175,8 @@ requests==2.31.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
+ruff==0.4.2
+    # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
     #   -c requirements/requirements.txt
@@ -201,7 +203,7 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlparse==0.4.4
+sqlparse==0.5.0
     # via
     #   -c requirements/requirements.txt
     #   django
@@ -250,7 +252,7 @@ virtualenv==20.25.1
     # via pre-commit
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.1
+werkzeug==3.0.2
     # via -r requirements/dev-requirements.in
 zipp==3.17.0
     # via

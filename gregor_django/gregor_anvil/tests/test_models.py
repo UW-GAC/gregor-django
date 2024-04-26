@@ -14,9 +14,7 @@ class ConsentGroupTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        instance = models.ConsentGroup(
-            code="TEST", consent="test consent", data_use_limitations="test limitations"
-        )
+        instance = models.ConsentGroup(code="TEST", consent="test consent", data_use_limitations="test limitations")
         instance.save()
         self.assertIsInstance(instance, models.ConsentGroup)
 
@@ -70,9 +68,7 @@ class ConsentGroupTest(TestCase):
 
     def test_invalid_code(self):
         """Cleaning a model with an invalid code fails."""
-        instance = models.ConsentGroup(
-            code="FOO", data_use_limitations="test limitations"
-        )
+        instance = models.ConsentGroup(code="FOO", data_use_limitations="test limitations")
         with self.assertRaises(ValidationError):
             instance.full_clean()
 
@@ -198,9 +194,7 @@ class UploadCycleTest(TestCase):
 
     def test_start_date_equal_to_end_date(self):
         same_date = date.today()
-        instance_2 = factories.UploadCycleFactory.build(
-            start_date=same_date, end_date=same_date
-        )
+        instance_2 = factories.UploadCycleFactory.build(start_date=same_date, end_date=same_date)
         with self.assertRaises(ValidationError) as e:
             instance_2.full_clean()
         self.assertEqual(len(e.exception.message_dict), 1)
@@ -228,18 +222,14 @@ class UploadCycleTest(TestCase):
     def test_get_partner_upload_workspaces_with_date_completed_after_end_date(self):
         """PartnerUploadWorkspace with date_completed after UploadCycle end_date is not included."""
         upload_cycle = factories.UploadCycleFactory.create()
-        factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=upload_cycle.end_date + timedelta(days=4)
-        )
+        factories.PartnerUploadWorkspaceFactory.create(date_completed=upload_cycle.end_date + timedelta(days=4))
         included_workspaces = upload_cycle.get_partner_upload_workspaces()
         self.assertEqual(included_workspaces.count(), 0)
 
     def test_get_partner_upload_workspaces_with_date_completed_equal_to_end_date(self):
         """PartnerUploadWorkspace with date_completed equal to UploadCycle end_date is included."""
         upload_cycle = factories.UploadCycleFactory.create()
-        workspace = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=upload_cycle.end_date
-        )
+        workspace = factories.PartnerUploadWorkspaceFactory.create(date_completed=upload_cycle.end_date)
         included_workspaces = upload_cycle.get_partner_upload_workspaces()
         self.assertEqual(included_workspaces.count(), 1)
         self.assertIn(workspace, included_workspaces)
@@ -457,9 +447,7 @@ class PartnerUploadWorkspaceTest(TestCase):
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
 
     def test_date_completed(self):
-        instance = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=date.today()
-        )
+        instance = factories.PartnerUploadWorkspaceFactory.create(date_completed=date.today())
         instance.save()
         self.assertIsNotNone(instance.date_completed)
 
@@ -545,21 +533,19 @@ class PartnerUploadWorkspaceTest(TestCase):
             instance_2.save()
 
 
-class ExampleWorkspaceTest(TestCase):
-    """Tests for the ExampleWorkspace model."""
+class ResourceWorkspaceTest(TestCase):
+    """Tests for the ResourceWorkspace model."""
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.ExampleWorkspace(workspace=workspace)
+        instance = models.ResourceWorkspace(workspace=workspace)
         instance.save()
-        self.assertIsInstance(instance, models.ExampleWorkspace)
+        self.assertIsInstance(instance, models.ResourceWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
-        instance = factories.ExampleWorkspaceFactory.create(workspace=workspace)
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        instance = factories.ResourceWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
 
@@ -575,9 +561,7 @@ class TemplateWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.TemplateWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.TemplateWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -590,9 +574,7 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
         upload_cycle = factories.UploadCycleFactory.create()
-        instance = models.CombinedConsortiumDataWorkspace(
-            workspace=workspace, upload_cycle=upload_cycle
-        )
+        instance = models.CombinedConsortiumDataWorkspace(workspace=workspace, upload_cycle=upload_cycle)
         instance.save()
         self.assertIsInstance(instance, models.CombinedConsortiumDataWorkspace)
 
@@ -742,9 +724,7 @@ class ReleaseWorkspaceTest(TestCase):
 
     def test_get_dbgap_accession(self):
         """get_dbgap_accession works as expected."""
-        instance = factories.ReleaseWorkspaceFactory.create(
-            dbgap_version=1, dbgap_participant_set=2
-        )
+        instance = factories.ReleaseWorkspaceFactory.create(dbgap_version=1, dbgap_participant_set=2)
         self.assertEqual(instance.get_dbgap_accession(), "phs003047.v1.p2")
 
 
@@ -808,9 +788,7 @@ class DCCProcessedDataWorkspaceTest(TestCase):
 
     def test_unique(self):
         """Cannot have two workspaces with the same upload cycle and consent group."""
-        dcc_processed_data_workspace = (
-            factories.DCCProcessedDataWorkspaceFactory.create()
-        )
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
         workspace = WorkspaceFactory.create()
         instance = factories.DCCProcessedDataWorkspaceFactory.build(
             upload_cycle=dcc_processed_data_workspace.upload_cycle,
