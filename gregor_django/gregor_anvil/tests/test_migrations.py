@@ -1,4 +1,5 @@
 """Tests for data migrations in the app."""
+
 from datetime import date
 
 from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
@@ -22,7 +23,9 @@ class PopulateUploadCycleTest(MigratorTestCase):
         ResearchCenter = self.old_state.apps.get_model("gregor_anvil", "ResearchCenter")
         ConsentGroup = self.old_state.apps.get_model("gregor_anvil", "ConsentGroup")
         UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
-        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model(
+            "gregor_anvil", "CombinedConsortiumDataWorkspace"
+        )
         ReleaseWorkspace = self.old_state.apps.get_model("gregor_anvil", "ReleaseWorkspace")
         # Make FKs.
         consent_group = factory.create(ConsentGroup, FACTORY_CLASS=factories.ConsentGroupFactory)
@@ -30,50 +33,50 @@ class PopulateUploadCycleTest(MigratorTestCase):
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.u_1 = UploadWorkspace.objects.create(
             version=1,
             research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
             consent_group=consent_group,
-            workspace=workspace
+            workspace=workspace,
         )
         # Second upload workspace - also version 1
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.u_2 = UploadWorkspace.objects.create(
             version=1,
             research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
             consent_group=consent_group,
-            workspace=workspace
+            workspace=workspace,
         )
         # Third upload workspace - version 2
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.u_3 = UploadWorkspace.objects.create(
             version=2,
             research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
             consent_group=consent_group,
-            workspace=workspace
+            workspace=workspace,
         )
         # Combined data workspace.
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.c_1 = CombinedConsortiumDataWorkspace.objects.create(workspace=workspace)
         self.c_1.upload_workspaces.add(self.u_1, self.u_2)
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.c_2 = CombinedConsortiumDataWorkspace.objects.create(workspace=workspace)
         self.c_2.upload_workspaces.add(self.u_3)
@@ -81,7 +84,7 @@ class PopulateUploadCycleTest(MigratorTestCase):
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.r_1 = ReleaseWorkspace.objects.create(
             consent_group=consent_group,
@@ -94,7 +97,7 @@ class PopulateUploadCycleTest(MigratorTestCase):
         workspace = factory.create(
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
-            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory)
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
         self.r_2 = ReleaseWorkspace.objects.create(
             consent_group=consent_group,
@@ -107,9 +110,7 @@ class PopulateUploadCycleTest(MigratorTestCase):
 
     def test_migration_0012_upload_cycles(self):
         """Run the test."""
-        UploadCycle = self.new_state.apps.get_model(
-            "gregor_anvil", "UploadCycle"
-        )
+        UploadCycle = self.new_state.apps.get_model("gregor_anvil", "UploadCycle")
         self.assertEqual(UploadCycle.objects.count(), 2)
         upload_cycle = UploadCycle.objects.get(cycle=1)
         self.assertEqual(upload_cycle.cycle, 1)
@@ -124,9 +125,7 @@ class PopulateUploadCycleTest(MigratorTestCase):
 
     def test_migration_0012_upload_workspaces(self):
         """Run the test for upload workspaces."""
-        UploadWorkspace = self.new_state.apps.get_model(
-            "gregor_anvil", "UploadWorkspace"
-        )
+        UploadWorkspace = self.new_state.apps.get_model("gregor_anvil", "UploadWorkspace")
         workspace = UploadWorkspace.objects.get(pk=self.u_1.pk)
         self.assertEqual(workspace.upload_cycle.cycle, 1)
         workspace.full_clean()
@@ -151,9 +150,7 @@ class PopulateUploadCycleTest(MigratorTestCase):
 
     def test_migration_0012_release_workspaces(self):
         """Run the test for release workspaces."""
-        ReleaseWorkspace = self.new_state.apps.get_model(
-            "gregor_anvil", "ReleaseWorkspace"
-        )
+        ReleaseWorkspace = self.new_state.apps.get_model("gregor_anvil", "ReleaseWorkspace")
         workspace = ReleaseWorkspace.objects.get(pk=self.r_1.pk)
         self.assertEqual(workspace.upload_cycle.cycle, 1)
         workspace.full_clean()

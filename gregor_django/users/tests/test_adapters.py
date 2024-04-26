@@ -101,9 +101,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_research_centers(
-            user, dict(research_center_or_site=[rc1.full_name])
-        )
+        adapter.update_user_research_centers(user, dict(research_center_or_site=[rc1.full_name]))
         assert user.research_centers.filter(pk=rc1.pk).exists()
         assert user.research_centers.all().count() == 1
 
@@ -121,9 +119,7 @@ class TestsUserSocialLoginAdapter(object):
         user.research_centers.add(rc1, rc2)
         assert user.research_centers.all().count() == 2
 
-        adapter.update_user_research_centers(
-            user, dict(research_center_or_site=[rc1.full_name])
-        )
+        adapter.update_user_research_centers(user, dict(research_center_or_site=[rc1.full_name]))
         assert user.research_centers.filter(pk=rc1.pk).exists()
         assert user.research_centers.all().count() == 1
 
@@ -134,16 +130,12 @@ class TestsUserSocialLoginAdapter(object):
         adapter = SocialAccountAdapter()
         user = UserFactory()
         with pytest.raises(ImproperlyConfigured):
-            adapter.update_user_research_centers(
-                user, dict(research_center_or_site="FOO")
-            )
+            adapter.update_user_research_centers(user, dict(research_center_or_site="FOO"))
 
     def test_update_user_research_centers_unknown(self):
         adapter = SocialAccountAdapter()
         user = UserFactory()
-        adapter.update_user_research_centers(
-            user, dict(research_center_or_site=["UNKNOWN"])
-        )
+        adapter.update_user_research_centers(user, dict(research_center_or_site=["UNKNOWN"]))
         assert user.research_centers.all().count() == 0
 
     def test_update_user_groups_add(self):
@@ -157,9 +149,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_groups(
-            user, extra_data=dict(managed_scope_status={g1.name: True})
-        )
+        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={g1.name: True}))
         assert user.groups.filter(pk=g1.pk).exists()
         assert user.groups.all().count() == 1
 
@@ -229,9 +219,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_groups(
-            user, extra_data=dict(managed_scope_status={"CREATE_GROUP": True})
-        )
+        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={"CREATE_GROUP": True}))
         assert user.groups.filter(name="CREATE_GROUP").exists()
         assert user.groups.all().count() == 1
 

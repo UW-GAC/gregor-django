@@ -50,12 +50,9 @@ class CustomAdapter(OAuth2Adapter):
             return keys[0]
 
     def get_public_key(self, headers):
-
         public_key_jwk = self._get_public_key_jwk(headers)
         try:
-            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(
-                json.dumps(public_key_jwk)
-            )
+            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(public_key_jwk))
         except Exception as e:
             logger.error(f"[get_public_key] failed to convert jwk to public key {e}")
         else:
@@ -83,9 +80,7 @@ class CustomAdapter(OAuth2Adapter):
             logger.error(f"Invalid id_token {e} {id_token.token}")
             raise OAuth2Error("Invalid id_token") from e
         except Exception as e:
-            logger.error(
-                f"Other exception parsing token {e} header {unverified_header} token {id_token}"
-            )
+            logger.error(f"Other exception parsing token {e} header {unverified_header} token {id_token}")
             raise OAuth2Error("Error when decoding token {e}")
         else:
             scopes = token_payload.get("scope")
@@ -96,9 +91,7 @@ class CustomAdapter(OAuth2Adapter):
         headers = {"Authorization": "Bearer {0}".format(token.token)}
 
         scopes_granted = self.get_scopes_from_token(token, headers)
-        managed_scope_status = self.get_provider().get_provider_managed_scope_status(
-            scopes_granted
-        )
+        managed_scope_status = self.get_provider().get_provider_managed_scope_status(scopes_granted)
 
         resp = requests.get(self.profile_url, headers=headers)
         resp.raise_for_status()
@@ -110,9 +103,7 @@ class CustomAdapter(OAuth2Adapter):
         )
         extra_data["scopes_granted"] = scopes_granted
         extra_data["managed_scope_status"] = managed_scope_status
-        social_login = self.get_provider().sociallogin_from_response(
-            request, extra_data
-        )
+        social_login = self.get_provider().sociallogin_from_response(request, extra_data)
 
         return social_login
 

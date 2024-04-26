@@ -1,0 +1,12 @@
+line-length = 120
+exclude = ["**/migrations/**",]
+
+[lint]
+extend-select = [
+    "E",
+    "F",
+    "W", # pycodestyle warnings
+    "I", # isort
+    "DJ", # flake8-django
+    "E501", # line-too-long
+]
