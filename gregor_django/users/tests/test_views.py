@@ -52,7 +52,6 @@ class TestUserUpdateView:
         assert view.get_object() == user
 
     def test_user_update_view(self, client, user: User, rf: RequestFactory):
-
         client.force_login(user)
         user_detail_url = reverse("users:update")
         response = client.get(user_detail_url)
@@ -92,7 +91,6 @@ class TestUserRedirectView:
 
 class TestUserDetailView:
     def test_authenticated(self, client, user: User, rf: RequestFactory):
-
         client.force_login(user)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
         response = client.get(user_detail_url)
@@ -115,9 +113,7 @@ class UserAutocompleteViewTest(TestCase):
         """Set up test class."""
         self.factory = RequestFactory()
         # Create a user with the correct permissions.
-        self.user = User.objects.create_user(
-            username="test", password="test", email="test@example.com"
-        )
+        self.user = User.objects.create_user(username="test", password="test", email="test@example.com")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -127,9 +123,7 @@ class UserAutocompleteViewTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_logged_in(self):
         """Returns successful response code."""
@@ -142,10 +136,7 @@ class UserAutocompleteViewTest(TestCase):
         UserFactory.create_batch(9)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), User.objects.count())
         self.assertEqual(
             sorted(returned_ids),
@@ -161,10 +152,7 @@ class UserAutocompleteViewTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "another-user"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
 
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
@@ -178,10 +166,7 @@ class UserAutocompleteViewTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "another"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -194,10 +179,7 @@ class UserAutocompleteViewTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "use"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -210,10 +192,7 @@ class UserAutocompleteViewTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "ANOTHER-USER"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -235,9 +214,7 @@ class UserLookupTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""

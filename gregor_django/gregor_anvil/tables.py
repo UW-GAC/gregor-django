@@ -95,16 +95,12 @@ class WorkspaceConsortiumAccessTable(tables.Table):
         except ManagedGroup.DoesNotExist:
             has_consortium_access = False
         else:
-            has_consortium_access = record.is_in_authorization_domain(
-                group
-            ) and record.is_shared(group)
+            has_consortium_access = record.is_in_authorization_domain(group) and record.is_shared(group)
 
         if has_consortium_access:
             icon = "check-circle-fill"
             color = "green"
-            value = format_html(
-                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
-            )
+            value = format_html("""<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color))
         else:
             value = ""
         return value
@@ -187,9 +183,7 @@ class WorkspaceReportTable(tables.Table):
 
     workspace_type = tables.columns.Column(orderable=False)
     n_total = tables.columns.Column(verbose_name="Total number", orderable=False)
-    n_shared = tables.columns.Column(
-        verbose_name="Number shared with consortium", orderable=False
-    )
+    n_shared = tables.columns.Column(verbose_name="Number shared with consortium", orderable=False)
 
     class Meta:
         model = Workspace
@@ -200,9 +194,7 @@ class WorkspaceReportTable(tables.Table):
         return adapter_names[value] + "s"
 
 
-class CombinedConsortiumDataWorkspaceTable(
-    WorkspaceConsortiumAccessTable, tables.Table
-):
+class CombinedConsortiumDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from CombinedConsortiumDataWorkspace."""
 
     name = tables.columns.Column(linkify=True)

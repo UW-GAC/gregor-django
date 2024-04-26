@@ -32,8 +32,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user} "
-                f"name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_name] user {user} " f"name updated from {user.name} to {full_name}"
             )
             user.name = full_name
             user_changed = True
@@ -61,9 +60,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         partner_group_object_list = []
         if partner_groups:
             if not isinstance(partner_groups, list):
-                raise ImproperlyConfigured(
-                    "sociallogin.extra_data.partner_groups should be None or a list"
-                )
+                raise ImproperlyConfigured("sociallogin.extra_data.partner_groups should be None or a list")
 
             for pg_name in partner_groups:
                 try:
@@ -97,8 +94,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             if existing_pg not in partner_group_object_list:
                 user.partner_groups.remove(existing_pg)
                 logger.info(
-                    "[SocialAccountAdapter:update_user_partner_groups] "
-                    f"removing pg {existing_pg} for user {user}"
+                    "[SocialAccountAdapter:update_user_partner_groups] " f"removing pg {existing_pg} for user {user}"
                 )
 
     def update_user_research_centers(self, user, extra_data: Dict):
@@ -108,9 +104,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         research_center_object_list = []
         if research_center_or_site:
             if not isinstance(research_center_or_site, list):
-                raise ImproperlyConfigured(
-                    "sociallogin.extra_data.research_center_or_site should be a list"
-                )
+                raise ImproperlyConfigured("sociallogin.extra_data.research_center_or_site should be a list")
 
             for rc_name in research_center_or_site:
                 try:
@@ -145,8 +139,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             if existing_rc not in research_center_object_list:
                 user.research_centers.remove(existing_rc)
                 logger.info(
-                    "[SocialAccountAdatpter:update_user_research_centers] "
-                    f"removing rc {existing_rc} for user {user}"
+                    "[SocialAccountAdatpter:update_user_research_centers] " f"removing rc {existing_rc} for user {user}"
                 )
 
     def update_user_groups(self, user, extra_data: Dict):
@@ -155,14 +148,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             added_groups = []
             removed_groups = []
             if not isinstance(managed_scope_status, dict):
-                raise ImproperlyConfigured(
-                    "sociallogin.extra_data.managed_scope_status should be a dict"
-                )
+                raise ImproperlyConfigured("sociallogin.extra_data.managed_scope_status should be a dict")
             else:
                 for group_name, user_has_group in managed_scope_status.items():
-                    user_group, was_created = Group.objects.get_or_create(
-                        name=group_name
-                    )
+                    user_group, was_created = Group.objects.get_or_create(name=group_name)
                     if was_created:
                         logger.debug(
                             f"[SocialAccountAdatpter:update_user_data] created mapped user group: {group_name}"
@@ -183,7 +172,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                 )
 
     def update_user_data(self, sociallogin: Any):
-
         logger.debug(
             f"[SocialAccountAdatpter:update_user_data] account: {sociallogin.account} "
             f"extra_data {sociallogin.account.extra_data} "

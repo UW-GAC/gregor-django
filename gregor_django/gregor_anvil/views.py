@@ -29,9 +29,7 @@ class ConsentGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView)
     table_class = tables.ConsentGroupTable
 
 
-class ResearchCenterDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `ResearchCenter`."""
 
     model = models.ResearchCenter
@@ -48,9 +46,7 @@ class ResearchCenterList(AnVILConsortiumManagerStaffViewRequired, SingleTableVie
     table_class = tables.ResearchCenterTable
 
 
-class PartnerGroupDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class PartnerGroupDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `PartnerGroup`."""
 
     model = models.PartnerGroup
@@ -67,9 +63,7 @@ class PartnerGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView)
     table_class = tables.PartnerGroupTable
 
 
-class UploadCycleCreate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
-):
+class UploadCycleCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
     """View to create a new UploadCycle object."""
 
     model = models.UploadCycle
@@ -77,9 +71,7 @@ class UploadCycleCreate(
     success_message = "Successfully created Upload Cycle."
 
 
-class UploadCycleDetail(
-    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
-):
+class UploadCycleDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """View to show details about an `UploadCycle`."""
 
     model = models.UploadCycle
@@ -94,15 +86,9 @@ class UploadCycleDetail(
     ]
 
     def get_tables_data(self):
-        upload_workspace_qs = Workspace.objects.filter(
-            uploadworkspace__upload_cycle=self.object
-        )
-        combined_workspace_qs = Workspace.objects.filter(
-            combinedconsortiumdataworkspace__upload_cycle=self.object
-        )
-        release_workspace_qs = Workspace.objects.filter(
-            releaseworkspace__upload_cycle=self.object
-        )
+        upload_workspace_qs = Workspace.objects.filter(uploadworkspace__upload_cycle=self.object)
+        combined_workspace_qs = Workspace.objects.filter(combinedconsortiumdataworkspace__upload_cycle=self.object)
+        release_workspace_qs = Workspace.objects.filter(releaseworkspace__upload_cycle=self.object)
         dcc_processing_workspace_qs = Workspace.objects.filter(
             dccprocessingworkspace__upload_cycle=self.object,
         )
@@ -110,9 +96,7 @@ class UploadCycleDetail(
             dccprocesseddataworkspace__upload_cycle=self.object,
         )
         partner_workspaces = self.object.get_partner_upload_workspaces()
-        partner_workspace_qs = Workspace.objects.filter(
-            partneruploadworkspace__in=partner_workspaces
-        )
+        partner_workspace_qs = Workspace.objects.filter(partneruploadworkspace__in=partner_workspaces)
         return [
             upload_workspace_qs,
             combined_workspace_qs,

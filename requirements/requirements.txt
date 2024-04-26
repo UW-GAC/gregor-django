@@ -8,7 +8,7 @@ argon2-cffi==23.1.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-asgiref==3.7.2
+asgiref==3.8.1
     # via
     #   -r requirements/requirements.in
     #   django
@@ -55,7 +55,7 @@ django==4.2.11
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.20.1
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.22
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
@@ -80,9 +80,9 @@ django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.21.1
     # via -r requirements/requirements.in
-django-model-utils==4.4.0
+django-model-utils==4.5.0
     # via -r requirements/requirements.in
-django-picklefield==3.1
+django-picklefield==3.2
     # via
     #   -r requirements/requirements.in
     #   django-constance
@@ -95,9 +95,7 @@ django-tables2==2.7.0
 fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
 google-auth[requests]==2.11.0
-    # via
-    #   django-anvil-consortium-manager
-    #   google-auth
+    # via django-anvil-consortium-manager
 idna==3.6
     # via requests
 importlib-metadata==6.8.0
@@ -154,7 +152,7 @@ rsa==4.9
     # via google-auth
 six==1.16.0
     # via google-auth
-sqlparse==0.4.4
+sqlparse==0.5.0
     # via
     #   -r requirements/requirements.in
     #   django

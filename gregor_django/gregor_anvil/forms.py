@@ -61,12 +61,15 @@ class PartnerUploadWorkspaceForm(forms.ModelForm):
         }
 
 
-class ExampleWorkspaceForm(forms.ModelForm):
-    """Form for a ExampleWorkspace object."""
+class ResourceWorkspaceForm(forms.ModelForm):
+    """Form for a ResourceWorkspace object."""
 
     class Meta:
-        model = models.ExampleWorkspace
-        fields = ("workspace",)
+        model = models.ResourceWorkspace
+        fields = (
+            "workspace",
+            "brief_description",
+        )
 
 
 class TemplateWorkspaceForm(forms.ModelForm):
@@ -114,9 +117,7 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
 class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a DCCProcessingWorkspace object."""
 
-    ERROR_UPLOAD_CYCLE = (
-        "upload_cycle must match upload_cycle of all upload_workspaces."
-    )
+    ERROR_UPLOAD_CYCLE = "upload_cycle must match upload_cycle of all upload_workspaces."
 
     class Meta:
         model = models.DCCProcessingWorkspace
