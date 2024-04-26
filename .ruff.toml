@@ -1,5 +1,10 @@
 line-length = 120
-exclude = ["**/migrations/**",]
+exclude = [
+    "**/migrations/**",
+    "*/static/CACHE/*",
+    "venv",
+    "docs",
+]
 
 [lint]
 extend-select = [
@@ -10,3 +15,6 @@ extend-select = [
     "DJ", # flake8-django
     "E501", # line-too-long
 ]
+
+[lint.isort]
+known-first-party = ["gregor_django", "config", ]

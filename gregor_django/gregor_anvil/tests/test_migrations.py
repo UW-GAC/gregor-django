@@ -2,9 +2,9 @@
 
 from datetime import date
 
+import factory
 from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
-import factory
 
 from . import factories
 

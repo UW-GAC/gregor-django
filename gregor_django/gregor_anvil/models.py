@@ -103,15 +103,15 @@ class UploadCycle(TimeStampedModel, models.Model):
     def __str__(self):
         return "U{cycle:02d}".format(cycle=self.cycle)
 
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
+
     def clean(self):
         """Custom cleaning methods."""
         # End date must be after start date.
         if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
-
-    def get_absolute_url(self):
-        """Return the absolute url for this object."""
-        return reverse("gregor_anvil:upload_cycles:detail", args=[self.cycle])
 
     def get_partner_upload_workspaces(self):
         """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
