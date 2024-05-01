@@ -22,7 +22,7 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-black==24.4.0
+black==24.4.2
     # via -r requirements/dev-requirements.in
 certifi==2023.7.22
     # via
@@ -111,7 +111,7 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
-mypy==1.9.0
+mypy==1.10.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via
