@@ -22,8 +22,6 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-black==24.4.2
-    # via -r requirements/dev-requirements.in
 certifi==2023.7.22
     # via
     #   -c requirements/requirements.txt
@@ -39,7 +37,6 @@ charset-normalizer==3.3.2
 click==8.1.7
     # via
     #   -c requirements/requirements.txt
-    #   black
 colorama==0.4.6
     # via sphinx-autobuild
 decorator==5.1.1
@@ -68,12 +65,6 @@ executing==2.0.1
     # via stack-data
 filelock==3.13.1
     # via virtualenv
-flake8==7.0.0
-    # via
-    #   -r requirements/dev-requirements.in
-    #   flake8-isort
-flake8-isort==6.1.1
-    # via -r requirements/dev-requirements.in
 identify==2.5.35
     # via pre-commit
 idna==3.6
@@ -93,7 +84,6 @@ ipython==8.12.3
     # via ipdb
 isort==5.13.2
     # via
-    #   flake8-isort
     #   pylint
 jedi==0.19.1
     # via ipython
@@ -109,13 +99,11 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via
-    #   flake8
     #   pylint
 mypy==1.10.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via
-    #   black
     #   mypy
 nodeenv==1.8.0
     # via pre-commit
@@ -123,19 +111,15 @@ packaging==23.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
-    #   black
     #   sphinx
 parso==0.8.3
     # via jedi
-pathspec==0.12.1
-    # via black
 pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
 platformdirs==4.2.0
     # via
-    #   black
     #   pylint
     #   virtualenv
 pre-commit==3.5.0
@@ -146,10 +130,6 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pycodestyle==2.11.1
-    # via flake8
-pyflakes==3.2.0
-    # via flake8
 pygments==2.17.2
     # via
     #   ipython
@@ -214,7 +194,6 @@ tomli==2.0.1
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
-    #   black
     #   django-stubs
     #   ipdb
     #   mypy
@@ -237,7 +216,6 @@ typing-extensions==4.8.0
     #   -c requirements/test-requirements.txt
     #   asgiref
     #   astroid
-    #   black
     #   django-stubs
     #   django-stubs-ext
     #   ipython
