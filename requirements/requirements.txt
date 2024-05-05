@@ -80,7 +80,7 @@ django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.21.1
     # via -r requirements/requirements.in
-django-model-utils==4.5.0
+django-model-utils==4.5.1
     # via -r requirements/requirements.in
 django-picklefield==3.2
     # via
@@ -94,7 +94,7 @@ django-tables2==2.7.0
     # via django-anvil-consortium-manager
 fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
-google-auth[requests]==2.11.0
+google-auth==2.11.0
     # via django-anvil-consortium-manager
 idna==3.6
     # via requests
@@ -145,6 +145,7 @@ pytz==2023.4
 requests==2.31.0
     # via
     #   django-allauth
+    #   django-anvil-consortium-manager
     #   requests-oauthlib
 requests-oauthlib==1.3.1
     # via django-allauth
