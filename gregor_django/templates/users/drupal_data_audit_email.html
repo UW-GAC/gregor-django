@@ -1,0 +1,50 @@
+
+{% load static i18n %}<!DOCTYPE html>
+{% load render_table from django_tables2 %}
+
+<html>
+  <head>
+    <title>Drupal Data Audit Report</title>
+  </head>
+
+  <div class="container">
+
+{% block content %}
+
+      <h1>Drupal Data Audit - [applying_changes={{ apply_changes }}]</h1>
+      <h2>User Audit</h2>
+
+      <h3>Verified Users - {{ user_audit.verified|length }} record(s)</h3>
+
+      <h3>Needs action - {{user_audit.needs_action|length }} record(s)</h3>
+
+      {% if user_audit.needs_action %}
+      {% render_table user_audit.get_needs_action_table %}
+      {% endif %}
+
+      <h3>Errors - {{user_audit.errors|length }} record(s)</h3>
+      {% if user_audit.errors %}
+      {% render_table user_audit.get_errors_table %}
+      {% endif %}
+
+      <h2>Site Audit</h2>
+
+      <h3>Verified sites - {{ site_audit.verified|length }} record(s)</h3>
+
+      <h3>Sites that need action - {{site_audit.needs_action|length }} record(s)</h3>
+      {% if site_audit.needs_action %}
+      {% render_table site_audit.get_needs_action_table %}
+      {% endif %}
+
+      <h3>Sites with errors - {{site_audit.errors|length }} record(s)</h3>
+      {% if site_audit.errors %}
+      {% render_table site_audit.get_errors_table %}
+      {% endif %}
+      <p>* Users and sites that <b>Need Action</b> will be resolved by this script if in update mode</p>
+      <p>* Users and sites listed as <b>Error</b> need manual intervention to resolve</p>
+
+
+{% endblock content %}
+
+  </div>
+</html>

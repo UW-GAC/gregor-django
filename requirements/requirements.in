@@ -55,3 +55,9 @@ sqlparse>=0.4.4
 # Dynamic settings
 django-constance
 django-picklefield  # Required by django-constance for database backend
+
+# For interacting with drupal json api
+jsonapi-requests
+
+# for exporting django-tables2 tables to tsv.
+tablib
