@@ -371,8 +371,6 @@ CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
-# Specify the path to the service account to use for managing access on AnVIL.
-ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.ResourceWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
