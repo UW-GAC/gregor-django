@@ -35,6 +35,7 @@ jobs:
           - python-version: 3.8  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.11"
+
     name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
     services:
@@ -77,13 +78,18 @@ jobs:
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
-        run:  coverage run -p -m pytest
+        run:  |
+          pytest --cov=gregor_django -n auto
+          mv .coverage .coverage-${{ strategy.job-index }}
+
+      - name: List files for debugging purposes
+        run: ls -lhta
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ strategy.job-index }}
-          path: .coverage.*
+          path: .coverage-${{ strategy.job-index }}
 
   coverage:
     needs:
@@ -110,13 +116,14 @@ jobs:
 
       - name: Merge coverage files
         run: |
-          mv ./artifacts/coverage-data*/.coverage* .
+          python -m coverage combine ./artifacts/coverage-data*/.coverage-*
+          python -m coverage xml
           ls -la .coverage*
 
-      - name: Combine coverage data
+      - name: Report coverage
         run: |
-          python -m coverage combine
-          python -m coverage xml
+          python -m coverage report
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
