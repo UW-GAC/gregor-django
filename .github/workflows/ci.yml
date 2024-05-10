@@ -74,7 +74,7 @@ jobs:
         if: matrix.pip-recompile
         run: |
           python -m ensurepip --upgrade
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
           pip install pip-tools
           pip-compile requirements/requirements.in
           pip-compile requirements/test-requirements.in
