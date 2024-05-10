@@ -73,6 +73,7 @@ jobs:
       - name: Recompile pip files if requested
         if: matrix.pip-recompile
         run: |
+          python -m ensurepip --upgrade
           python -m pip install --upgrade pip
           pip install pip-tools
           pip-compile requirements/requirements.in
