@@ -78,7 +78,7 @@ jobs:
           python -m pip install --upgrade setuptools
 
       - name: Install piptools
-        run: pip install pip-tools
+        run: python -m pip install pip-tools
 
       - name: Recompile pip files if requested
         if: matrix.pip-recompile
