@@ -29,12 +29,14 @@ jobs:
         mariadb-version: ["10.4"]
         include:
           # Note that we can't use python 3.12 until we figure out how to have separate requirements files.
-          - python-version: 3.8  # Possible future version.
+          - python-version: 3.11  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.5"
-          - python-version: 3.8  # Possible future version.
+            pip-recompile: true
+          - python-version: 3.11  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.11"
+            pip-recompile: true
 
     name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
@@ -68,10 +70,26 @@ jobs:
             requirements/requirements.txt
             requirements/test-requirements.txt
 
+      - name: Ensure pip is installed
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install --upgrade pip
+          # Upgrade setup tools
+          python -m pip install --upgrade setuptools
+
+      - name: Install piptools
+        run: python -m pip install pip-tools
+
+      - name: Recompile pip files if requested
+        if: matrix.pip-recompile
+        run: |
+          pip-compile requirements/requirements.in
+          pip-compile requirements/test-requirements.in
+          # Print out changes.
+          git diff
+
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Collect staticfiles
