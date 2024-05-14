@@ -29,11 +29,11 @@ jobs:
         mariadb-version: ["10.4"]
         include:
           # Note that we can't use python 3.12 until we figure out how to have separate requirements files.
-          - python-version: 3.12  # Possible future version.
+          - python-version: 3.8  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.5"
             pip-recompile: true
-          - python-version: 3.12  # Possible future version.
+          - python-version: 3.8  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.11"
             pip-recompile: true
