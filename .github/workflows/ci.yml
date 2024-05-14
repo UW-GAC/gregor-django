@@ -85,6 +85,8 @@ jobs:
         run: |
           pip-compile requirements/requirements.in
           pip-compile requirements/test-requirements.in
+          # Print out changes.
+          git diff
 
       - name: Install Dependencies
         run: |
