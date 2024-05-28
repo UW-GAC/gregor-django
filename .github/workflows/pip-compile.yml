@@ -20,7 +20,7 @@ jobs:
           python-version: 3.8
 
       - name: Update requirements files
-        uses: UW-GAC/pip-tools-actions/update-requirements-files@v1.0
+        uses: UW-GAC/pip-tools-actions/update-requirements-files@feature/internal-refs
         with:
           requirements_files:  |-
             requirements/requirements.in
