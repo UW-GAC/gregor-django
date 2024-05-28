@@ -26,4 +26,5 @@ jobs:
             requirements/requirements.in
             requirements/test-requirements.in
             requirements/dev-requirements.in
+          pr-title: Update requirements file for ${{ github.head_ref }}
           pr-branch-suffix: "${{ github.event.number}}"
