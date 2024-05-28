@@ -78,7 +78,7 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.31.0.20240406
+types-requests==2.32.0.20240523
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
