@@ -50,7 +50,7 @@ django==4.2.13
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==4.3.0
+django-debug-toolbar==4.4.1
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
@@ -149,7 +149,7 @@ requests==2.31.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.4.4
+ruff==0.4.5
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
