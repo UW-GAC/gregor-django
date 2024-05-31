@@ -117,9 +117,6 @@ class UserDetailTest(TestCase):
         staff_user.user_permissions.add(
             Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
-        staff_user.user_permissions.add(
-            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
-        )
         account = AccountFactory.create(verified=True)
         account_user = account.user
         account.unlink_user()
