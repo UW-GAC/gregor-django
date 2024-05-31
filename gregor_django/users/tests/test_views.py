@@ -1,10 +1,12 @@
 import json
 
 import pytest
+from anvil_consortium_manager.models import AnVILProjectManagerAccess
+from anvil_consortium_manager.tests.factories import AccountFactory
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest
@@ -106,6 +108,28 @@ class TestUserDetailView:
 
         assert response.status_code == 302
         assert response.url == f"{login_url}?next=/fake-url/"
+
+
+class UserDetailTest(TestCase):
+    def test_unlinked_accounts(self):
+        """The unlinked accounts are in the context."""
+        staff_user = User.objects.create_user(username="test", password="test")
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        account = AccountFactory.create(verified=True)
+        account_user = account.user
+        account.unlink_user()
+        account.save()
+        self.client.force_login(staff_user)
+        response = self.client.get(reverse("users:detail", kwargs={"username": account_user.username}))
+        self.assertIn("unlinked_accounts", response.context_data)
+        self.assertEqual(len(response.context_data["unlinked_accounts"]), 1)
+        self.assertIn(account, response.context_data["unlinked_accounts"])
+        self.assertContains(response, "Previously-linked accounts")
 
 
 class UserAutocompleteViewTest(TestCase):

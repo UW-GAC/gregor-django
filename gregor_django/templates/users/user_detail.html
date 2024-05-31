@@ -78,7 +78,7 @@
             </ul>
           {% elif object.useremailentry_set.all %}
             <ul>
-            {% for uee in object.useremailentry_set.all %}
+            {% for uee in user_email_entries %}
               <li><i class="bi bi-hourglass-split"></i> AnVIL account user email verification in progress for email: {{ uee.email }}
                 <ul>
                   <li>Email sent: {{ uee.date_verification_email_sent }}</li>
@@ -98,10 +98,36 @@
             {% endif %}
           {% endif %}
           <p class='alert alert-secondary mt-3'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the DCC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
+
+        </div><i class="bi bi-c-square"></i>
+
+
+      </div>
+
+
+      {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view and unlinked_accounts %}
+      <div class='card card-shadow-sm mt-3'>
+        <div class='card-header'>
+          <h3><i class="bi bi-clock-history"></i> Previously-linked accounts</h3>
+        </div>
+        <div class='card-body'>
+          <ul>
+          {% for account in unlinked_accounts %}
+            <li><a href="{{ account.get_absolute_url }}">{{ account.email }}</a></li>
+          {% endfor %}
+          </ul>
         </div><i class="bi bi-c-square"></i>
       </div>
+      {% endif %}
+
     </div>
   </div>
 
 </div>
 {% endblock content %}
+
+
+
+<div class="bg-light">
+
+</div>
