@@ -63,3 +63,5 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES += [  # noqa F405
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# Specify the path to the service account to use for managing access on AnVIL.
+ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")

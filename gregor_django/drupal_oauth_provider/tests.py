@@ -107,7 +107,7 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
     # This login response mimics drupals in that it contains a set of scopes
     # and the uid which has the name sub
     def get_login_response_json(self, with_refresh_token=True):
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         app = get_adapter().get_app(request=None, provider=self.provider_id)
         allowed_audience = app.client_id
         id_token = sign_id_token(
