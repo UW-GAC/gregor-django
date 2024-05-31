@@ -20,31 +20,40 @@ concurrency:
 
 jobs:
 
-  pytest-mariadb:
+  test:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 2
       matrix:
-        # While we are only running for a single version
-        # ahead of planned upgrades we can add versions as
-        # needed
         python-version: [3.8]
-        mariadb-version: ["10.4", "10.5"]
+        backend: ["sqlite", "mariadb"]
+        mariadb-version: ["10.4"]
+        include:
+          - python-version: 3.12  # Possible future version.
+            backend: "mariadb"
+            mariadb-version: "10.5"
+            pip-recompile: true
+          - python-version: 3.12  # Possible future version.
+            backend: "mariadb"
+            mariadb-version: "10.11"
+            pip-recompile: true
+
+    name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
     services:
       mysql:
+        # Always start mariadb, even if we are testing with the mysql backend.
+        # Github actions do not allow conditional services yet.
         image: mariadb:${{ matrix.mariadb-version }}
         ports:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: root
-
+        options: --tmpfs /var/lib/mysql
 
     env:
-      # mysql://user:password@host:port/database
-      DATABASE_URL: "mysql://root:root@127.0.0.1:3306/mysql"
-      # We can set this to an empty string, since we'll never make an API call.
-      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+      PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
+      # Conditionally set the database url based on the backend.
+      DATABASE_URL: ${{ matrix.backend == 'sqlite' && 'sqlite:///db.sqlite3' || 'mysql://root:root@127.0.0.1:3306/mysql' }}
 
     steps:
 
@@ -60,72 +69,48 @@ jobs:
             requirements/requirements.txt
             requirements/test-requirements.txt
 
+      - name: Ensure pip is installed
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install --upgrade pip
+          # Upgrade setup tools
+          python -m pip install --upgrade setuptools
+
+      - name: Install piptools
+        run: python -m pip install pip-tools
+
+      - name: Recompile pip files if requested
+        if: matrix.pip-recompile
+        run: |
+          pip-compile requirements/requirements.in
+          pip-compile requirements/test-requirements.in
+          # Print out changes.
+          git diff
+
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Collect staticfiles
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
-        run:  coverage run -p -m pytest
-        env:
-          # We can set this to an empty string, since we'll never make an API call.
-          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+        run:  |
+          pytest --cov=gregor_django -n auto
+          mv .coverage .coverage-${{ strategy.job-index }}
+
+      - name: List files for debugging purposes
+        run: ls -lhta
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-mysql-${{ strategy.job-index }}
-          path: .coverage.*
-
-  pytest-sqlite:
-    runs-on: ubuntu-latest
-
-    env:
-      # We can set this to an empty string, since we'll never make an API call.
-      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-
-    steps:
-      - name: Checkout Code Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.8
-          cache: pip
-          cache-dependency-path: |
-            requirements/requirements.txt
-            requirements/test-requirements.txt
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pip-tools
-          pip-sync requirements/requirements.txt requirements/test-requirements.txt
-
-      - name: Collect staticfiles
-        run: python manage.py collectstatic --noinput --settings=config.settings.test
-
-      - name: Run tests
-        run:  coverage run -p -m pytest
-        env:
-          # We can set this to an empty string, since we'll never make an API call.
-          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-data-sqlite-${{ strategy.job-index }}
-          path: .coverage.*
+          name: coverage-data-${{ strategy.job-index }}
+          path: .coverage-${{ strategy.job-index }}
 
   coverage:
     needs:
-      - pytest-mariadb
-      - pytest-sqlite
+      - test
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -148,13 +133,14 @@ jobs:
 
       - name: Merge coverage files
         run: |
-          mv ./artifacts/coverage-data*/.coverage* .
+          python -m coverage combine ./artifacts/coverage-data*/.coverage-*
+          python -m coverage xml
           ls -la .coverage*
 
-      - name: Combine coverage data
+      - name: Report coverage
         run: |
-          python -m coverage combine
-          python -m coverage xml
+          python -m coverage report
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
