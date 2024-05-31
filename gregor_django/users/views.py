@@ -17,6 +17,14 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     slug_field = "username"
     slug_url_kwarg = "username"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["unlinked_accounts"] = self.object.unlinked_accounts.all()
+        print(context["unlinked_accounts"])
+        context["user_email_entries"] = self.object.useremailentry_set.filter(date_verified=None)
+        context["is_me"] = self.request.user == self.object
+        return context
+
 
 user_detail_view = UserDetailView.as_view()
 
