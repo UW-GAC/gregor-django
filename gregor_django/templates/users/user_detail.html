@@ -76,7 +76,7 @@
               </li>
               {% endif %}
             </ul>
-          {% elif object.useremailentry_set.all %}
+          {% elif user_email_entries %}
             <ul>
             {% for uee in user_email_entries %}
               <li><i class="bi bi-hourglass-split"></i> AnVIL account user email verification in progress for email: {{ uee.email }}
