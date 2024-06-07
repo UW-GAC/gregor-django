@@ -18,6 +18,10 @@ babel==2.14.0
     # via sphinx
 backcall==0.2.0
     # via ipython
+backports-zoneinfo==0.2.1
+    # via
+    #   -c requirements/requirements.txt
+    #   django
 certifi==2023.7.22
     # via
     #   -c requirements/requirements.txt
@@ -40,13 +44,17 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.11
+django==4.2.13
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
+<<<<<<< HEAD
 django-debug-toolbar==4.3.0
+=======
+django-debug-toolbar==4.4.2
+>>>>>>> main
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
@@ -132,6 +140,13 @@ pylint-django==2.5.5
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
+<<<<<<< HEAD
+=======
+pytz==2023.4
+    # via
+    #   -c requirements/requirements.txt
+    #   babel
+>>>>>>> main
 pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
@@ -141,7 +156,11 @@ requests==2.31.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
+<<<<<<< HEAD
 ruff==0.4.3
+=======
+ruff==0.4.7
+>>>>>>> main
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via

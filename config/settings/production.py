@@ -154,3 +154,5 @@ LOGGING = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# Specify the path to the service account to use for managing access on AnVIL.
+ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
