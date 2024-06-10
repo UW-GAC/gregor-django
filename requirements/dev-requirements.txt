@@ -8,7 +8,7 @@ alabaster==0.7.13
     # via sphinx
 asgiref==3.8.1
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   django
 astroid==3.1.0
     # via pylint
@@ -20,19 +20,19 @@ backcall==0.2.0
     # via ipython
 backports-zoneinfo==0.2.1
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   django
 certifi==2023.7.22
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 colorama==0.4.6
     # via sphinx-autobuild
@@ -46,7 +46,7 @@ distlib==0.3.8
     # via virtualenv
 django==4.2.13
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
@@ -66,14 +66,14 @@ identify==2.5.35
     # via pre-commit
 idna==3.6
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==6.8.0
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   sphinx
 ipdb==0.13.13
     # via -r requirements/dev-requirements.in
@@ -103,8 +103,8 @@ nodeenv==1.8.0
     # via pre-commit
 packaging==23.2
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   sphinx
 parso==0.8.3
     # via jedi
@@ -138,23 +138,23 @@ pylint-plugin-utils==0.8.2
     # via pylint-django
 pytz==2023.4
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   babel
 pyyaml==6.0.1
     # via
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/test-requirements.txt
     #   pre-commit
 requests==2.31.0
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   sphinx
 ruff==0.4.8
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   asttokens
     #   livereload
 snowballstemmer==2.2.0
@@ -179,15 +179,15 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 sqlparse==0.5.0
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   django
     #   django-debug-toolbar
 stack-data==0.6.3
     # via ipython
 tomli==2.0.1
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django-stubs
     #   ipdb
     #   mypy
@@ -206,8 +206,8 @@ types-pyyaml==6.0.12.12
     # via django-stubs
 typing-extensions==4.8.0
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   asgiref
     #   astroid
     #   django-stubs
@@ -217,8 +217,8 @@ typing-extensions==4.8.0
     #   pylint
 urllib3==2.1.0
     # via
-    #   -r requirements/requirements.txt
-    #   -r requirements/test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 virtualenv==20.25.1
     # via pre-commit
@@ -228,7 +228,7 @@ werkzeug==3.0.3
     # via -r requirements/dev-requirements.in
 zipp==3.17.0
     # via
-    #   -r requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
