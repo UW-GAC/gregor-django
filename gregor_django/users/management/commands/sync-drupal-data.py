@@ -88,8 +88,10 @@ class Command(BaseCommand):
         partner_group_audit.run_audit()
 
         notification_content += (
-            f"PartnerGroupAudit summary: status ok: {partner_group_audit.ok()} verified: {len(partner_group_audit.verified)} "
-            f"needs_changes: {len(partner_group_audit.needs_action)} errors: {len(partner_group_audit.errors)}\n"
+            f"PartnerGroupAudit summary: status ok: {partner_group_audit.ok()} "
+            f"verified: {len(partner_group_audit.verified)} "
+            f"needs_changes: {len(partner_group_audit.needs_action)} "
+            f"errors: {len(partner_group_audit.errors)}\n"
         )
         if partner_group_audit.needs_action:
             notification_content += "PartnerGroups that need syncing:\n"

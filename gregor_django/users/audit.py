@@ -15,7 +15,7 @@ from requests_oauthlib import OAuth2, OAuth2Session
 
 from gregor_django.drupal_oauth_provider.provider import CustomProvider
 from gregor_django.gregor_anvil.audit import GREGORAudit, GREGORAuditResult
-from gregor_django.gregor_anvil.models import ResearchCenter, PartnerGroup
+from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +73,9 @@ class UserAuditResult(GREGORAuditResult):
                     "remote_user_id": self.remote_user_data.attributes.get("drupal_internal__uid"),
                     "remote_username": self.remote_user_data.attributes.get("name"),
                     "remote_name": "{} {}".format(
-                        self.remote_user_data.attributes.get('field_fname'),
-                        self.remote_user_data.attributes.get('field_lname')
-                    )
+                        self.remote_user_data.attributes.get("field_fname"),
+                        self.remote_user_data.attributes.get("field_lname"),
+                    ),
                 }
             )
         if self.anvil_account:
@@ -158,7 +158,7 @@ class UserAudit(GREGORAudit):
                 drupal_lastname = user.attributes.get("field_lname")
                 drupal_full_name = " ".join(part for part in (drupal_firstname, drupal_lastname) if part)
                 drupal_study_sites_rel = user.relationships.get("field_research_center_or_site")
-                drupal_partner_groups_rel = user.relationships.get('field_partner_member_group')
+                # drupal_partner_groups_rel = user.relationships.get('field_partner_member_group')
                 drupal_user_study_site_shortnames = []
                 if drupal_study_sites_rel:
                     for dss in drupal_study_sites_rel.data:
@@ -449,7 +449,6 @@ class SiteAudit(GREGORAudit):
             self.errors.append(RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALID))
 
 
-
 class PartnerGroupAuditResultsTable(tables.Table, TextTable):
     """A table to show results from a PartnerGroupAudit instance."""
 
@@ -549,12 +548,18 @@ class PartnerGroupAudit(GREGORAudit):
                         short_name=short_name,
                         full_name=full_name,
                     )
-                self.needs_action.append(NewPartnerGroup(remote_partner_group_data=study_partner_group_info, local_partner_group=study_partner_group))
+                self.needs_action.append(
+                    NewPartnerGroup(
+                        remote_partner_group_data=study_partner_group_info, local_partner_group=study_partner_group
+                    )
+                )
             else:
                 study_partner_group_updates = {}
 
                 if study_partner_group.full_name != full_name:
-                    study_partner_group_updates.update({"full_name": {"old": study_partner_group.full_name, "new": full_name}})
+                    study_partner_group_updates.update(
+                        {"full_name": {"old": study_partner_group.full_name, "new": full_name}}
+                    )
                     study_partner_group.full_name = full_name
 
                 # Short name not currently maintained in drupal
@@ -580,13 +585,18 @@ class PartnerGroupAudit(GREGORAudit):
                         )
                     )
                 else:
-                    self.verified.append(VerifiedPartnerGroup(local_partner_group=study_partner_group, remote_partner_group_data=study_partner_group_info))
+                    self.verified.append(
+                        VerifiedPartnerGroup(
+                            local_partner_group=study_partner_group, remote_partner_group_data=study_partner_group_info
+                        )
+                    )
 
         invalid_study_partner_groups = ResearchCenter.objects.exclude(drupal_node_id__in=valid_nodes)
 
         for iss in invalid_study_partner_groups:
-            self.errors.append(RemovePartnerGroup(local_partner_group=iss, note=self.ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID))
-
+            self.errors.append(
+                RemovePartnerGroup(local_partner_group=iss, note=self.ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID)
+            )
 
 
 def get_drupal_json_api():
@@ -632,7 +642,6 @@ def get_study_sites(json_api):
     return study_sites_info
 
 
-
 def get_partner_groups(json_api):
     partner_groups_endpoint = json_api.endpoint("node/partner_group")
     partner_groups_response = partner_groups_endpoint.get()
@@ -643,7 +652,7 @@ def get_partner_groups(json_api):
         # try to figure out short name
 
         short_name = ss.attributes["title"]
-        
+
         node_id = ss.attributes["drupal_internal__nid"]
 
         partner_groups_info[ss.id] = {

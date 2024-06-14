@@ -28,12 +28,14 @@ class ResearchCenterMockObject:
         self.field_short_name = field_short_name
         self.drupal_internal__nid = drupal_internal__nid
 
+
 class PartnerGroupMockObject:
     def __init__(self, id, title, drupal_internal__nid):
         self.id = id
         self.title = title
         self.full_name = title
         self.drupal_internal__nid = drupal_internal__nid
+
 
 class UserMockObject:
     def __init__(
@@ -67,10 +69,12 @@ class ResearchCenterSchema(Schema):
     class Meta:
         type_ = "node--research_center"
 
+
 class PartnerGroupSchema(Schema):
     id = fields.Str(dump_only=True)
     title = fields.Str()
     drupal_internal__nid = fields.Str()
+
 
 class UserSchema(Schema):
     id = fields.Str(dump_only=True)
@@ -190,6 +194,7 @@ class TestUserDataAudit(TestCase):
             url=url_path,
             body=json.dumps(ResearchCenterSchema(many=True).dump(TEST_STUDY_SITE_DATA)),
         )
+
     def add_fake_partner_groups_response(self):
         url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/partner_group/"
         responses.get(
@@ -214,7 +219,7 @@ class TestUserDataAudit(TestCase):
     def get_fake_json_api(self):
         self.add_fake_token_response()
         return audit.get_drupal_json_api()
-    
+
     @responses.activate
     def test_get_json_api(self):
         json_api = self.get_fake_json_api()
