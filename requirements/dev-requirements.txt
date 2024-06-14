@@ -149,7 +149,7 @@ requests==2.31.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.4.7
+ruff==0.4.8
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -194,7 +194,7 @@ tomli==2.0.1
     #   pylint
 tomlkit==0.12.3
     # via pylint
-tornado==6.4
+tornado==6.4.1
     # via livereload
 traitlets==5.14.1
     # via

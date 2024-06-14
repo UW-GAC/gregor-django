@@ -47,7 +47,7 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.5.0
     # via pytest
-pytest==8.2.1
+pytest==8.2.2
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
@@ -70,7 +70,7 @@ requests==2.31.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.25.0
+responses==0.25.2
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
