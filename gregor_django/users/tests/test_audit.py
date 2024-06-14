@@ -22,12 +22,18 @@ from gregor_django.users.models import ResearchCenter
 
 
 class ResearchCenterMockObject:
-    def __init__(self, id, title, field_long_name, drupal_internal__nid) -> None:
+    def __init__(self, id, title, field_short_name, drupal_internal__nid) -> None:
         self.id = id
         self.title = title
-        self.field_long_name = field_long_name
+        self.field_short_name = field_short_name
         self.drupal_internal__nid = drupal_internal__nid
 
+class PartnerGroupMockObject:
+    def __init__(self, id, title, drupal_internal__nid):
+        self.id = id
+        self.title = title
+        self.full_name = title
+        self.drupal_internal__nid = drupal_internal__nid
 
 class UserMockObject:
     def __init__(
@@ -37,30 +43,34 @@ class UserMockObject:
         drupal_internal__uid,
         name,
         mail,
-        field_given_first_name_s_,
-        field_examples_family_last_name_,
-        field_study_site_or_center,
+        field_fname,
+        field_lname,
+        field_research_center_or_site,
     ) -> None:
         self.id = id
         self.display_name = display_name
         self.drupal_internal__uid = drupal_internal__uid
         self.name = name
         self.mail = mail
-        self.field_given_first_name_s_ = field_given_first_name_s_
-        self.field_examples_family_last_name_ = field_examples_family_last_name_
-        self.field_study_site_or_center = field_study_site_or_center
+        self.field_fname = field_fname
+        self.field_lname = field_lname
+        self.field_research_center_or_site = field_research_center_or_site
 
 
 class ResearchCenterSchema(Schema):
     id = fields.Str(dump_only=True)
+    field_short_name = fields.Str()
     title = fields.Str()
-    field_long_name = fields.Str()
     drupal_internal__nid = fields.Str()
     # document_meta = fields.DocumentMeta()
 
     class Meta:
-        type_ = "node--study_site_or_center"
+        type_ = "node--research_center"
 
+class PartnerGroupSchema(Schema):
+    id = fields.Str(dump_only=True)
+    title = fields.Str()
+    drupal_internal__nid = fields.Str()
 
 class UserSchema(Schema):
     id = fields.Str(dump_only=True)
@@ -68,10 +78,13 @@ class UserSchema(Schema):
     drupal_internal__uid = fields.Str()
     name = fields.Str()
     mail = fields.Str()
-    field_given_first_name_s_ = fields.Str()
-    field_examples_family_last_name_ = fields.Str()
-    field_study_site_or_center = fields.Relationship(
-        many=True, schema="ResearchCenterSchema", type_="node--study_site_or_center"
+    field_fname = fields.Str()
+    field_lname = fields.Str()
+    field_research_center_or_site = fields.Relationship(
+        many=True, schema="ResearchCenterSchema", type_="node--research_center"
+    )
+    field_partner_member_group = fields.Relationship(
+        many=True, schema="PartnerGroupSchema", type_="node--partner_group"
     )
 
     class Meta:
@@ -94,8 +107,8 @@ TEST_STUDY_SITE_DATA = [
         **{
             "id": "1",
             "drupal_internal__nid": "1",
-            "title": "SS1",
-            "field_long_name": "S S 1",
+            "field_short_name": "SS1",
+            "title": "S S 1",
             # "document_meta": {"page": {"offset": 10}},
         }
     ),
@@ -103,9 +116,26 @@ TEST_STUDY_SITE_DATA = [
         **{
             "id": "2",
             "drupal_internal__nid": "2",
-            "title": "SS2",
-            "field_long_name": "S S 2",
+            "field_short_name": "SS2",
+            "title": "S S 2",
             # "document_meta": {"page": {"offset": 10}},
+        }
+    ),
+]
+
+TEST_PARTNER_GROUP_DATA = [
+    PartnerGroupMockObject(
+        **{
+            "id": "11",
+            "title": "Partner Group 11",
+            "drupal_internal__nid": "11",
+        }
+    ),
+    PartnerGroupMockObject(
+        **{
+            "id": "22",
+            "title": "Partner Group 22",
+            "drupal_internal__nid": "22",
         }
     ),
 ]
@@ -118,9 +148,9 @@ TEST_USER_DATA = [
             "drupal_internal__uid": "usr1",
             "name": "testuser1",
             "mail": "testuser1@test.com",
-            "field_given_first_name_s_": "test1",
-            "field_examples_family_last_name_": "user1",
-            "field_study_site_or_center": [],
+            "field_fname": "test1",
+            "field_lname": "user1",
+            "field_research_center_or_site": [],
         }
     ),
     # second mock object is deactivated user (no drupal uid)
@@ -131,9 +161,9 @@ TEST_USER_DATA = [
             "drupal_internal__uid": "",
             "name": "testuser2",
             "mail": "testuser2@test.com",
-            "field_given_first_name_s_": "test2",
-            "field_examples_family_last_name_": "user2",
-            "field_study_site_or_center": [],
+            "field_fname": "test2",
+            "field_lname": "user2",
+            "field_research_center_or_site": [],
         }
     ),
 ]
@@ -155,16 +185,22 @@ class TestUserDataAudit(TestCase):
         }
 
     def add_fake_study_sites_response(self):
-        url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/study_site_or_center/"
+        url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/research_center/"
         responses.get(
             url=url_path,
             body=json.dumps(ResearchCenterSchema(many=True).dump(TEST_STUDY_SITE_DATA)),
         )
+    def add_fake_partner_groups_response(self):
+        url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/partner_group/"
+        responses.get(
+            url=url_path,
+            body=json.dumps(ResearchCenterSchema(many=True).dump(TEST_PARTNER_GROUP_DATA)),
+        )
 
     def add_fake_users_response(self):
         url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/user/user/"
-        TEST_USER_DATA[0].field_study_site_or_center = [TEST_STUDY_SITE_DATA[0]]
-        user_data = UserSchema(include_data=("field_study_site_or_center",), many=True).dump(TEST_USER_DATA)
+        TEST_USER_DATA[0].field_research_center_or_site = [TEST_STUDY_SITE_DATA[0]]
+        user_data = UserSchema(include_data=("field_research_center_or_site",), many=True).dump(TEST_USER_DATA)
 
         responses.get(
             url=url_path,
@@ -178,7 +214,7 @@ class TestUserDataAudit(TestCase):
     def get_fake_json_api(self):
         self.add_fake_token_response()
         return audit.get_drupal_json_api()
-
+    
     @responses.activate
     def test_get_json_api(self):
         json_api = self.get_fake_json_api()
@@ -191,8 +227,8 @@ class TestUserDataAudit(TestCase):
         study_sites = audit.get_study_sites(json_api=json_api)
 
         for test_study_site in TEST_STUDY_SITE_DATA:
-            assert test_study_site.field_long_name == study_sites[test_study_site.drupal_internal__nid]["full_name"]
-            assert test_study_site.title == study_sites[test_study_site.drupal_internal__nid]["short_name"]
+            assert test_study_site.title == study_sites[test_study_site.drupal_internal__nid]["full_name"]
+            assert test_study_site.field_short_name == study_sites[test_study_site.drupal_internal__nid]["short_name"]
             assert test_study_site.drupal_internal__nid == study_sites[test_study_site.drupal_internal__nid]["node_id"]
 
     @responses.activate
@@ -219,8 +255,8 @@ class TestUserDataAudit(TestCase):
         assert (
             ResearchCenter.objects.filter(
                 short_name__in=[
-                    TEST_STUDY_SITE_DATA[0].title,
-                    TEST_STUDY_SITE_DATA[1].title,
+                    TEST_STUDY_SITE_DATA[0].field_short_name,
+                    TEST_STUDY_SITE_DATA[1].field_short_name,
                 ]
             ).count()
             == 2
@@ -236,8 +272,8 @@ class TestUserDataAudit(TestCase):
         )
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[1].title,
-            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[1].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[1].title,
         )
         self.get_fake_json_api()
         self.add_fake_study_sites_response()
@@ -249,10 +285,10 @@ class TestUserDataAudit(TestCase):
         self.assertEqual(len(site_audit.errors), 0)
         self.assertEqual(ResearchCenter.objects.all().count(), 2)
 
-        first_test_ss = ResearchCenter.objects.get(short_name=TEST_STUDY_SITE_DATA[0].title)
+        first_test_ss = ResearchCenter.objects.get(short_name=TEST_STUDY_SITE_DATA[0].field_short_name)
         # did we update the long name
-        assert first_test_ss.full_name == TEST_STUDY_SITE_DATA[0].field_long_name
-        assert first_test_ss.short_name == TEST_STUDY_SITE_DATA[0].title
+        assert first_test_ss.full_name == TEST_STUDY_SITE_DATA[0].title
+        assert first_test_ss.short_name == TEST_STUDY_SITE_DATA[0].field_short_name
 
     @responses.activate
     def test_audit_study_sites_with_extra_site(self):
@@ -270,11 +306,12 @@ class TestUserDataAudit(TestCase):
     def test_full_user_audit(self):
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
+        self.add_fake_partner_groups_response()
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
         user_audit = audit.UserAudit(apply_changes=True)
         user_audit.run_audit()
@@ -288,7 +325,7 @@ class TestUserDataAudit(TestCase):
         assert users.first().email == TEST_USER_DATA[0].mail
         assert users.first().username == TEST_USER_DATA[0].name
         assert users.first().research_centers.count() == 1
-        assert users.first().research_centers.first().short_name == TEST_STUDY_SITE_DATA[0].title
+        assert users.first().research_centers.first().short_name == TEST_STUDY_SITE_DATA[0].field_short_name
 
     @responses.activate
     def test_full_user_audit_check_only(self):
@@ -297,8 +334,8 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
         user_audit = audit.UserAudit(apply_changes=False)
         user_audit.run_audit()
@@ -316,12 +353,12 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ss1 = ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[1].title,
-            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[1].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[1].title,
         )
         drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_given_first_name_s_,
-            TEST_USER_DATA[0].field_examples_family_last_name_,
+            TEST_USER_DATA[0].field_fname,
+            TEST_USER_DATA[0].field_lname,
         )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
@@ -352,12 +389,12 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ss1 = ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[1].title,
-            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[1].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[1].title,
         )
         drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_given_first_name_s_,
-            TEST_USER_DATA[0].field_examples_family_last_name_,
+            TEST_USER_DATA[0].field_fname,
+            TEST_USER_DATA[0].field_lname,
         )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
@@ -387,12 +424,12 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
         drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_given_first_name_s_,
-            TEST_USER_DATA[0].field_examples_family_last_name_,
+            TEST_USER_DATA[0].field_fname,
+            TEST_USER_DATA[0].field_lname,
         )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
@@ -423,8 +460,8 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
 
         new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
@@ -448,8 +485,8 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
 
         new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
@@ -491,8 +528,8 @@ class TestUserDataAudit(TestCase):
         self.add_fake_users_response()
         ResearchCenter.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
 
         SocialAccount.objects.create(
@@ -535,6 +572,7 @@ class TestUserDataAudit(TestCase):
     def test_sync_drupal_data_command(self):
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
+        self.add_fake_partner_groups_response()
         self.add_fake_users_response()
         out = StringIO()
         call_command("sync-drupal-data", stdout=out)
@@ -547,8 +585,8 @@ class TestUserDataAudit(TestCase):
     def test_sync_drupal_data_command_with_issues(self):
         ResearchCenter.objects.create(
             drupal_node_id="999999",
-            short_name=TEST_STUDY_SITE_DATA[0].title,
-            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+            short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
+            full_name=TEST_STUDY_SITE_DATA[0].title,
         )
 
         new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
@@ -559,6 +597,7 @@ class TestUserDataAudit(TestCase):
         )
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
+        self.add_fake_partner_groups_response()
         self.add_fake_users_response()
         out = StringIO()
         call_command("sync-drupal-data", "--email=test@example.com", stdout=out)

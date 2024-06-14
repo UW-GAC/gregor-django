@@ -35,9 +35,9 @@ class Command(BaseCommand):
             help="""Email to which to send audit result details that need action or have errors.""",
         )
 
-    def _send_email(self, user_audit, site_audit):
+    def _send_email(self, user_audit, site_audit, partner_group_audit):
         # Send email if requested and there are problems.
-        if user_audit.ok() is False or site_audit.ok() is False:
+        if user_audit.ok() is False or site_audit.ok() is False or partner_group_audit.ok() is False:
             # django-tables2 requires request context, so we create an empty one
             # if we wanted to linkify any of our data we would need to do more here
             request = HttpRequest()
@@ -47,6 +47,7 @@ class Command(BaseCommand):
                 context={
                     "user_audit": user_audit,
                     "site_audit": site_audit,
+                    "partner_group_audit": partner_group_audit,
                     "request": request,
                     "apply_changes": self.apply_changes,
                 },
@@ -83,6 +84,20 @@ class Command(BaseCommand):
             notification_content += "Sites requiring intervention:\n"
             notification_content += site_audit.get_errors_table().render_to_text()
 
+        partner_group_audit = audit.PartnerGroupAudit(apply_changes=self.apply_changes)
+        partner_group_audit.run_audit()
+
+        notification_content += (
+            f"PartnerGroupAudit summary: status ok: {partner_group_audit.ok()} verified: {len(partner_group_audit.verified)} "
+            f"needs_changes: {len(partner_group_audit.needs_action)} errors: {len(partner_group_audit.errors)}\n"
+        )
+        if partner_group_audit.needs_action:
+            notification_content += "PartnerGroups that need syncing:\n"
+            notification_content += partner_group_audit.get_needs_action_table().render_to_text()
+        if partner_group_audit.errors:
+            notification_content += "PartnerGroups requiring intervention:\n"
+            notification_content += partner_group_audit.get_errors_table().render_to_text()
+
         user_audit = audit.UserAudit(
             apply_changes=self.apply_changes,
             ignore_deactivate_threshold=self.ignore_threshold,
@@ -102,4 +117,4 @@ class Command(BaseCommand):
 
         self.stdout.write(notification_content)
         if self.email:
-            self._send_email(user_audit, site_audit)
+            self._send_email(user_audit, site_audit, partner_group_audit)

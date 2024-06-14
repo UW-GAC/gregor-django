@@ -15,7 +15,7 @@ from requests_oauthlib import OAuth2, OAuth2Session
 
 from gregor_django.drupal_oauth_provider.provider import CustomProvider
 from gregor_django.gregor_anvil.audit import GREGORAudit, GREGORAuditResult
-from gregor_django.gregor_anvil.models import ResearchCenter
+from gregor_django.gregor_anvil.models import ResearchCenter, PartnerGroup
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class UserAuditResultsTable(tables.Table, TextTable):
     local_username = tables.Column()
     remote_user_id = tables.Column()
     remote_username = tables.Column()
+    remote_name = tables.Column()
     changes = tables.Column()
     note = tables.Column()
     anvil_groups = tables.Column()
@@ -51,7 +52,7 @@ class UserAuditResult(GREGORAuditResult):
     anvil_groups: list = None
 
     def get_table_dictionary(self):
-        """Return a dictionary that can be used to populate an instance of `SiteAuditResultsTable`."""
+        """Return a dictionary that can be used to populate an instance of `UserAuditResultsTable`."""
 
         row = {
             "changes": self.changes,
@@ -71,6 +72,10 @@ class UserAuditResult(GREGORAuditResult):
                 {
                     "remote_user_id": self.remote_user_data.attributes.get("drupal_internal__uid"),
                     "remote_username": self.remote_user_data.attributes.get("name"),
+                    "remote_name": "{} {}".format(
+                        self.remote_user_data.attributes.get('field_fname'),
+                        self.remote_user_data.attributes.get('field_lname')
+                    )
                 }
             )
         if self.anvil_account:
@@ -149,10 +154,11 @@ class UserAudit(GREGORAudit):
                 drupal_uid = user.attributes.get("drupal_internal__uid")
                 drupal_username = user.attributes.get("name")
                 drupal_email = user.attributes.get("mail")
-                drupal_firstname = user.attributes.get("field_given_first_name_s_")
-                drupal_lastname = user.attributes.get("field_examples_family_last_name_")
+                drupal_firstname = user.attributes.get("field_fname")
+                drupal_lastname = user.attributes.get("field_lname")
                 drupal_full_name = " ".join(part for part in (drupal_firstname, drupal_lastname) if part)
-                drupal_study_sites_rel = user.relationships.get("field_study_site_or_center")
+                drupal_study_sites_rel = user.relationships.get("field_research_center_or_site")
+                drupal_partner_groups_rel = user.relationships.get('field_partner_member_group')
                 drupal_user_study_site_shortnames = []
                 if drupal_study_sites_rel:
                     for dss in drupal_study_sites_rel.data:
@@ -443,6 +449,146 @@ class SiteAudit(GREGORAudit):
             self.errors.append(RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALID))
 
 
+
+class PartnerGroupAuditResultsTable(tables.Table, TextTable):
+    """A table to show results from a PartnerGroupAudit instance."""
+
+    result_type = tables.Column()
+    local_partner_group_name = tables.Column()
+    remote_partner_group_name = tables.Column()
+    changes = tables.Column()
+    note = tables.Column()
+
+    def value_local_partner_group_name(self, value):
+        return value
+
+    class Meta:
+        orderable = False
+
+
+@dataclass
+class PartnerGroupAuditResult(GREGORAuditResult):
+    local_partner_group: ResearchCenter
+    remote_partner_group_data: jsonapi_requests.JsonApiObject = None
+    changes: dict = None
+    note: str = None
+
+    def get_table_dictionary(self):
+        """Return a dictionary that can be used to populate an instance of `PartnerGroupAuditResultsTable`."""
+        row = {
+            "changes": self.changes,
+            "note": self.note,
+            "result_type": type(self).__name__,
+        }
+        if self.local_partner_group:
+            row.update(
+                {
+                    "local_partner_group_name": self.local_partner_group.short_name,
+                }
+            )
+        if self.remote_partner_group_data:
+            row.update(
+                {
+                    "remote_partner_group_name": self.remote_partner_group_data.get("short_name"),
+                }
+            )
+        return row
+
+
+@dataclass
+class VerifiedPartnerGroup(PartnerGroupAuditResult):
+    pass
+
+
+@dataclass
+class NewPartnerGroup(PartnerGroupAuditResult):
+    pass
+
+
+@dataclass
+class RemovePartnerGroup(PartnerGroupAuditResult):
+    pass
+
+
+@dataclass
+class UpdatePartnerGroup(PartnerGroupAuditResult):
+    changes: dict
+
+
+class PartnerGroupAudit(GREGORAudit):
+    ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID = "Local PartnerGroup is invalid"
+    results_table_class = PartnerGroupAuditResultsTable
+
+    def __init__(self, apply_changes=False):
+        """Initialize the audit.
+
+        Args:
+            apply_changes: Whether to make changes to align the audit
+        """
+        super().__init__()
+        self.apply_changes = apply_changes
+
+    def _run_audit(self):
+        """Run the audit on local and remote users."""
+        valid_nodes = set()
+        json_api = get_drupal_json_api()
+        study_partner_groups = get_partner_groups(json_api=json_api)
+        for study_partner_group_info in study_partner_groups.values():
+            short_name = study_partner_group_info["short_name"]
+            full_name = study_partner_group_info["full_name"]
+            node_id = study_partner_group_info["node_id"]
+            valid_nodes.add(node_id)
+
+            try:
+                study_partner_group = PartnerGroup.objects.get(drupal_node_id=node_id)
+            except ObjectDoesNotExist:
+                study_partner_group = None
+                if self.apply_changes is True:
+                    study_partner_group = PartnerGroup.objects.create(
+                        drupal_node_id=node_id,
+                        short_name=short_name,
+                        full_name=full_name,
+                    )
+                self.needs_action.append(NewPartnerGroup(remote_partner_group_data=study_partner_group_info, local_partner_group=study_partner_group))
+            else:
+                study_partner_group_updates = {}
+
+                if study_partner_group.full_name != full_name:
+                    study_partner_group_updates.update({"full_name": {"old": study_partner_group.full_name, "new": full_name}})
+                    study_partner_group.full_name = full_name
+
+                # Short name not currently maintained in drupal
+                # if study_partner_group.short_name != short_name:
+                #     study_partner_group_updates.update(
+                #         {
+                #             "short_name": {
+                #                 "old": study_partner_group.short_name,
+                #                 "new": short_name,
+                #             }
+                #         }
+                #     )
+                #     study_partner_group.short_name = short_name
+
+                if study_partner_group_updates:
+                    if self.apply_changes is True:
+                        study_partner_group.save()
+                    self.needs_action.append(
+                        UpdatePartnerGroup(
+                            local_partner_group=study_partner_group,
+                            remote_partner_group_data=study_partner_group_info,
+                            changes=study_partner_group_updates,
+                        )
+                    )
+                else:
+                    self.verified.append(VerifiedPartnerGroup(local_partner_group=study_partner_group, remote_partner_group_data=study_partner_group_info))
+
+        invalid_study_partner_groups = ResearchCenter.objects.exclude(drupal_node_id__in=valid_nodes)
+
+        for iss in invalid_study_partner_groups:
+            self.errors.append(RemovePartnerGroup(local_partner_group=iss, note=self.ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID))
+
+
+
 def get_drupal_json_api():
     json_api_client_id = settings.DRUPAL_API_CLIENT_ID
     json_api_client_secret = settings.DRUPAL_API_CLIENT_SECRET
@@ -469,13 +615,13 @@ def get_drupal_json_api():
 
 
 def get_study_sites(json_api):
-    study_sites_endpoint = json_api.endpoint("node/study_site_or_center")
+    study_sites_endpoint = json_api.endpoint("node/research_center")
     study_sites_response = study_sites_endpoint.get()
     study_sites_info = dict()
 
     for ss in study_sites_response.data:
-        short_name = ss.attributes["title"]
-        full_name = ss.attributes["field_long_name"]
+        short_name = ss.attributes["field_short_name"]
+        full_name = ss.attributes["title"]
         node_id = ss.attributes["drupal_internal__nid"]
 
         study_sites_info[ss.id] = {
@@ -484,3 +630,25 @@ def get_study_sites(json_api):
             "full_name": full_name,
         }
     return study_sites_info
+
+
+
+def get_partner_groups(json_api):
+    partner_groups_endpoint = json_api.endpoint("node/partner_group")
+    partner_groups_response = partner_groups_endpoint.get()
+    partner_groups_info = dict()
+
+    for ss in partner_groups_response.data:
+        full_name = ss.attributes["title"]
+        # try to figure out short name
+
+        short_name = ss.attributes["title"]
+        
+        node_id = ss.attributes["drupal_internal__nid"]
+
+        partner_groups_info[ss.id] = {
+            "node_id": node_id,
+            "short_name": short_name,
+            "full_name": full_name,
+        }
+    return partner_groups_info
