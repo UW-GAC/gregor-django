@@ -65,7 +65,7 @@ requests==2.31.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.25.2
+responses==0.25.3
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
