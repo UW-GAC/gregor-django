@@ -172,7 +172,7 @@ urllib3==2.1.0
     #   requests
 wheel==0.42.0
     # via pip-tools
-whitenoise==6.6.0
+whitenoise==6.7.0
     # via -r requirements/requirements.in
 zipp==3.17.0
     # via importlib-metadata
