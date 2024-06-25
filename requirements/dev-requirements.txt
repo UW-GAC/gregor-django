@@ -50,7 +50,7 @@ django==4.2.13
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==4.4.1
+django-debug-toolbar==4.4.2
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
@@ -64,7 +64,7 @@ filelock==3.13.1
     # via virtualenv
 identify==2.5.35
     # via pre-commit
-idna==3.6
+idna==3.7
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -144,12 +144,12 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.31.0
+requests==2.32.3
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.4.5
+ruff==0.4.10
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -194,7 +194,7 @@ tomli==2.0.1
     #   pylint
 tomlkit==0.12.3
     # via pylint
-tornado==6.4
+tornado==6.4.1
     # via livereload
 traitlets==5.14.1
     # via
@@ -215,7 +215,7 @@ typing-extensions==4.8.0
     #   ipython
     #   mypy
     #   pylint
-urllib3==2.1.0
+urllib3==2.2.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
