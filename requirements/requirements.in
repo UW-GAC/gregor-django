@@ -45,11 +45,13 @@ mysqlclient # https://github.com/PyMySQL/mysqlclient
 # See issue https://github.com/jazzband/django-simple-history/issues/1255
 asgiref>=3.6
 
-# Temporary fixes to handle dependabot not reading django-anvil-consortium-manager dependencies
+# Temporary fixes to handle security vulnerabilities
 certifi>=2023.7.22
 pyjwt>=2.4.0
-urllib3>=1.26.18
 sqlparse>=0.4.4
+idna>3.7
+urllib3>=2.2.2
+requests>=2.32.0
 
 # Dynamic settings
 django-constance
