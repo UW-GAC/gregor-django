@@ -649,7 +649,8 @@ def get_partner_groups(json_api):
 
     for ss in partner_groups_response.data:
         full_name = ss.attributes["title"]
-        # try to figure out short name
+        # try to figure out short name - try to split on dash
+        # or just truncate
 
         short_name = ss.attributes["title"]
 
