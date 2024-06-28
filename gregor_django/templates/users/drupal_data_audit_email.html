@@ -40,8 +40,23 @@
       {% if site_audit.errors %}
       {% render_table site_audit.get_errors_table %}
       {% endif %}
-      <p>* Users and sites that <b>Need Action</b> will be resolved by this script if in update mode</p>
-      <p>* Users and sites listed as <b>Error</b> need manual intervention to resolve</p>
+
+      <h2>Partner Group Audit</h2>
+
+      <h3>Verified partner groups - {{ partner_group_audit.verified|length }} record(s)</h3>
+
+      <h3>PartnerGroups that need action - {{ partner_group_audit.needs_action|length }} record(s)</h3>
+      {% if partner_group_audit.needs_action %}
+      {% render_table partner_group_audit.get_needs_action_table %}
+      {% endif %}
+
+      <h3>PartnerGroups with errors - {{partner_group_audit.errors|length }} record(s)</h3>
+      {% if partner_group_audit.errors %}
+      {% render_table partner_group_audit.get_errors_table %}
+      {% endif %}
+
+      <p>* Users, sites, partner groups that <b>Need Action</b> will be resolved by this script if in update mode</p>
+      <p>* Users, sites, partner groups listed as <b>Error</b> need manual intervention to resolve</p>
 
 
 {% endblock content %}

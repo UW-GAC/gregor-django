@@ -18,7 +18,7 @@ from marshmallow_jsonapi import Schema, fields
 
 from gregor_django.drupal_oauth_provider.provider import CustomProvider
 from gregor_django.users import audit
-from gregor_django.users.models import ResearchCenter
+from gregor_django.users.models import PartnerGroup, ResearchCenter
 
 
 class ResearchCenterMockObject:
@@ -296,6 +296,36 @@ class TestUserDataAudit(TestCase):
         assert first_test_ss.short_name == TEST_STUDY_SITE_DATA[0].field_short_name
 
     @responses.activate
+    def test_audit_partner_groups_with_group_update(self):
+        PartnerGroup.objects.create(
+            drupal_node_id=TEST_PARTNER_GROUP_DATA[0].drupal_internal__nid,
+            short_name="WrongShortName",
+            full_name="WrongTitle",
+        )
+        PartnerGroup.objects.create(
+            drupal_node_id=TEST_PARTNER_GROUP_DATA[1].drupal_internal__nid,
+            short_name=TEST_PARTNER_GROUP_DATA[1].title,
+            full_name=TEST_PARTNER_GROUP_DATA[1].title,
+        )
+        self.get_fake_json_api()
+        self.add_fake_partner_groups_response()
+        pg_audit = audit.PartnerGroupAudit(apply_changes=True)
+        pg_audit.run_audit()
+        self.assertFalse(pg_audit.ok())
+        self.assertEqual(len(pg_audit.needs_action), 1)
+        self.assertEqual(len(pg_audit.verified), 1)
+        self.assertEqual(len(pg_audit.errors), 0)
+        self.assertEqual(PartnerGroup.objects.all().count(), 2)
+
+        needs_action_table = pg_audit.get_needs_action_table()
+        self.assertIn("UpdatePartnerGroup", needs_action_table.render_to_text())
+
+        first_test_ss = PartnerGroup.objects.get(full_name=TEST_PARTNER_GROUP_DATA[0].title)
+        # did we update the long name
+        assert first_test_ss.full_name == TEST_PARTNER_GROUP_DATA[0].title
+        # assert first_test_ss.short_name == TEST_PARTNER_GROUP_DATA[0].title
+
+    @responses.activate
     def test_audit_study_sites_with_extra_site(self):
         ResearchCenter.objects.create(drupal_node_id=99, short_name="ExtraSite", full_name="ExtraSiteLong")
         self.get_fake_json_api()
@@ -306,6 +336,18 @@ class TestUserDataAudit(TestCase):
         self.assertEqual(len(site_audit.errors), 1)
         self.assertEqual(ResearchCenter.objects.all().count(), 3)
         assert len(site_audit.get_errors_table().rows) == 1
+
+    @responses.activate
+    def test_audit_partner_groups_with_extra_group(self):
+        PartnerGroup.objects.create(drupal_node_id=99, short_name="ExtraPG", full_name="ExtraPartnerGroupLong")
+        self.get_fake_json_api()
+        self.add_fake_partner_groups_response()
+        pg_audit = audit.PartnerGroupAudit(apply_changes=True)
+        pg_audit.run_audit()
+        self.assertFalse(pg_audit.ok())
+        self.assertEqual(len(pg_audit.errors), 1)
+        self.assertEqual(PartnerGroup.objects.all().count(), 3)
+        assert len(pg_audit.get_errors_table().rows) == 1
 
     @responses.activate
     def test_full_user_audit(self):
@@ -593,7 +635,11 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
             full_name=TEST_STUDY_SITE_DATA[0].title,
         )
-
+        PartnerGroup.objects.create(
+            drupal_node_id="999999",
+            short_name=TEST_PARTNER_GROUP_DATA[0].title,
+            full_name=TEST_PARTNER_GROUP_DATA[0].title,
+        )
         new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
         SocialAccount.objects.create(
             user=new_user,
@@ -608,6 +654,7 @@ class TestUserDataAudit(TestCase):
         call_command("sync-drupal-data", "--email=test@example.com", stdout=out)
         self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
         self.assertIn("UserAudit summary: status ok: False", out.getvalue())
+        self.assertIn("PartnerGroupAudit summary: status ok: False", out.getvalue())
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]

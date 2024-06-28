@@ -591,7 +591,7 @@ class PartnerGroupAudit(GREGORAudit):
                         )
                     )
 
-        invalid_study_partner_groups = ResearchCenter.objects.exclude(drupal_node_id__in=valid_nodes)
+        invalid_study_partner_groups = PartnerGroup.objects.exclude(drupal_node_id__in=valid_nodes)
 
         for iss in invalid_study_partner_groups:
             self.errors.append(
