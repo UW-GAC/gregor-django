@@ -650,9 +650,16 @@ def get_partner_groups(json_api):
     for ss in partner_groups_response.data:
         full_name = ss.attributes["title"]
         # try to figure out short name - try to split on dash
-        # or just truncate
+        # or just truncate to max len of field
 
         short_name = ss.attributes["title"]
+        short_name_parts = short_name.split(" - ")
+        if short_name_parts:
+            short_name = short_name_parts[0]
+
+        short_name_max_len = PartnerGroup._meta.get_field("short_name").max_length
+        if len(short_name) > short_name_max_len:
+            short_name = short_name[slice(short_name_max_len)]
 
         node_id = ss.attributes["drupal_internal__nid"]
 
