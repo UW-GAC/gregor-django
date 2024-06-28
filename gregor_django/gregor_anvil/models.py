@@ -42,6 +42,9 @@ class ResearchCenter(TimeStampedModel, models.Model):
     full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Research Center."""
 
+    drupal_node_id = models.IntegerField(blank=True, null=True)
+    """Reference node ID for entity in drupal"""
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -65,6 +68,9 @@ class PartnerGroup(TimeStampedModel, models.Model):
 
     full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Partner Group"""
+
+    drupal_node_id = models.IntegerField(blank=True, null=True)
+    """Reference node ID for entity in drupal"""
 
     history = HistoricalRecords()
 
