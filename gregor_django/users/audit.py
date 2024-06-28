@@ -642,6 +642,17 @@ def get_study_sites(json_api):
     return study_sites_info
 
 
+def partner_group_short_name_from_full_name(full_name):
+    short_name_parts = full_name.split(" - ")
+    if short_name_parts:
+        short_name = short_name_parts[0]
+
+    short_name_max_len = PartnerGroup._meta.get_field("short_name").max_length
+    if len(short_name) > short_name_max_len:
+        short_name = short_name[slice(short_name_max_len)]
+    return short_name
+
+
 def get_partner_groups(json_api):
     partner_groups_endpoint = json_api.endpoint("node/partner_group")
     partner_groups_response = partner_groups_endpoint.get()
@@ -651,15 +662,7 @@ def get_partner_groups(json_api):
         full_name = ss.attributes["title"]
         # try to figure out short name - try to split on dash
         # or just truncate to max len of field
-
-        short_name = ss.attributes["title"]
-        short_name_parts = short_name.split(" - ")
-        if short_name_parts:
-            short_name = short_name_parts[0]
-
-        short_name_max_len = PartnerGroup._meta.get_field("short_name").max_length
-        if len(short_name) > short_name_max_len:
-            short_name = short_name[slice(short_name_max_len)]
+        short_name = partner_group_short_name_from_full_name(full_name)
 
         node_id = ss.attributes["drupal_internal__nid"]
 

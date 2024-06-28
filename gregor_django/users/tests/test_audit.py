@@ -304,7 +304,7 @@ class TestUserDataAudit(TestCase):
         )
         PartnerGroup.objects.create(
             drupal_node_id=TEST_PARTNER_GROUP_DATA[1].drupal_internal__nid,
-            short_name=TEST_PARTNER_GROUP_DATA[1].title,
+            short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[1].title),
             full_name=TEST_PARTNER_GROUP_DATA[1].title,
         )
         self.get_fake_json_api()
@@ -637,7 +637,7 @@ class TestUserDataAudit(TestCase):
         )
         PartnerGroup.objects.create(
             drupal_node_id="999999",
-            short_name=TEST_PARTNER_GROUP_DATA[0].title,
+            short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[0].title),
             full_name=TEST_PARTNER_GROUP_DATA[0].title,
         )
         new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
