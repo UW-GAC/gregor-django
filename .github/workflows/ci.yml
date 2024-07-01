@@ -28,11 +28,11 @@ jobs:
         backend: ["sqlite", "mariadb"]
         mariadb-version: ["10.4"]
         include:
-          - python-version: 3.12  # Possible future version.
+          - python-version: "3.10"  # Future ubuntu 22.04 upgrade.
             backend: "mariadb"
-            mariadb-version: "10.5"
+            mariadb-version: "10.6"
             pip-recompile: true
-          - python-version: 3.12  # Possible future version.
+          - python-version: 3.12  # Future ubuntu 24.04.01 upgrade.
             backend: "mariadb"
             mariadb-version: "10.11"
             pip-recompile: true
