@@ -29,14 +29,23 @@ class ConsentGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView)
     table_class = tables.ConsentGroupTable
 
 
-class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
+class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `ResearchCenter`."""
 
     model = models.ResearchCenter
-    context_table_name = "site_user_table"
 
-    def get_table(self):
-        return UserTable(User.objects.filter(research_centers=self.object))
+    def get_tables(self):
+        members = Account.objects.filter(
+            groupaccountmembership__group=self.object.member_group,
+        )
+        uploaders = Account.objects.filter(
+            groupaccountmembership__group=self.object.uploader_group,
+        )
+        return [
+            UserTable(User.objects.filter(research_centers=self.object)),
+            tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
+            tables.AccountTable(uploaders, exclude=("user__research_centers", "number_groups")),
+        ]
 
 
 class ResearchCenterList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):

@@ -18,6 +18,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from gregor_django.users.tables import UserTable
 from gregor_django.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
@@ -283,12 +284,60 @@ class ResearchCenterDetailTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("site_user_table", response.context_data)
-        table = response.context_data["site_user_table"]
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
 
         self.assertIn(site_user, table.data)
         self.assertNotIn(non_site_user, table.data)
+
+    def test_link_to_member_group(self):
+        """Response includes a link to the members group."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, obj.member_group.get_absolute_url())
+
+    def test_link_to_uploader_group(self):
+        """Response includes a link to the uploader group."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, obj.uploader_group.get_absolute_url())
+
+    def test_table_classes(self):
+        """Table classes are correct."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertIsInstance(response.context_data["tables"][1], tables.AccountTable)
+        self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
+
+    def test_rc_member_table(self):
+        obj = self.model_factory.create()
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.member_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_rc_uploader_table(self):
+        obj = self.model_factory.create()
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.uploader_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
 
 
 class ResearchCenterListTest(TestCase):
