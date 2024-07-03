@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceFactory
 from factory import Faker, LazyAttribute, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
@@ -24,6 +24,14 @@ class ResearchCenterFactory(DjangoModelFactory):
 
     short_name = Faker("word")
     full_name = Faker("company")
+    members_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(lambda o: "{}_members".format(o.factory_parent.short_name)),
+    )
+    uploaders_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(lambda o: "{}_uploaders".format(o.factory_parent.short_name)),
+    )
 
     class Meta:
         model = models.ResearchCenter
