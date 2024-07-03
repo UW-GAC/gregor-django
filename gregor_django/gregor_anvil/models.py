@@ -42,7 +42,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
     full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Research Center."""
 
-    members_group = models.OneToOneField(
+    member_group = models.OneToOneField(
         ManagedGroup,
         on_delete=models.PROTECT,
         help_text="The AnVIL group containing members from this Research Center.",
@@ -50,7 +50,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
         null=True,
     )
 
-    uploaders_group = models.OneToOneField(
+    uploader_group = models.OneToOneField(
         ManagedGroup,
         on_delete=models.PROTECT,
         help_text="The group that has write/upload access to workspaces associated with this Research Center.",
@@ -75,8 +75,8 @@ class ResearchCenter(TimeStampedModel, models.Model):
     def clean(self):
         """Custom cleaning methods."""
         # Members group and uploaders group must be different.
-        if self.members_group and self.uploaders_group and self.members_group == self.uploaders_group:
-            raise ValidationError("members_group and uploaders_group must be different!")
+        if self.member_group and self.uploader_group and self.member_group == self.uploader_group:
+            raise ValidationError("member_group and uploader_group must be different!")
 
 
 class PartnerGroup(TimeStampedModel, models.Model):
