@@ -35,9 +35,10 @@ class PopulateUploadCycleTest(MigratorTestCase):
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
+        research_center_1 = ResearchCenter.objects.create(short_name="rc1", full_name="Research Center 1")
         self.u_1 = UploadWorkspace.objects.create(
             version=1,
-            research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
+            research_center=research_center_1,
             consent_group=consent_group,
             workspace=workspace,
         )
@@ -47,9 +48,10 @@ class PopulateUploadCycleTest(MigratorTestCase):
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
+        research_center_2 = ResearchCenter.objects.create(short_name="rc2", full_name="Research Center 2")
         self.u_2 = UploadWorkspace.objects.create(
             version=1,
-            research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
+            research_center=research_center_2,
             consent_group=consent_group,
             workspace=workspace,
         )
@@ -59,9 +61,10 @@ class PopulateUploadCycleTest(MigratorTestCase):
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
+        research_center_3 = ResearchCenter.objects.create(short_name="rc3", full_name="Research Center 3")
         self.u_3 = UploadWorkspace.objects.create(
             version=2,
-            research_center=factory.create(ResearchCenter, FACTORY_CLASS=factories.ResearchCenterFactory),
+            research_center=research_center_3,
             consent_group=consent_group,
             workspace=workspace,
         )
