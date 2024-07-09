@@ -7,11 +7,70 @@
   <ul>
     <li>Full name: {{ object.full_name }}</li>
     <li>Short name: {{ object.short_name }}</li>
+    <li>Member group:
+      {% if object.member_group %}
+        <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
+    <li>Uploader group:
+      {% if object.uploader_group %}
+        <a href="{{ object.uploader_group.get_absolute_url }}">{{ object.uploader_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
   </ul>
 {% endblock panel %}
 
 {% block after_panel %}
-  <h3>Partner Group Users</h3>
-  {% render_table partner_group_user_table %}
+<div class="my-3">
+  <div class="accordion" id="accordionMembers">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingMembersOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMembersOne" aria-expanded="false" aria-controls="collapseMembersOne">
+          <span class="fa-solid fa-cloud-arrow-down mx-2"></span>
+          View consortium members with data access
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.1.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseMembersOne" class="accordion-collapse collapse" aria-labelledby="headingMembersOne" data-bs-parent="#accordionMembers">
+        <div class="accordion-body">
+          <p>
+            This table shows Accounts in the member group for this Partner Group.
+          </p>
+        {% render_table tables.1 %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionUploaders">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingWorkspacesOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUploadersOne" aria-expanded="false" aria-controls="collapseUploadersOne">
+          <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
+          View uploaders
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.2.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseUploadersOne" class="accordion-collapse collapse" aria-labelledby="headingUploadersOne" data-bs-parent="#accordionUploaders">
+        <div class="accordion-body">
+          <p>
+            This table shows Accounts in the uploader group for this Partner Group.
+          </p>
+        {% render_table tables.2 %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<h3>Partner Group Users</h3>
+  {% render_table tables.0 %}
   <p class='alert alert-warning'>Partner Group user list only contains those group users who have created an account on this website.</p>
 {% endblock after_panel %}
