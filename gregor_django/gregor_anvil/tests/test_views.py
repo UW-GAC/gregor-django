@@ -333,6 +333,14 @@ class ResearchCenterDetailTest(TestCase):
         self.assertIn(account, table.data)
         self.assertNotIn(other_account, table.data)
 
+    def test_member_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 0)
+
     def test_rc_uploader_table(self):
         uploader_group = acm_factories.ManagedGroupFactory.create()
         obj = self.model_factory.create(uploader_group=uploader_group)
@@ -345,6 +353,14 @@ class ResearchCenterDetailTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(account, table.data)
         self.assertNotIn(other_account, table.data)
+
+    def test_upload_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 0)
 
 
 class ResearchCenterListTest(TestCase):
@@ -512,6 +528,14 @@ class PartnerGroupDetailTest(TestCase):
         self.assertIn(account, table.data)
         self.assertNotIn(other_account, table.data)
 
+    def test_member_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 0)
+
     def test_uploader_table(self):
         uploader_group = acm_factories.ManagedGroupFactory.create()
         obj = self.model_factory.create(uploader_group=uploader_group)
@@ -524,6 +548,14 @@ class PartnerGroupDetailTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(account, table.data)
         self.assertNotIn(other_account, table.data)
+
+    def test_upload_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 0)
 
 
 class PartnerGroupListTest(TestCase):
