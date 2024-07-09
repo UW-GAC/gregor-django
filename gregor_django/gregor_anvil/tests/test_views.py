@@ -291,18 +291,20 @@ class ResearchCenterDetailTest(TestCase):
         self.assertNotIn(non_site_user, table.data)
 
     def test_link_to_member_group(self):
-        """Response includes a link to the members group."""
-        obj = self.model_factory.create()
+        """Response includes a link to the members group if it exists."""
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertContains(response, obj.member_group.get_absolute_url())
+        self.assertContains(response, member_group.get_absolute_url())
 
     def test_link_to_uploader_group(self):
-        """Response includes a link to the uploader group."""
-        obj = self.model_factory.create()
+        """Response includes a link to the uploader group if it exists."""
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertContains(response, obj.uploader_group.get_absolute_url())
+        self.assertContains(response, uploader_group.get_absolute_url())
 
     def test_table_classes(self):
         """Table classes are correct."""
@@ -312,13 +314,17 @@ class ResearchCenterDetailTest(TestCase):
         self.assertIn("tables", response.context_data)
         self.assertEqual(len(response.context_data["tables"]), 3)
         self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertEqual(len(response.context_data["tables"][0].data), 0)
         self.assertIsInstance(response.context_data["tables"][1], tables.AccountTable)
+        self.assertEqual(len(response.context_data["tables"][1].data), 0)
         self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
+        self.assertEqual(len(response.context_data["tables"][2].data), 0)
 
     def test_rc_member_table(self):
-        obj = self.model_factory.create()
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
         account = acm_factories.AccountFactory.create(verified=True)
-        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.member_group)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=member_group)
         other_account = acm_factories.AccountFactory.create(verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
@@ -328,9 +334,10 @@ class ResearchCenterDetailTest(TestCase):
         self.assertNotIn(other_account, table.data)
 
     def test_rc_uploader_table(self):
-        obj = self.model_factory.create()
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
         account = acm_factories.AccountFactory.create(verified=True)
-        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.uploader_group)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=uploader_group)
         other_account = acm_factories.AccountFactory.create(verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
@@ -493,9 +500,10 @@ class PartnerGroupDetailTest(TestCase):
         self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
 
     def test_member_table(self):
-        obj = self.model_factory.create()
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
         account = acm_factories.AccountFactory.create(verified=True)
-        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.member_group)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=member_group)
         other_account = acm_factories.AccountFactory.create(verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
@@ -505,9 +513,10 @@ class PartnerGroupDetailTest(TestCase):
         self.assertNotIn(other_account, table.data)
 
     def test_uploader_table(self):
-        obj = self.model_factory.create()
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
         account = acm_factories.AccountFactory.create(verified=True)
-        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.uploader_group)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=uploader_group)
         other_account = acm_factories.AccountFactory.create(verified=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))

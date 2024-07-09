@@ -7,8 +7,20 @@
   <ul>
     <li>Full name: {{ object.full_name }}</li>
     <li>Short name: {{ object.short_name }}</li>
-    <li>Member group: <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a></li>
-    <li>Uploader group: <a href="{{ object.uploader_group.get_absolute_url }}">{{ object.uploader_group }}</a></li>
+    <li>Member group:
+      {% if object.member_group %}
+        <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
+    <li>Uploader group:
+      {% if object.uploader_group %}
+        <a href="{{ object.uploader_group.get_absolute_url }}">{{ object.uploader_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
   </ul>
 {% endblock panel %}
 

@@ -47,6 +47,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The AnVIL group containing members from this Research Center.",
         related_name="research_center_of_members",
+        blank=True,
         null=True,
     )
 
@@ -55,6 +56,7 @@ class ResearchCenter(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The group that has write/upload access to workspaces associated with this Research Center.",
         related_name="research_center_of_uploaders",
+        blank=True,
         null=True,
     )
 
@@ -94,6 +96,7 @@ class PartnerGroup(TimeStampedModel, models.Model):
         help_text="The AnVIL group containing members from this Partner Group.",
         related_name="partner_group_of_members",
         null=True,
+        blank=True,
     )
 
     uploader_group = models.OneToOneField(
@@ -102,6 +105,7 @@ class PartnerGroup(TimeStampedModel, models.Model):
         help_text="The group that has write/upload access to workspaces associated with this Partner Group.",
         related_name="partner_group_of_uploaders",
         null=True,
+        blank=True,
     )
 
     history = HistoricalRecords()

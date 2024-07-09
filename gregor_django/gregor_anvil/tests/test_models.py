@@ -78,6 +78,16 @@ class ResearchCenterTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.ResearchCenter)
+
+    def test_model_saving_with_groups(self):
+        """Creation using the model constructor and .save() works."""
         member_group = ManagedGroupFactory.create()
         uploader_group = ManagedGroupFactory.create()
         instance = models.ResearchCenter(
@@ -86,6 +96,7 @@ class ResearchCenterTest(TestCase):
             member_group=member_group,
             uploader_group=uploader_group,
         )
+        instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.ResearchCenter)
 
@@ -128,13 +139,12 @@ class ResearchCenterTest(TestCase):
 
     def test_error_two_rcs_same_member_group(self):
         """Cannot have the same member group for two RCs."""
-        rc = factories.ResearchCenterFactory.create()
-        uploader_group = ManagedGroupFactory.create()
+        member_group = ManagedGroupFactory.create()
+        factories.ResearchCenterFactory.create(member_group=member_group)
         instance = factories.ResearchCenterFactory.build(
             full_name="Test name",
             short_name="TEST",
-            member_group=rc.member_group,
-            uploader_group=uploader_group,
+            member_group=member_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -145,13 +155,12 @@ class ResearchCenterTest(TestCase):
 
     def test_error_two_rcs_same_uploader_group(self):
         """Cannot have the same uploader group for two RCs."""
-        rc = factories.ResearchCenterFactory.create()
-        member_group = ManagedGroupFactory.create()
+        uploader_group = ManagedGroupFactory.create()
+        factories.ResearchCenterFactory.create(uploader_group=uploader_group)
         instance = factories.ResearchCenterFactory.build(
             full_name="Test name",
             short_name="TEST",
-            member_group=member_group,
-            uploader_group=rc.uploader_group,
+            uploader_group=uploader_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -484,6 +493,16 @@ class PartnerGroupTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
+        instance = models.PartnerGroup(
+            full_name="Test name",
+            short_name="TEST",
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.PartnerGroup)
+
+    def test_model_saving_with_groups(self):
+        """Creation using the model constructor and .save() works."""
         member_group = ManagedGroupFactory.create()
         uploader_group = ManagedGroupFactory.create()
         instance = models.PartnerGroup(
@@ -492,6 +511,7 @@ class PartnerGroupTest(TestCase):
             member_group=member_group,
             uploader_group=uploader_group,
         )
+        instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.PartnerGroup)
 
@@ -534,13 +554,12 @@ class PartnerGroupTest(TestCase):
 
     def test_error_two_groups_same_member_group(self):
         """Cannot have the same member group for two RCs."""
-        rc = factories.PartnerGroupFactory.create()
-        uploader_group = ManagedGroupFactory.create()
+        member_group = ManagedGroupFactory.create()
+        factories.PartnerGroupFactory.create(member_group=member_group)
         instance = factories.PartnerGroupFactory.build(
             full_name="Test name",
             short_name="TEST",
-            member_group=rc.member_group,
-            uploader_group=uploader_group,
+            member_group=member_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -551,13 +570,12 @@ class PartnerGroupTest(TestCase):
 
     def test_error_two_groups_same_uploader_group(self):
         """Cannot have the same uploader group for two RCs."""
-        rc = factories.PartnerGroupFactory.create()
-        member_group = ManagedGroupFactory.create()
+        uploader_group = ManagedGroupFactory.create()
+        factories.PartnerGroupFactory.create(uploader_group=uploader_group)
         instance = factories.PartnerGroupFactory.build(
             full_name="Test name",
             short_name="TEST",
-            member_group=member_group,
-            uploader_group=rc.uploader_group,
+            uploader_group=uploader_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
