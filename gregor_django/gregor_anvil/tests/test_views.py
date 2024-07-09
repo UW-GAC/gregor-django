@@ -474,12 +474,47 @@ class PartnerGroupDetailTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("partner_group_user_table", response.context_data)
-        table = response.context_data["partner_group_user_table"]
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
 
         self.assertIn(pg_user, table.data)
         self.assertNotIn(non_pg_user, table.data)
+
+    def test_table_classes(self):
+        """Table classes are correct."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertIsInstance(response.context_data["tables"][1], tables.AccountTable)
+        self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
+
+    def test_member_table(self):
+        obj = self.model_factory.create()
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.member_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_uploader_table(self):
+        obj = self.model_factory.create()
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=obj.uploader_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
 
 
 class PartnerGroupListTest(TestCase):
