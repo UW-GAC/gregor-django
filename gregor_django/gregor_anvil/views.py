@@ -35,12 +35,18 @@ class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMi
     model = models.ResearchCenter
 
     def get_tables(self):
-        members = Account.objects.filter(
-            groupaccountmembership__group=self.object.member_group,
-        )
-        uploaders = Account.objects.filter(
-            groupaccountmembership__group=self.object.uploader_group,
-        )
+        if self.object.member_group is None:
+            members = Account.objects.none()
+        else:
+            members = Account.objects.filter(
+                groupaccountmembership__group=self.object.member_group,
+            )
+        if self.object.uploader_group is None:
+            uploaders = Account.objects.none()
+        else:
+            uploaders = Account.objects.filter(
+                groupaccountmembership__group=self.object.uploader_group,
+            )
         return [
             UserTable(User.objects.filter(research_centers=self.object)),
             tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
@@ -61,12 +67,18 @@ class PartnerGroupDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixi
     model = models.PartnerGroup
 
     def get_tables(self):
-        members = Account.objects.filter(
-            groupaccountmembership__group=self.object.member_group,
-        )
-        uploaders = Account.objects.filter(
-            groupaccountmembership__group=self.object.uploader_group,
-        )
+        if self.object.member_group is None:
+            members = Account.objects.none()
+        else:
+            members = Account.objects.filter(
+                groupaccountmembership__group=self.object.member_group,
+            )
+        if self.object.uploader_group is None:
+            uploaders = Account.objects.none()
+        else:
+            uploaders = Account.objects.filter(
+                groupaccountmembership__group=self.object.uploader_group,
+            )
         return [
             UserTable(User.objects.filter(partner_groups=self.object)),
             tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
