@@ -88,6 +88,22 @@ class PartnerGroup(TimeStampedModel, models.Model):
     full_name = models.CharField(max_length=255, unique=True)
     """The full name of the Partner Group"""
 
+    member_group = models.OneToOneField(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The AnVIL group containing members from this Partner Group.",
+        related_name="partner_group_of_members",
+        null=True,
+    )
+
+    uploader_group = models.OneToOneField(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The group that has write/upload access to workspaces associated with this Partner Group.",
+        related_name="partner_group_of_uploaders",
+        null=True,
+    )
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -101,6 +117,12 @@ class PartnerGroup(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("gregor_anvil:partner_groups:detail", args=[self.pk])
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Members group and uploaders group must be different.
+        if self.member_group and self.uploader_group and self.member_group == self.uploader_group:
+            raise ValidationError("member_group and uploader_group must be different!")
 
 
 class UploadCycle(TimeStampedModel, models.Model):

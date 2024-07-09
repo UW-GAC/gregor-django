@@ -58,6 +58,14 @@ class PartnerGroupFactory(DjangoModelFactory):
 
     short_name = Faker("word")
     full_name = Faker("company")
+    member_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(lambda o: "{}_members".format(o.factory_parent.short_name)),
+    )
+    uploader_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(lambda o: "{}_uploaders".format(o.factory_parent.short_name)),
+    )
 
     class Meta:
         model = models.PartnerGroup
