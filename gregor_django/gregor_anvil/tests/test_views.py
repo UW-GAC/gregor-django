@@ -290,6 +290,19 @@ class ResearchCenterDetailTest(TestCase):
         self.assertIn(site_user, table.data)
         self.assertNotIn(non_site_user, table.data)
 
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.research_centers.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
     def test_link_to_member_group(self):
         """Response includes a link to the members group if it exists."""
         member_group = acm_factories.ManagedGroupFactory.create()
@@ -503,6 +516,19 @@ class PartnerGroupDetailTest(TestCase):
 
         self.assertIn(pg_user, table.data)
         self.assertNotIn(non_pg_user, table.data)
+
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.partner_groups.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
 
     def test_table_classes(self):
         """Table classes are correct."""

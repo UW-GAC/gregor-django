@@ -48,7 +48,7 @@ class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMi
                 groupaccountmembership__group=self.object.uploader_group,
             )
         return [
-            UserTable(User.objects.filter(research_centers=self.object)),
+            UserTable(User.objects.filter(is_active=True, research_centers=self.object)),
             tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
             tables.AccountTable(uploaders, exclude=("user__research_centers", "number_groups")),
         ]
@@ -80,7 +80,7 @@ class PartnerGroupDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixi
                 groupaccountmembership__group=self.object.uploader_group,
             )
         return [
-            UserTable(User.objects.filter(partner_groups=self.object)),
+            UserTable(User.objects.filter(is_active=True, partner_groups=self.object)),
             tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
             tables.AccountTable(uploaders, exclude=("user__research_centers", "number_groups")),
         ]
