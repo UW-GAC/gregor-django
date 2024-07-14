@@ -50,7 +50,7 @@ django==4.2.14
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==4.4.5
+django-debug-toolbar==4.4.6
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
