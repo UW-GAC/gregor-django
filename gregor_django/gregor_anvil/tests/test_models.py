@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceFactory
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -78,7 +78,25 @@ class ResearchCenterTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        instance = models.ResearchCenter(full_name="Test name", short_name="TEST")
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.ResearchCenter)
+
+    def test_model_saving_with_groups(self):
+        """Creation using the model constructor and .save() works."""
+        member_group = ManagedGroupFactory.create()
+        uploader_group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=member_group,
+            uploader_group=uploader_group,
+        )
+        instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.ResearchCenter)
 
@@ -102,6 +120,54 @@ class ResearchCenterTest(TestCase):
             instance2.full_clean()
         with self.assertRaises(IntegrityError):
             instance2.save()
+
+    def test_member_group_uploader_group_must_be_different(self):
+        """The same group cannot be used as the members group and uploaders group."""
+        group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=group,
+            uploader_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_error_two_rcs_same_member_group(self):
+        """Cannot have the same member group for two RCs."""
+        member_group = ManagedGroupFactory.create()
+        factories.ResearchCenterFactory.create(member_group=member_group)
+        instance = factories.ResearchCenterFactory.build(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=member_group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("member_group", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["member_group"]), 1)
+        self.assertIn("already exists", str(e.exception.error_dict["member_group"][0]))
+
+    def test_error_two_rcs_same_uploader_group(self):
+        """Cannot have the same uploader group for two RCs."""
+        uploader_group = ManagedGroupFactory.create()
+        factories.ResearchCenterFactory.create(uploader_group=uploader_group)
+        instance = factories.ResearchCenterFactory.build(
+            full_name="Test name",
+            short_name="TEST",
+            uploader_group=uploader_group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("uploader_group", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["uploader_group"]), 1)
+        self.assertIn("already exists", str(e.exception.error_dict["uploader_group"][0]))
 
 
 class UploadCycleTest(TestCase):
@@ -420,6 +486,103 @@ class UploadWorkspaceTest(TestCase):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+
+class PartnerGroupTest(TestCase):
+    """Tests for the ResearchCenter model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        instance = models.PartnerGroup(
+            full_name="Test name",
+            short_name="TEST",
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.PartnerGroup)
+
+    def test_model_saving_with_groups(self):
+        """Creation using the model constructor and .save() works."""
+        member_group = ManagedGroupFactory.create()
+        uploader_group = ManagedGroupFactory.create()
+        instance = models.PartnerGroup(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=member_group,
+            uploader_group=uploader_group,
+        )
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.PartnerGroup)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.PartnerGroupFactory.create(short_name="Test")
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "Test")
+
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.PartnerGroupFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_unique_short_name(self):
+        """Saving a model with a duplicate short name fails."""
+        factories.PartnerGroupFactory.create(short_name="FOO")
+        instance2 = models.PartnerGroup(short_name="FOO", full_name="full name")
+        with self.assertRaises(ValidationError):
+            instance2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance2.save()
+
+    def test_member_group_uploader_group_must_be_different(self):
+        """The same group cannot be used as the members group and uploaders group."""
+        group = ManagedGroupFactory.create()
+        instance = models.PartnerGroup(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=group,
+            uploader_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_error_two_groups_same_member_group(self):
+        """Cannot have the same member group for two RCs."""
+        member_group = ManagedGroupFactory.create()
+        factories.PartnerGroupFactory.create(member_group=member_group)
+        instance = factories.PartnerGroupFactory.build(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=member_group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("member_group", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["member_group"]), 1)
+        self.assertIn("already exists", str(e.exception.error_dict["member_group"][0]))
+
+    def test_error_two_groups_same_uploader_group(self):
+        """Cannot have the same uploader group for two RCs."""
+        uploader_group = ManagedGroupFactory.create()
+        factories.PartnerGroupFactory.create(uploader_group=uploader_group)
+        instance = factories.PartnerGroupFactory.build(
+            full_name="Test name",
+            short_name="TEST",
+            uploader_group=uploader_group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("uploader_group", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["uploader_group"]), 1)
+        self.assertIn("already exists", str(e.exception.error_dict["uploader_group"][0]))
 
 
 class PartnerUploadWorkspaceTest(TestCase):

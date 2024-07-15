@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Count, Q
 from django.views.generic import CreateView, DetailView, TemplateView
-from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
 
@@ -29,14 +29,29 @@ class ConsentGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView)
     table_class = tables.ConsentGroupTable
 
 
-class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
+class ResearchCenterDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `ResearchCenter`."""
 
     model = models.ResearchCenter
-    context_table_name = "site_user_table"
 
-    def get_table(self):
-        return UserTable(User.objects.filter(research_centers=self.object))
+    def get_tables(self):
+        if self.object.member_group is None:
+            members = Account.objects.none()
+        else:
+            members = Account.objects.filter(
+                groupaccountmembership__group=self.object.member_group,
+            )
+        if self.object.uploader_group is None:
+            uploaders = Account.objects.none()
+        else:
+            uploaders = Account.objects.filter(
+                groupaccountmembership__group=self.object.uploader_group,
+            )
+        return [
+            UserTable(User.objects.filter(is_active=True, research_centers=self.object)),
+            tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
+            tables.AccountTable(uploaders, exclude=("user__research_centers", "number_groups")),
+        ]
 
 
 class ResearchCenterList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
@@ -46,14 +61,29 @@ class ResearchCenterList(AnVILConsortiumManagerStaffViewRequired, SingleTableVie
     table_class = tables.ResearchCenterTable
 
 
-class PartnerGroupDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
+class PartnerGroupDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `PartnerGroup`."""
 
     model = models.PartnerGroup
-    context_table_name = "partner_group_user_table"
 
-    def get_table(self):
-        return UserTable(User.objects.filter(partner_groups=self.object))
+    def get_tables(self):
+        if self.object.member_group is None:
+            members = Account.objects.none()
+        else:
+            members = Account.objects.filter(
+                groupaccountmembership__group=self.object.member_group,
+            )
+        if self.object.uploader_group is None:
+            uploaders = Account.objects.none()
+        else:
+            uploaders = Account.objects.filter(
+                groupaccountmembership__group=self.object.uploader_group,
+            )
+        return [
+            UserTable(User.objects.filter(is_active=True, partner_groups=self.object)),
+            tables.AccountTable(members, exclude=("user__research_centers", "number_groups")),
+            tables.AccountTable(uploaders, exclude=("user__research_centers", "number_groups")),
+        ]
 
 
 class PartnerGroupList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):

@@ -18,6 +18,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from gregor_django.users.tables import UserTable
 from gregor_django.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
@@ -283,12 +284,96 @@ class ResearchCenterDetailTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("site_user_table", response.context_data)
-        table = response.context_data["site_user_table"]
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
 
         self.assertIn(site_user, table.data)
         self.assertNotIn(non_site_user, table.data)
+
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.research_centers.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
+    def test_link_to_member_group(self):
+        """Response includes a link to the members group if it exists."""
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, member_group.get_absolute_url())
+
+    def test_link_to_uploader_group(self):
+        """Response includes a link to the uploader group if it exists."""
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, uploader_group.get_absolute_url())
+
+    def test_table_classes(self):
+        """Table classes are correct."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertEqual(len(response.context_data["tables"][0].data), 0)
+        self.assertIsInstance(response.context_data["tables"][1], tables.AccountTable)
+        self.assertEqual(len(response.context_data["tables"][1].data), 0)
+        self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
+        self.assertEqual(len(response.context_data["tables"][2].data), 0)
+
+    def test_rc_member_table(self):
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=member_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_member_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 0)
+
+    def test_rc_uploader_table(self):
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=uploader_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_upload_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 0)
 
 
 class ResearchCenterListTest(TestCase):
@@ -425,12 +510,78 @@ class PartnerGroupDetailTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("partner_group_user_table", response.context_data)
-        table = response.context_data["partner_group_user_table"]
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
 
         self.assertIn(pg_user, table.data)
         self.assertNotIn(non_pg_user, table.data)
+
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.partner_groups.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
+    def test_table_classes(self):
+        """Table classes are correct."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 3)
+        self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertIsInstance(response.context_data["tables"][1], tables.AccountTable)
+        self.assertIsInstance(response.context_data["tables"][2], tables.AccountTable)
+
+    def test_member_table(self):
+        member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=member_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_member_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 0)
+
+    def test_uploader_table(self):
+        uploader_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(uploader_group=uploader_group)
+        account = acm_factories.AccountFactory.create(verified=True)
+        acm_factories.GroupAccountMembershipFactory.create(account=account, group=uploader_group)
+        other_account = acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_upload_table_group_not_set(self):
+        obj = self.model_factory.create()
+        acm_factories.AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 0)
 
 
 class PartnerGroupListTest(TestCase):
