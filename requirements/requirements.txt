@@ -61,7 +61,7 @@ django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-constance==3.1.0
     # via -r requirements/requirements.in
-django-crispy-forms==2.2
+django-crispy-forms==2.3
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
