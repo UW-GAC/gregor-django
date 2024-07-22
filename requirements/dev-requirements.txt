@@ -22,7 +22,7 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-certifi==2023.7.22
+certifi==2024.7.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
