@@ -18,10 +18,8 @@ build==1.0.3
     # via pip-tools
 cachetools==5.3.2
     # via google-auth
-certifi==2023.7.22
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+certifi==2024.7.4
+    # via requests
 cffi==1.16.0
     # via
     #   argon2-cffi-bindings
@@ -38,7 +36,7 @@ cryptography==42.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.13
+django==4.2.14
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -61,7 +59,7 @@ django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-constance==3.1.0
     # via -r requirements/requirements.in
-django-crispy-forms==2.2
+django-crispy-forms==2.3
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -97,9 +95,7 @@ fontawesomefree==6.5.1
 google-auth==2.11.0
     # via django-anvil-consortium-manager
 idna==3.7
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+    # via requests
 importlib-metadata==6.8.0
     # via build
 jsonapi-requests==0.7.0
@@ -131,9 +127,7 @@ pyasn1-modules==0.3.0
 pycparser==2.21
     # via cffi
 pyjwt[crypto]==2.8.0
-    # via
-    #   -r requirements/requirements.in
-    #   django-allauth
+    # via django-allauth
 pyproject-hooks==1.0.0
     # via
     #   build
@@ -148,7 +142,6 @@ pytz==2023.4
     #   django-dbbackup
 requests==2.32.3
     # via
-    #   -r requirements/requirements.in
     #   django-allauth
     #   django-anvil-consortium-manager
     #   jsonapi-requests
@@ -159,10 +152,8 @@ rsa==4.9
     # via google-auth
 six==1.16.0
     # via google-auth
-sqlparse==0.5.0
-    # via
-    #   -r requirements/requirements.in
-    #   django
+sqlparse==0.5.1
+    # via django
 tablib==3.6.1
     # via -r requirements/requirements.in
 tenacity==8.2.3
@@ -177,14 +168,12 @@ tomli==2.0.1
 typing-extensions==4.8.0
     # via asgiref
 urllib3==2.2.2
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+    # via requests
 wheel==0.42.0
     # via pip-tools
 whitenoise==6.7.0
     # via -r requirements/requirements.in
-zipp==3.17.0
+zipp==3.19.1
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
