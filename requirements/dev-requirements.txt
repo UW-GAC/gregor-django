@@ -22,7 +22,7 @@ backports-zoneinfo==0.2.1
     # via
     #   -c requirements/requirements.txt
     #   django
-certifi==2023.7.22
+certifi==2024.7.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -149,7 +149,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.5.2
+ruff==0.5.4
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -226,7 +226,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.3
     # via -r requirements/dev-requirements.in
-zipp==3.17.0
+zipp==3.19.1
     # via
     #   -c requirements/requirements.txt
     #   importlib-metadata
