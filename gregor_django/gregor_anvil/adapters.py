@@ -119,8 +119,8 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ReleaseWorkspace."""
 
     type = "release"
-    name = "Release workspace"
-    description = "Workspaces for release to the general scientific community via dbGaP"
+    name = "Release prep workspace"
+    description = "Workspaces for preparing releases for the general scientific community via dbGaP"
     list_table_class_view = tables.ReleaseWorkspaceTable
     list_table_class_staff_view = tables.ReleaseWorkspaceTable
     workspace_data_model = models.ReleaseWorkspace
