@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/dev-requirements.in
 #
-alabaster==0.7.13
+alabaster==1.0.0
     # via sphinx
 asgiref==3.8.1
     # via
@@ -147,7 +147,7 @@ six==1.16.0
     #   livereload
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.1.2
+sphinx==8.0.2
     # via
     #   -r requirements/dev-requirements.in
     #   sphinx-autobuild
@@ -163,7 +163,7 @@ sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==1.0.3
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.5
+sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sqlparse==0.5.1
     # via
@@ -180,6 +180,7 @@ tomli==2.0.1
     #   ipdb
     #   mypy
     #   pylint
+    #   sphinx
 tomlkit==0.12.3
     # via pylint
 tornado==6.4.1
