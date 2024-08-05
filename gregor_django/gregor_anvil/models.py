@@ -249,7 +249,7 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
-    """A model to track a workspace for release to the scientific community."""
+    """A model to track a workspace for preparing data releases for the scientific community."""
 
     phs = 3047
     """dbGaP-assigned phs for the GREGoR study."""
@@ -285,6 +285,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
                 fields=["consent_group", "upload_cycle"],
             ),
         ]
+        verbose_name = "release prep workspace"
 
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{p}".format(phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set)
