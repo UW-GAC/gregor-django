@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.11.0
+mypy==1.11.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
