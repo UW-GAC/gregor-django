@@ -1,7 +1,13 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
+from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
-from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
+from anvil_consortium_manager.models import (
+    GroupGroupMembership,
+    ManagedGroup,
+    WorkspaceGroupSharing,
+)
+from anvil_consortium_manager.tables import ManagedGroupStaffTable
 from django.conf import settings
 from django.db.models import Q
 
@@ -75,6 +81,26 @@ class AccountAdapter(BaseAccountAdapter):
         else:
             name = "---"
         return "{} ({})".format(name, account.email)
+
+
+class ManagedGroupAdapter(BaseManagedGroupAdapter):
+    """Adapter for ManagedGroups."""
+
+    list_table_class = ManagedGroupStaffTable
+
+    def after_anvil_create(self, managed_group):
+        super().after_anvil_create(managed_group)
+        # Add the ADMINs group as an admin of the auth domain.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        membership = GroupGroupMembership.objects.create(
+            parent_group=managed_group,
+            child_group=admins_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        membership.anvil_create()
 
 
 class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):

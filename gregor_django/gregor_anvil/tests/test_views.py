@@ -2093,3 +2093,50 @@ class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.ExchangeWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.research_center, research_center)
+
+
+class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for custom ManagedGroup behavior."""
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:managed_groups:new", args=args)
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        # Create the admins group.
+        self.admins_group = acm_factories.ManagedGroupFactory.create(name="TEST_GREGOR_DCC_ADMINS")
+
+    def test_cc_admins_membership(self):
+        """The after_anvil_create method is run after a managed group is created."""
+        # API response for group creation.
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/test-group"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201)
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + "/api/groups/v1/test-group/admin/TEST_GREGOR_DCC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # Submit the form to django.
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"name": "test-group"})
+        self.assertEqual(response.status_code, 302)
+        # Check that the admin group was added.
+        new_group = acm_models.ManagedGroup.objects.latest("pk")
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, new_group)
+        self.assertEqual(membership.child_group, self.admins_group)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)

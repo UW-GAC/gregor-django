@@ -3,6 +3,7 @@ from anvil_consortium_manager.adapters.default import DefaultWorkspaceAdapter
 from anvil_consortium_manager.models import Account, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
+    GroupGroupMembership,
     ManagedGroupFactory,
     WorkspaceFactory,
     WorkspaceGroupSharingFactory,
@@ -239,3 +240,55 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(sharing.group, admins_group)
         self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
         self.assertTrue(sharing.can_compute)
+
+
+class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the custom PRIMED ManagedGroupAdapter."""
+
+    def setUp(self):
+        super().setUp()
+        self.adapter = adapters.ManagedGroupAdapter()
+
+    def test_after_anvil_create(self):
+        admins_group = ManagedGroupFactory.create(name="TEST_GREGOR_DCC_ADMINS")
+        managed_group = ManagedGroupFactory.create(name="test-group")
+        # API response for PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + "/api/groups/v1/test-group/admin/TEST_GREGOR_DCC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(managed_group)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, managed_group)
+        self.assertEqual(membership.child_group, admins_group)
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    def test_after_anvil_create_different_admins_group(self):
+        admins_group = ManagedGroupFactory.create(name="foobar")
+        managed_group = ManagedGroupFactory.create(name="test-group")
+        # API response for PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + "/api/groups/v1/test-group/admin/foobar@firecloud.org",
+            status=204,
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(managed_group)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, managed_group)
+        self.assertEqual(membership.child_group, admins_group)
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+
+    def test_after_anvil_create_no_admins_group(self):
+        managed_group = ManagedGroupFactory.create(name="test-group")
+        # Run the adapter method.
+        self.adapter.after_anvil_create(managed_group)
+        # No WorkspaceGroupSharing objects were created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
