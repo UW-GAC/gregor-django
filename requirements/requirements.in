@@ -33,7 +33,7 @@ django-extensions  # https://github.com/django-extensions/django-extensions
 # Bootstrap5 templates for crispy-forms
 crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5
 
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.23
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.25
 # Simple history - model history tracking
 django-simple-history
 
