@@ -1,9 +1,8 @@
 import responses
 from anvil_consortium_manager.adapters.default import DefaultWorkspaceAdapter
-from anvil_consortium_manager.models import Account, WorkspaceGroupSharing
+from anvil_consortium_manager.models import Account, GroupGroupMembership, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
-    GroupGroupMembership,
     ManagedGroupFactory,
     WorkspaceFactory,
     WorkspaceGroupSharingFactory,
@@ -267,7 +266,7 @@ class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.child_group, admins_group)
         self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
-    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
     def test_after_anvil_create_different_admins_group(self):
         admins_group = ManagedGroupFactory.create(name="foobar")
         managed_group = ManagedGroupFactory.create(name="test-group")
