@@ -1161,6 +1161,8 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "upload"
+        # Create the admins group.
+        self.admins_group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1183,6 +1185,23 @@ class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             url,
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        # API response for GREGOR admins workspace owner.
+        acls = [
+            {
+                "email": "TEST_GREGOR_DCC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -1401,6 +1420,8 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "resource"
+        # Create the admins group.
+        self.admins_group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1420,6 +1441,23 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             url,
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        # API response for GREGOR admins workspace owner.
+        acls = [
+            {
+                "email": "TEST_GREGOR_DCC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -1512,6 +1550,8 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
+        # Create the admins group.
+        self.admins_group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1531,6 +1571,23 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             url,
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        # API response for GREGOR admins workspace owner.
+        acls = [
+            {
+                "email": "TEST_GREGOR_DCC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -1974,6 +2031,8 @@ class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "exchange"
+        # Create the admins group.
+        self.admins_group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1994,6 +2053,23 @@ class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             url,
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        # API response for GREGOR admins workspace owner.
+        acls = [
+            {
+                "email": "TEST_GREGOR_DCC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         self.client.force_login(self.user)
         response = self.client.post(

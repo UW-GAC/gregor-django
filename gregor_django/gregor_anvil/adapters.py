@@ -77,7 +77,7 @@ class AccountAdapter(BaseAccountAdapter):
         return "{} ({})".format(name, account.email)
 
 
-class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
+class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for UploadWorkspaces."""
 
     type = "upload"
@@ -106,7 +106,7 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
         return queryset
 
 
-class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
+class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for PartnerUploadWorkspaces."""
 
     type = "partner_upload"
@@ -121,7 +121,7 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
 
 
-class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
@@ -137,7 +137,7 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
+class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExampleWorkspaces."""
 
     type = "template"
@@ -151,7 +151,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
+class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for CombinedConsortiumDataWorkspace."""
 
     type = "combined_consortium"
@@ -165,7 +165,7 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
+class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ReleaseWorkspace."""
 
     type = "release"
@@ -179,7 +179,7 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
+class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessingWorkspace."""
 
     type = "dcc_processing"
@@ -193,7 +193,7 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
+class DCCProcessedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessedDataWorkspace."""
 
     type = "dcc_processed_data"
@@ -207,7 +207,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
+class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExchangeWorkspaces."""
 
     type = "exchange"
