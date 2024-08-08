@@ -5,12 +5,12 @@
 #    pip-compile requirements/requirements.in
 #
 argon2-cffi==23.1.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 asgiref==3.8.1
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   django
 build==1.0.3
     # via pip-tools
@@ -28,15 +28,15 @@ click==8.1.7
     # via pip-tools
 crispy-bootstrap5==2024.2
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   django-anvil-consortium-manager
 cryptography==42.0.4
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.14
+django==4.2.15
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   crispy-bootstrap5
     #   django-allauth
     #   django-anvil-consortium-manager
@@ -50,41 +50,41 @@ django==4.2.14
     #   django-simple-history
     #   django-tables2
 django-allauth==0.54.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.25
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-constance==3.1.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-crispy-forms==2.3
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
 django-dbbackup==4.1.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-environ==0.10.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-extensions==3.2.1
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
 django-login-required-middleware==0.9.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-maintenance-mode==0.21.1
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-model-utils==4.5.1
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 django-picklefield==3.2
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   django-constance
 django-simple-history==3.7.0
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   django-anvil-consortium-manager
 django-tables2==2.7.0
     # via django-anvil-consortium-manager
@@ -95,21 +95,21 @@ google-auth==2.11.0
 idna==3.7
     # via requests
 mysqlclient==2.2.4
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 networkx==3.1
     # via django-anvil-consortium-manager
 numpy==1.24.4
     # via django-anvil-consortium-manager
 oauthlib==3.2.2
     # via
-    #   -r requirements/requirements.in
+    #   -r requirements.in
     #   requests-oauthlib
 packaging==23.2
     # via
     #   build
     #   plotly
 pip-tools==7.4.1
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
 pyasn1==0.4.8
@@ -161,7 +161,7 @@ urllib3==2.2.2
 wheel==0.42.0
     # via pip-tools
 whitenoise==6.7.0
-    # via -r requirements/requirements.in
+    # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
