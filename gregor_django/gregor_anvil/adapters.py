@@ -26,6 +26,35 @@ class WorkspaceAdminSharingAdapterMixin:
         )
         sharing.anvil_create_or_update()
 
+    def after_anvil_import(self, workspace):
+        super().after_anvil_import(workspace)
+        # # Check if the workspace is already shared with the ADMINs group.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        try:
+            sharing = WorkspaceGroupSharing.objects.get(
+                workspace=workspace,
+                group=admins_group,
+            )
+        except WorkspaceGroupSharing.DoesNotExist:
+            sharing = WorkspaceGroupSharing.objects.create(
+                workspace=workspace,
+                group=admins_group,
+                access=WorkspaceGroupSharing.OWNER,
+                can_compute=True,
+            )
+            sharing.save()
+            sharing.anvil_create_or_update()
+        else:
+            # If the existing sharing record exists, make sure it has the correct permissions.
+            if not sharing.can_compute or sharing.access != WorkspaceGroupSharing.OWNER:
+                sharing.can_compute = True
+                sharing.access = WorkspaceGroupSharing.OWNER
+                sharing.save()
+                sharing.anvil_create_or_update()
+
 
 class AccountAdapter(BaseAccountAdapter):
     """Custom account adapter for PRIMED."""
