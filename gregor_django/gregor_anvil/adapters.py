@@ -1,9 +1,30 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
+from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
+from django.conf import settings
 from django.db.models import Q
 
 from . import filters, forms, models, tables
+
+
+class WorkspaceAdminSharingAdapterMixin:
+    """Helper class to share workspaces with the GREGOR_DCC_ADMINs group."""
+
+    def after_anvil_create(self, workspace):
+        super().after_anvil_create(workspace)
+        # Share the workspace with the ADMINs group as an owner.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        sharing = WorkspaceGroupSharing.objects.create(
+            workspace=workspace,
+            group=admins_group,
+            access=WorkspaceGroupSharing.OWNER,
+            can_compute=True,
+        )
+        sharing.anvil_create_or_update()
 
 
 class AccountAdapter(BaseAccountAdapter):
