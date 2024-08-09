@@ -1,9 +1,65 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
+from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
+from anvil_consortium_manager.models import (
+    GroupGroupMembership,
+    ManagedGroup,
+    WorkspaceGroupSharing,
+)
+from anvil_consortium_manager.tables import ManagedGroupStaffTable
+from django.conf import settings
 from django.db.models import Q
 
 from . import filters, forms, models, tables
+
+
+class WorkspaceAdminSharingAdapterMixin:
+    """Helper class to share workspaces with the GREGOR_DCC_ADMINs group."""
+
+    def after_anvil_create(self, workspace):
+        super().after_anvil_create(workspace)
+        # Share the workspace with the ADMINs group as an owner.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        sharing = WorkspaceGroupSharing.objects.create(
+            workspace=workspace,
+            group=admins_group,
+            access=WorkspaceGroupSharing.OWNER,
+            can_compute=True,
+        )
+        sharing.anvil_create_or_update()
+
+    def after_anvil_import(self, workspace):
+        super().after_anvil_import(workspace)
+        # # Check if the workspace is already shared with the ADMINs group.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        try:
+            sharing = WorkspaceGroupSharing.objects.get(
+                workspace=workspace,
+                group=admins_group,
+            )
+        except WorkspaceGroupSharing.DoesNotExist:
+            sharing = WorkspaceGroupSharing.objects.create(
+                workspace=workspace,
+                group=admins_group,
+                access=WorkspaceGroupSharing.OWNER,
+                can_compute=True,
+            )
+            sharing.save()
+            sharing.anvil_create_or_update()
+        else:
+            # If the existing sharing record exists, make sure it has the correct permissions.
+            if not sharing.can_compute or sharing.access != WorkspaceGroupSharing.OWNER:
+                sharing.can_compute = True
+                sharing.access = WorkspaceGroupSharing.OWNER
+                sharing.save()
+                sharing.anvil_create_or_update()
 
 
 class AccountAdapter(BaseAccountAdapter):
@@ -27,7 +83,27 @@ class AccountAdapter(BaseAccountAdapter):
         return "{} ({})".format(name, account.email)
 
 
-class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
+class ManagedGroupAdapter(BaseManagedGroupAdapter):
+    """Adapter for ManagedGroups."""
+
+    list_table_class = ManagedGroupStaffTable
+
+    def after_anvil_create(self, managed_group):
+        super().after_anvil_create(managed_group)
+        # Add the ADMINs group as an admin of the auth domain.
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
+        membership = GroupGroupMembership.objects.create(
+            parent_group=managed_group,
+            child_group=admins_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        membership.anvil_create()
+
+
+class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for UploadWorkspaces."""
 
     type = "upload"
@@ -56,7 +132,7 @@ class UploadWorkspaceAdapter(BaseWorkspaceAdapter):
         return queryset
 
 
-class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
+class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for PartnerUploadWorkspaces."""
 
     type = "partner_upload"
@@ -71,7 +147,7 @@ class PartnerUploadWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
 
 
-class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
@@ -87,7 +163,7 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
+class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExampleWorkspaces."""
 
     type = "template"
@@ -101,7 +177,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
+class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for CombinedConsortiumDataWorkspace."""
 
     type = "combined_consortium"
@@ -115,12 +191,12 @@ class CombinedConsortiumDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
+class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ReleaseWorkspace."""
 
     type = "release"
-    name = "Release workspace"
-    description = "Workspaces for release to the general scientific community via dbGaP"
+    name = "Release prep workspace"
+    description = "Workspaces for preparing releases for the general scientific community via dbGaP"
     list_table_class_view = tables.ReleaseWorkspaceTable
     list_table_class_staff_view = tables.ReleaseWorkspaceTable
     workspace_data_model = models.ReleaseWorkspace
@@ -129,7 +205,7 @@ class ReleaseWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
+class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessingWorkspace."""
 
     type = "dcc_processing"
@@ -143,7 +219,7 @@ class DCCProcessingWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
+class DCCProcessedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessedDataWorkspace."""
 
     type = "dcc_processed_data"
@@ -157,7 +233,7 @@ class DCCProcessedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
 
 
-class ExchangeWorkspaceAdapter(BaseWorkspaceAdapter):
+class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExchangeWorkspaces."""
 
     type = "exchange"

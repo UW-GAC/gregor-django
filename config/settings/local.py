@@ -65,3 +65,4 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES += [  # noqa F405
 # ------------------------------------------------------------------------------
 # Specify the path to the service account to use for managing access on AnVIL.
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
+ANVIL_DCC_ADMINS_GROUP_NAME = env("ANVIL_DCC_ADMINS_GROUP_NAME", default="DEV_GREGOR_DCC_ADMINS")
