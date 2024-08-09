@@ -1,6 +1,9 @@
-# GREGOR_APPS crontab
-# nightly except sunday at 00:00
-0 0 * * MON-SAT . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --email gregorconsortium@uw.edu --errors-only >> cron.log 2>&1
+# GREGOR_APPS crontab - maintained in git gregor_apps.cron
+# Send errors to gregorweb email
+MAILTO="gregorweb@uw.edu"
 
-# sunday night at 00:00
-0 0 * * SUN . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --email gregorconsortium@uw.edu >> cron.log 2>&1
+# nightly except sunday at 02:00
+0 0 * * MON-SAT . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --email gregorconsortium@uw.edu --errors-only >> cron.log
+
+# sunday night at 02:00
+0 0 * * SUN . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --email gregorconsortium@uw.edu >> cron.log
