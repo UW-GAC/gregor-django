@@ -35,3 +35,4 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
 # template tests require debug to be set
 # get the last templates entry and set debug option
 TEMPLATES[-1]["OPTIONS"]["debug"] = True  # noqa
+ANVIL_DCC_ADMINS_GROUP_NAME = "TEST_GREGOR_DCC_ADMINS"

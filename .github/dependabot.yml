@@ -4,8 +4,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "sunday"
+      interval: "daily"
 
   # Enable version updates for Python/Pip - Production
   - package-ecosystem: "pip"
@@ -14,8 +13,7 @@ updates:
     directory: "/"
     # Check for updates to GitHub Actions every weekday
     schedule:
-      interval: "weekly"
-      day: "sunday"
+      interval: "daily"
     allow:
       # Allow only direct dependencies - should be ok with pip-sync?
       - dependency-type: "direct"
