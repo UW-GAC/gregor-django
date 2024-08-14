@@ -14,7 +14,7 @@ from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2, OAuth2Session
 
 from gregor_django.drupal_oauth_provider.provider import CustomProvider
-from gregor_django.gregor_anvil.audit import GREGORAudit, GREGORAuditResult
+from gregor_django.gregor_anvil.audit.base import GREGORAudit, GREGORAuditResult
 from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 
 logger = logging.getLogger(__name__)
