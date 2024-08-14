@@ -7,3 +7,6 @@ MAILTO="gregorweb@uw.edu"
 
 # sunday night at 02:00
 0 2 * * SUN . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --email gregorconsortium@uw.edu >> cron.log
+
+# Nightly user data audit
+0 2 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py sync-drupal-data --update --email gregorweb@uw.edu >> cron.log
