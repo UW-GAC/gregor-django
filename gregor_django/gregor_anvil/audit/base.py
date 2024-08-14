@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod, abstractproperty
 
 
-class GREGORAuditResult(ABC):
+class GREGoRAuditResult(ABC):
     """Abstract base class to hold an audit result for a single check.
 
     Subclasses of this class are typically also dataclasses. They can define any number of
     fields that track information about an audit and its result. The companion RPIMEDAudit
     class `verified`, `needs_action`, and `errors` attributes should store lists of
-    GREGORAuditResult instances.
+    GREGoRAuditResult instances.
 
     Typical usage:
         @dataclass
-        class MyAuditResult(GREGORAuditResult):
+        class MyAuditResult(GREGoRAuditResult):
 
             some_value: str
 
@@ -27,7 +27,7 @@ class GREGORAuditResult(ABC):
         ...  # pragma: no cover
 
 
-class GREGORAudit(ABC):
+class GREGoRAudit(ABC):
     """Abstract base class for GREGOR audit classes.
 
     This class is intended to be subclassed in order to store all results for a GREGOR audit.
@@ -38,14 +38,14 @@ class GREGORAudit(ABC):
     attributes.
 
     Attributes:
-        verified: A list of GREGORAuditResult subclasses instances that have been verified.
-        needs_action: A list of GREGORAuditResult subclasses instances that some sort of need action.
-        errors: A list of GREGORAuditResult subclasses instances where an error has been detected.
+        verified: A list of GREGoRAuditResult subclasses instances that have been verified.
+        needs_action: A list of GREGoRAuditResult subclasses instances that some sort of need action.
+        errors: A list of GREGoRAuditResult subclasses instances where an error has been detected.
         completed: A boolean indicator of whether the audit has been run.
     """
 
     # TODO: Add add_verified_result, add_needs_action_result, add_error_result methods. They should
-    # verify that the result is an instance of GREGORAuditResult (subclass).
+    # verify that the result is an instance of GREGoRAuditResult (subclass).
 
     @abstractproperty
     def results_table_class(self):
@@ -65,7 +65,7 @@ class GREGORAudit(ABC):
 
         This method should typically loop over a set of instances or checks, and store the
         results in the `verified`, `needs_action`, and `errors` attributes. The results should
-        be instances of GREGORAuditResult subclasses. This method should not be called directly.
+        be instances of GREGoRAuditResult subclasses. This method should not be called directly.
 
         When deciding which list to store a result in, consider the following:
         - verified: The result is as expected and no action is needed.
