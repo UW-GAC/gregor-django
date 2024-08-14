@@ -1,3 +1,5 @@
+import sys
+
 from .production import *  # noqa
 from .production import LOGGING, env  # noqa
 
@@ -11,3 +13,5 @@ try:
     LOGGING["handlers"]["console"]["filename"] = "/var/log/django/gregor-app-dev.log"
 except ImportError:
     LOGGING["handlers"]["console"]["class"] = "logging.StreamHandler"
+    # Send stream logging to stdout so we can redirect exceptions to email
+    LOGGING["handlers"]["console"]["stream"] = sys.stdout
