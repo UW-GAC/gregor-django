@@ -1,7 +1,8 @@
 from datetime import timedelta
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, LazyAttribute, Sequence, SubFactory
+from django.utils import timezone
+from factory import Faker, LazyAttribute, Sequence, SubFactory, Trait
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -39,6 +40,18 @@ class UploadCycleFactory(DjangoModelFactory):
 
     class Params:
         duration = 90
+        is_past = Trait(
+            start_date=timezone.localdate() - timedelta(days=100),
+            end_date=timezone.localdate() - timedelta(days=10),
+        )
+        is_current = Trait(
+            start_date=timezone.localdate() - timedelta(days=45),
+            end_date=timezone.localdate() - timedelta(days=45),
+        )
+        is_future = Trait(
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() - timedelta(days=100),
+        )
 
     class Meta:
         model = models.UploadCycle
