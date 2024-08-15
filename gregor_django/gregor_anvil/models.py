@@ -217,6 +217,13 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     """The UploadCycle associated with this workspace."""
 
+    date_qc_completed = models.DateTimeField(
+        help_text="Date that QC was completed for this workspace. If null, QC is not complete.",
+        blank=True,
+        null=True,
+        default=None,
+    )
+
     class Meta:
         constraints = [
             # Model uniqueness.

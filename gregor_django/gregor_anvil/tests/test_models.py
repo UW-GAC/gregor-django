@@ -454,6 +454,7 @@ class UploadWorkspaceTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance, models.UploadWorkspace)
+        self.assertIsNone(instance.date_qc_completed)
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
