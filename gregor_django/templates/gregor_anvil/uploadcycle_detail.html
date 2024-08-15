@@ -16,6 +16,14 @@
     <li>Cycle: {{ object.cycle }}</li>
     <li>Start date: {{ object.start_date }}</li>
     <li>End date: {{ object.end_date }}</li>
+    <li>
+      Ready for compute:
+      {% if object.is_ready_for_compute %}
+      <i style="color:green;" class="ps-1 bi bi-check-circle-fill"></i> Yes
+      {% else %}
+      <i style="color:red;" class="ps-1 bi bi-x-circle-fill"></i> No
+      {% endif %}
+    </li>
   </ul>
 {% endblock panel %}
 

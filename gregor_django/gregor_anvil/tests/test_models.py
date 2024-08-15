@@ -183,6 +183,7 @@ class UploadCycleTest(TestCase):
         instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.UploadCycle)
+        self.assertEqual(instance.is_ready_for_compute, False)
 
     def test_model_saving_with_note(self):
         """Creation using the model constructor and .save() works."""
@@ -380,6 +381,14 @@ class UploadCycleTest(TestCase):
         self.assertIn(workspace_2, included_workspaces)
         self.assertIn(workspace_3, included_workspaces)
         self.assertNotIn(workspace_4, included_workspaces)
+
+    def test_is_ready_for_compute(self):
+        """UploadCycle is ready for compute if all PartnerUploadWorkspaces have date_completed."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        self.assertFalse(upload_cycle.is_ready_for_compute)
+        upload_cycle.is_ready_for_compute = True
+        upload_cycle.save()
+        self.assertEqual(upload_cycle.is_ready_for_compute, True)
 
 
 class UploadWorkspaceTest(TestCase):
