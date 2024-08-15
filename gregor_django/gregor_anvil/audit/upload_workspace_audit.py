@@ -4,7 +4,6 @@ import django_tables2 as tables
 from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
 from django.db.models import Q, QuerySet
-from django.utils import timezone
 
 from ..models import UploadWorkspace
 
@@ -19,8 +18,8 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
     workspace: UploadWorkspace
     note: str
     managed_group: ManagedGroup
-    is_shared: bool
     action: str = None
+    current_sharing_instance: WorkspaceGroupSharing = None
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -43,6 +42,7 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
             "note": self.note,
             "action": self.action,
             "action_url": self.get_action_url(),
+            "current_sharing_instance": self.current_sharing_instance,
         }
         return row
 
@@ -51,7 +51,7 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
 class VerifiedShared(UploadWorkspaceAuditResult):
     """Audit results class for when Sharing has been verified."""
 
-    has_Sharing: bool = True
+    is_shared: bool = True
 
     def __str__(self):
         return f"Verified sharing: {self.note}"
@@ -61,28 +61,61 @@ class VerifiedShared(UploadWorkspaceAuditResult):
 class VerifiedNotShared(UploadWorkspaceAuditResult):
     """Audit results class for when no Sharing has been verified."""
 
-    has_Sharing: bool = False
+    is_shared: bool = False
 
     def __str__(self):
         return f"Verified not shared: {self.note}"
 
 
 @dataclass
-class Share(UploadWorkspaceAuditResult):
-    """Audit results class for when Sharing should be granted."""
+class ShareAsReader(UploadWorkspaceAuditResult):
+    """Audit results class for when Sharing should be granted as a reader."""
 
-    has_Sharing: bool = False
-    action: str = "Share"
+    is_shared: bool = False
+    action: str = "Share as reader"
 
     def __str__(self):
-        return f"Share: {self.note}"
+        return f"Share as reader: {self.note}"
+
+
+@dataclass
+class ShareAsWriter(UploadWorkspaceAuditResult):
+    """Audit results class for when Sharing should be granted as a writer."""
+
+    is_shared: bool = False
+    action: str = "Share as writer"
+
+    def __str__(self):
+        return f"Share as writer: {self.note}"
+
+
+@dataclass
+class ShareAsOwner(UploadWorkspaceAuditResult):
+    """Audit results class for when Sharing should be granted as an owner."""
+
+    is_shared: bool = False
+    action: str = "Share as owner"
+
+    def __str__(self):
+        return f"Share as owner: {self.note}"
+
+
+@dataclass
+class ShareWithCompute(UploadWorkspaceAuditResult):
+    """Audit results class for when Sharing should be granted with compute access."""
+
+    is_shared: bool = False
+    action: str = "Share with compute"
+
+    def __str__(self):
+        return f"Share with compute: {self.note}"
 
 
 @dataclass
 class StopSharing(UploadWorkspaceAuditResult):
     """Audit results class for when Sharing should be removed for a known reason."""
 
-    has_Sharing: bool = True
+    is_shared: bool = True
     action: str = "Stop sharing"
 
     def __str__(self):
@@ -104,6 +137,7 @@ class UploadWorkspaceAuditTable(tables.Table):
     is_shared = tables.Column()
     note = tables.Column()
     action = tables.Column()
+    current_sharing_instance = tables.Column(linkify=True)
     # action = tables.TemplateColumn(template_name="gregor_anvil/snippets/upload_workspace_audit_action_button.html")
 
     class Meta:
@@ -113,7 +147,13 @@ class UploadWorkspaceAuditTable(tables.Table):
 class UploadWorkspaceAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace audit."""
 
-    CURRENT_CYCLE_RC_MEMBER_GROUP = "RC member group has access during current upload cycle."
+    # Reasons for access/sharing.
+    RC_MEMBERS_GROUP_AS_READER = "RC member group should have read access."
+    RC_UPLOADER_GROUP_AS_READER = "RC upload group should have read access to past cycles."
+    RC_UPLOADER_GROUP_AS_WRITER = "RC upload group should have write access for current and future cycles."
+    RC_UPLOADER_GROUP_WITH_COMPUTE = "RC upload group should be able to run compute for the current cycle."
+
+    # Other errors
 
     results_table_class = UploadWorkspaceAuditTable
 
@@ -154,46 +194,46 @@ class UploadWorkspaceAudit(GREGoRAudit):
 
     def audit_workspace_and_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and ManagedGroup."""
-        # Check if the workspace is from a past, current, or future upload cycle.
-        if upload_workspace.upload_cycle.start_date > timezone.localdate():
-            self._audit_workspace_and_group_for_future_upload_cycle(upload_workspace, managed_group)
-        elif upload_workspace.upload_cycle.end_date >= timezone.localdate():
-            self._audit_workspace_and_group_for_current_upload_cycle(upload_workspace, managed_group)
-        elif upload_workspace.upload_cycle.end_date < timezone.localdate():
-            self._audit_workspace_and_group_for_previous_upload_cycle(upload_workspace, managed_group)
-        else:
-            raise ValueError("Upload cycle is not in the past, present, or future.")
+        # Check the group type, and then call the appropriate audit method.
+        if upload_workspace.research_center.member_group == managed_group:
+            self._audit_workspace_and_rc_member_group(upload_workspace, managed_group)
+        if upload_workspace.research_center.uploader_group == managed_group:
+            self._audit_workspace_and_rc_uploader_group(upload_workspace, managed_group)
 
-    def _audit_workspace_and_group_for_current_upload_cycle(self, upload_workspace, managed_group):
-        """Audit a workspace from the current upload cycle.
+    def _audit_workspace_and_rc_member_group(self, upload_workspace, managed_group):
+        """Run an audit of the upload workspace for the RC member group.
 
-        Groups that should have access are:
-        - GREGOR_DCC_WRITERS: write access
-        - GREGOR_DCC_ADMINS: owner access
-        - RC uploader group: write access
-        - RC member group: read access
-        - Auth domain: read access
-
-        Note that this audit does not check "can compute" access.
-        """
+        The RC member group should always have read access."""
         try:
-            WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=managed_group)
+            sharing_instance = WorkspaceGroupSharing.objects.get(
+                workspace=upload_workspace.workspace, group=managed_group
+            )
         except WorkspaceGroupSharing.DoesNotExist:
-            pass
-        else:
+            self.needs_action.append(
+                ShareAsReader(
+                    workspace=upload_workspace,
+                    note=self.RC_MEMBERS_GROUP_AS_READER,
+                    managed_group=managed_group,
+                    current_sharing_instance=None,
+                )
+            )
+            return
+
+        if sharing_instance.access == sharing_instance.READER:
             self.verified.append(
                 VerifiedShared(
                     workspace=upload_workspace,
-                    note=self.CURRENT_CYCLE_RC_MEMBER_GROUP,
+                    note=self.RC_MEMBERS_GROUP_AS_READER,
                     managed_group=managed_group,
-                    is_shared=True,
+                    current_sharing_instance=sharing_instance,
                 )
             )
-
-        # Groups that should have access
-
-    def _audit_workspace_and_group_for_future_upload_cycle(self, upload_workspace, managed_group):
-        pass
-
-    def _audit_workspace_and_group_for_previous_upload_cycle(self, upload_workspace, managed_group):
-        pass
+        else:
+            self.needs_action.append(
+                ShareAsReader(
+                    workspace=upload_workspace,
+                    note=self.RC_MEMBERS_GROUP_AS_READER,
+                    managed_group=managed_group,
+                    current_sharing_instance=sharing_instance,
+                )
+            )
