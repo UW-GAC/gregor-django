@@ -1,14 +1,16 @@
 """Tests for the `py` module."""
 
 from dataclasses import dataclass
-from unittest import TestCase
 
 import django_tables2 as tables
+from anvil_consortium_manager.models import WorkspaceGroupSharing
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceGroupSharingFactory
+from django.test import TestCase
 from faker import Faker
 
+from ..audit import upload_workspace_audit
 from ..audit.base import GREGoRAudit, GREGoRAuditResult
-
-# from ..audit import upload_workspace_audit
+from ..tests import factories
 
 fake = Faker()
 
@@ -152,3 +154,44 @@ class GREGoRAuditTest(TestCase):
         self.assertIsInstance(table, TempResultsTable)
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell("value"), "c")
+
+
+class UploadWorkspaceAuditTest(TestCase):
+    """Tests for the `UploadWorkspaceAudit` class."""
+
+    def test_completed(self):
+        """The completed attribute is set appropriately."""
+        # Instantiate the class.
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_upload_workspaces(self):
+        """The audit works if there are no UploadWorkspaces."""
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_audit_workspace_and_group_current_cycle_members_group_shared(self):
+        """audit method works with current upload cycle and members group."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__end_date=fake.date_between(start_date="-30d", end_date="+30d")
+        )
+        group = ManagedGroupFactory.create(research_center_of_members=upload_workspace.research_center)
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.CURRENT_CYCLE_RC_MEMBER_GROUP)
