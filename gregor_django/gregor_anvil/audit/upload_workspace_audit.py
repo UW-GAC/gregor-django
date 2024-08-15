@@ -148,12 +148,9 @@ class UploadWorkspaceAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace audit."""
 
     # Reasons for access/sharing.
-    RC_MEMBERS_GROUP_AS_READER = "RC member group should have read access."
-    RC_UPLOADER_GROUP_AS_READER = "RC upload group should have read access to past cycles."
-    RC_UPLOADER_GROUP_AS_WRITER = "RC upload group should have write access for current and future cycles."
-    RC_UPLOADER_GROUP_WITH_COMPUTE = "RC upload group should be able to run compute for the current cycle."
-
-    # Other errors
+    RC_UPLOADERS_FUTURE_CYCLE = "Uploaders should have write access for future cycles."
+    RC_UPLOADERS_BEFORE_COMPUTE = "Uploaders should have write access before compute is enabled for this upload cycle."
+    RC_UPLOADERS_WITH_COMPUTE = "Uploaders should have write access with compute for this upload cycle."
 
     results_table_class = UploadWorkspaceAuditTable
 
@@ -175,9 +172,8 @@ class UploadWorkspaceAudit(GREGoRAudit):
         # This includes the members group for the RC, the DCC groups, GREGOR_ALL, and the auth domain.
         research_center = upload_workspace.research_center
         groups_to_audit = ManagedGroup.objects.filter(
-            # RC member or uploader groups.
-            Q(research_center_of_members=research_center)
-            | Q(research_center_of_uploaders=research_center)
+            # RC uploader group.
+            Q(research_center_of_uploaders=research_center)
             |
             # Specific groups.
             Q(name__in=["GREGOR_DCC_WRITERS", "GREGOR_ALL", settings.ANVIL_DCC_ADMINS_GROUP_NAME])
@@ -195,45 +191,50 @@ class UploadWorkspaceAudit(GREGoRAudit):
     def audit_workspace_and_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and ManagedGroup."""
         # Check the group type, and then call the appropriate audit method.
-        if upload_workspace.research_center.member_group == managed_group:
-            self._audit_workspace_and_rc_member_group(upload_workspace, managed_group)
         if upload_workspace.research_center.uploader_group == managed_group:
             self._audit_workspace_and_rc_uploader_group(upload_workspace, managed_group)
 
-    def _audit_workspace_and_rc_member_group(self, upload_workspace, managed_group):
-        """Run an audit of the upload workspace for the RC member group.
-
-        The RC member group should always have read access."""
+    def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
+        """Audit access for a specific UploadWorkspace and RC uploader group."""
         try:
-            sharing_instance = WorkspaceGroupSharing.objects.get(
+            current_sharing = WorkspaceGroupSharing.objects.get(
                 workspace=upload_workspace.workspace, group=managed_group
             )
         except WorkspaceGroupSharing.DoesNotExist:
             self.needs_action.append(
-                ShareAsReader(
+                ShareAsWriter(
                     workspace=upload_workspace,
-                    note=self.RC_MEMBERS_GROUP_AS_READER,
                     managed_group=managed_group,
-                    current_sharing_instance=None,
+                    note=self.RC_UPLOADERS_FUTURE_CYCLE,
                 )
             )
             return
-
-        if sharing_instance.access == sharing_instance.READER:
-            self.verified.append(
-                VerifiedShared(
-                    workspace=upload_workspace,
-                    note=self.RC_MEMBERS_GROUP_AS_READER,
-                    managed_group=managed_group,
-                    current_sharing_instance=sharing_instance,
+        # Make sure sharing is correct.
+        if current_sharing.access == WorkspaceGroupSharing.WRITER:
+            if current_sharing.can_compute:
+                self.needs_action.append(
+                    ShareAsWriter(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_UPLOADERS_FUTURE_CYCLE,
+                        current_sharing_instance=current_sharing,
+                    )
                 )
-            )
+            else:
+                self.verified.append(
+                    VerifiedShared(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_UPLOADERS_FUTURE_CYCLE,
+                        current_sharing_instance=current_sharing,
+                    )
+                )
         else:
             self.needs_action.append(
-                ShareAsReader(
+                ShareAsWriter(
                     workspace=upload_workspace,
-                    note=self.RC_MEMBERS_GROUP_AS_READER,
                     managed_group=managed_group,
-                    current_sharing_instance=sharing_instance,
+                    note=self.RC_UPLOADERS_FUTURE_CYCLE,
+                    current_sharing_instance=current_sharing,
                 )
             )

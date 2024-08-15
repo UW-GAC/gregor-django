@@ -176,187 +176,110 @@ class UploadWorkspaceAuditTest(TestCase):
         self.assertEqual(len(audit.errors), 0)
 
 
-class UploadWorkspaceAuditRCMemberGroupTest(TestCase):
-    """Specific tests for the `UploadWorkspaceAudit` class for the member group from the UploadWorkspace's RC."""
+class UploadWorkspaceAuditFutureCycleTest(TestCase):
+    """Tests for the `UploadWorkspaceAudit` class for future cycle UploadWorkspaces."""
 
     def setUp(self):
         super().setUp()
-        self.managed_group = ManagedGroupFactory.create()
-        self.research_center = factories.ResearchCenterFactory.create(member_group=self.managed_group)
-
-    def test_audit_workspace_and_group_current_cycle_shared(self):
-        """audit method works with current upload cycle and members group."""
-        # Share the workspace with the group.
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_current=True
+        self.rc_uploader_group = ManagedGroupFactory.create()
+        self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
+        self.upload_workspace = factories.UploadWorkspaceFactory.create(
+            research_center=self.research_center, upload_cycle__is_future=True
         )
+
+    def test_uploaders_shared_as_writer_no_compute(self):
+        """audit method works with future upload cycle and group before compute is enabled."""
+        # Share the workspace with the group.
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.READER
+            workspace=self.upload_workspace.workspace, group=self.rc_uploader_group, access=WorkspaceGroupSharing.WRITER
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
         self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
 
-    def test_audit_workspace_and_group_current_cycle_shared_wrong_access(self):
-        """audit method works with current upload cycle and members group with wrong access."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_current=True
-        )
-        # Share the workspace with the group.
+    def test_uploaders_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsWriter)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.rc_uploader_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
+
+    def test_uploaders_shared_as_writer_can_compute(self):
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.WRITER
+            workspace=self.upload_workspace.workspace,
+            group=self.rc_uploader_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsWriter)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
 
-    def test_audit_workspace_and_group_current_cycle_not_shared(self):
-        """audit method works with current upload cycle and members group."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_current=True
-        )
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 0)
-        self.assertEqual(len(audit.needs_action), 1)
-        self.assertEqual(len(audit.errors), 0)
-        record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
-        self.assertIsNone(record.current_sharing_instance)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
-
-    def test_audit_workspace_and_group_past_cycle_shared(self):
-        """audit method works with current upload cycle and members group."""
-        # Share the workspace with the group.
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_past=True
-        )
+    def test_uploaders_shared_as_reader(self):
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.READER
+            workspace=self.upload_workspace.workspace, group=self.rc_uploader_group, access=WorkspaceGroupSharing.READER
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 1)
-        self.assertEqual(len(audit.needs_action), 0)
+        audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
-        record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsWriter)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
 
-    def test_audit_workspace_and_group_past_cycle_shared_wrong_access(self):
-        """audit method works with current upload cycle and members group with wrong access."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_past=True
-        )
-        # Share the workspace with the group.
+    def test_uploaders_shared_as_owner(self):
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.WRITER
+            workspace=self.upload_workspace.workspace, group=self.rc_uploader_group, access=WorkspaceGroupSharing.OWNER
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsWriter)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
 
-    def test_audit_workspace_and_group_past_cycle_not_shared(self):
-        """audit method works with current upload cycle and members group."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_past=True
-        )
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 0)
-        self.assertEqual(len(audit.needs_action), 1)
-        self.assertEqual(len(audit.errors), 0)
-        record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
-        self.assertIsNone(record.current_sharing_instance)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+    def test_dcc_writers(self):
+        pass
 
-    def test_audit_workspace_and_group_future_cycle_shared(self):
-        """audit method works with current upload cycle and members group."""
-        # Share the workspace with the group.
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_future=True
-        )
-        sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.READER
-        )
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 1)
-        self.assertEqual(len(audit.needs_action), 0)
-        self.assertEqual(len(audit.errors), 0)
-        record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
-        self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+    def test_dcc_admin(self):
+        pass
 
-    def test_audit_workspace_and_group_future_cycle_shared_wrong_access(self):
-        """audit method works with future upload cycle and members group with wrong access."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_future=True
-        )
-        # Share the workspace with the group.
-        sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=self.managed_group, access=WorkspaceGroupSharing.WRITER
-        )
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 0)
-        self.assertEqual(len(audit.needs_action), 1)
-        self.assertEqual(len(audit.errors), 0)
-        record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
-        self.assertEqual(record.current_sharing_instance, sharing)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+    def test_anvil_groups(self):
+        pass
 
-    def test_audit_workspace_and_group_future_cycle_not_shared(self):
-        """audit method works with future upload cycle and members group."""
-        upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_future=True
-        )
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.audit_workspace_and_group(upload_workspace, self.managed_group)
-        self.assertEqual(len(audit.verified), 0)
-        self.assertEqual(len(audit.needs_action), 1)
-        self.assertEqual(len(audit.errors), 0)
-        record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
-        self.assertEqual(record.workspace, upload_workspace)
-        self.assertEqual(record.managed_group, self.managed_group)
-        self.assertIsNone(record.current_sharing_instance)
-        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.RC_MEMBERS_GROUP_AS_READER)
+    def test_gregor_all(self):
+        pass
+
+    def test_unexpected_group(self):
+        pass
