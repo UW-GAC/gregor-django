@@ -171,7 +171,10 @@ class UploadWorkspaceAudit(GREGoRAudit):
         - GREGOR_DCC_WRITERS: write access
         - GREGOR_DCC_ADMINS: owner access
         - RC uploader group: write access
+        - RC member group: read access
         - Auth domain: read access
+
+        Note that this audit does not check "can compute" access.
         """
         try:
             WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=managed_group)

@@ -183,7 +183,7 @@ class UploadWorkspaceAuditTest(TestCase):
         group = ManagedGroupFactory.create(research_center_of_members=upload_workspace.research_center)
         # Share the workspace with the group.
         WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
         audit.audit_workspace_and_group(upload_workspace, group)
@@ -195,3 +195,48 @@ class UploadWorkspaceAuditTest(TestCase):
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.CURRENT_CYCLE_RC_MEMBER_GROUP)
+
+    def test_audit_workspace_and_group_current_cycle_members_group_shared_wrong_access(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_members_group_not_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_upload_group_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_upload_group_shared_wrong_access(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_upload_group_not_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_writers_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_writers_shared_wrong_access(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_writers_not_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_admin_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_admin_shared_wrong_access(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_dcc_admin_not_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_auth_domain_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_auth_domain_shared_wrong_access(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_auth_domain_not_shared(self):
+        pass
+
+    def test_audit_workspace_and_group_current_cycle_other_group(self):
+        pass
