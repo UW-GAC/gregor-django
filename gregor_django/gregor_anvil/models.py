@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
@@ -186,6 +187,21 @@ class UploadCycle(TimeStampedModel, models.Model):
                 if instance:
                     pks_to_keep.append(instance.pk)
         return qs.filter(pk__in=pks_to_keep)
+
+    @property
+    def is_current(self):
+        """Return a boolean indicating whether this upload cycle is the current one."""
+        return self.start_date <= timezone.localdate() and self.end_date >= timezone.localdate()
+
+    @property
+    def is_past(self):
+        """Return a boolean indicating whether this upload cycle is a past cycle."""
+        return self.end_date < timezone.localdate()
+
+    @property
+    def is_future(self):
+        """Return a boolean indicating whether this upload cycle is a future cycle."""
+        return self.start_date > timezone.localdate()
 
 
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):

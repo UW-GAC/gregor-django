@@ -4,9 +4,13 @@ from anvil_consortium_manager.tests.factories import ManagedGroupFactory, Worksp
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
+from faker import Faker
 
 from .. import models
 from . import factories
+
+fake = Faker()
 
 
 class ConsentGroupTest(TestCase):
@@ -389,6 +393,48 @@ class UploadCycleTest(TestCase):
         upload_cycle.is_ready_for_compute = True
         upload_cycle.save()
         self.assertEqual(upload_cycle.is_ready_for_compute, True)
+
+    def test_is_current_is_past_is_future(self):
+        # Previous cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=40),
+            end_date=timezone.localdate() - timedelta(days=10),
+        )
+        self.assertTrue(instance.is_past)
+        self.assertFalse(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle, end date today.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate(),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle, start date today.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate(),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Future cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=40),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertFalse(instance.is_current)
+        self.assertTrue(instance.is_future)
 
 
 class UploadWorkspaceTest(TestCase):
