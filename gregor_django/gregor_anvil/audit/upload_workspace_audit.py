@@ -5,7 +5,7 @@ from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
-from ..models import UploadWorkspace
+from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
 
 # from primed.primed_anvil.tables import BooleanIconColumn
 from .base import GREGoRAudit, GREGoRAuditResult
@@ -156,7 +156,10 @@ class UploadWorkspaceAudit(GREGoRAudit):
     RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE = (
         "Uploaders should have read access to upload workspaces before QC is complete."
     )
-    RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE = "Upload group should not have direct access after QC is complete."
+    RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE = "Uploader group should not have direct access after QC is complete."
+    RC_UPLOADERS_PAST_CYCLE_COMBINED_WORKSPACE_READY = (
+        "Uploader group should not have direct access when the combined workspace is ready to share or shared."
+    )
 
     results_table_class = UploadWorkspaceAuditTable
 
@@ -217,6 +220,13 @@ class UploadWorkspaceAudit(GREGoRAudit):
             )
         except WorkspaceGroupSharing.DoesNotExist:
             current_sharing = None
+
+        try:
+            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
+                upload_cycle=upload_cycle, date_completed__isnull=False
+            )
+        except CombinedConsortiumDataWorkspace.DoesNotExist:
+            combined_workspace = None
 
         audit_result_args = {
             "workspace": upload_workspace,
@@ -300,8 +310,24 @@ class UploadWorkspaceAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
-        elif upload_cycle.is_past and upload_workspace.date_qc_completed:
+        elif upload_cycle.is_past and upload_workspace.date_qc_completed and not combined_workspace:
             note = self.RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE
+            if not current_sharing:
+                self.verified.append(
+                    VerifiedNotShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    StopSharing(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_past and combined_workspace:
+            note = self.RC_UPLOADERS_PAST_CYCLE_COMBINED_WORKSPACE_READY
             if not current_sharing:
                 self.verified.append(
                     VerifiedNotShared(
