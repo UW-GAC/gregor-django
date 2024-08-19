@@ -161,6 +161,17 @@ class UploadWorkspaceAudit(GREGoRAudit):
         "Uploader group should not have direct access when the combined workspace is ready to share or shared."
     )
 
+    # DCC writer group status.
+    DCC_WRITERS_FUTURE_CYCLE = "DCC writers should have write and compute access for future cycles."
+    DCC_WRITERS_CURRENT_CYCLE = "DCC writers should have write and compute access for the current upload cycle."
+    DCC_WRITERS_PAST_CYCLE_BEFORE_QC_COMPLETE = (
+        "DCC writers should have write and compute access before QC is complete."
+    )
+    DCC_WRITERS_PAST_CYCLE_AFTER_QC_COMPLETE = "DCC writers should not have direct access after QC is complete."
+    DCC_WRITERS_PAST_CYCLE_COMBINED_WORKSPACE_READY = (
+        "DCC writers should not have direct access when the combined workspace is ready to share or shared."
+    )
+
     results_table_class = UploadWorkspaceAuditTable
 
     def __init__(self, queryset=None):
@@ -202,6 +213,27 @@ class UploadWorkspaceAudit(GREGoRAudit):
         # Check the group type, and then call the appropriate audit method.
         if upload_workspace.research_center.uploader_group == managed_group:
             self._audit_workspace_and_rc_uploader_group(upload_workspace, managed_group)
+        elif managed_group.name == "GREGOR_DCC_WRITERS":
+            self._audit_workspace_and_dcc_writer_group(upload_workspace, managed_group)
+
+    def _get_current_sharing(self, upload_workspace, managed_group):
+        try:
+            current_sharing = WorkspaceGroupSharing.objects.get(
+                workspace=upload_workspace.workspace, group=managed_group
+            )
+        except WorkspaceGroupSharing.DoesNotExist:
+            current_sharing = None
+        return current_sharing
+
+    def _get_combined_workspace(self, upload_cycle):
+        """Returns the combined workspace, but only if it is ready for sharing."""
+        try:
+            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
+                upload_cycle=upload_cycle, date_completed__isnull=False
+            )
+        except CombinedConsortiumDataWorkspace.DoesNotExist:
+            combined_workspace = None
+        return combined_workspace
 
     def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and RC uploader group.
@@ -214,19 +246,8 @@ class UploadWorkspaceAudit(GREGoRAudit):
         - No access to past upload cycle workspaces after QC is completed (read access via auth domain).
         """
         upload_cycle = upload_workspace.upload_cycle
-        try:
-            current_sharing = WorkspaceGroupSharing.objects.get(
-                workspace=upload_workspace.workspace, group=managed_group
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            current_sharing = None
-
-        try:
-            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
-                upload_cycle=upload_cycle, date_completed__isnull=False
-            )
-        except CombinedConsortiumDataWorkspace.DoesNotExist:
-            combined_workspace = None
+        current_sharing = self._get_current_sharing(upload_workspace, managed_group)
+        combined_workspace = self._get_combined_workspace(upload_cycle)
 
         audit_result_args = {
             "workspace": upload_workspace,
@@ -344,3 +365,110 @@ class UploadWorkspaceAudit(GREGoRAudit):
                 )
         else:
             raise ValueError("No case matched for RC uploader group.")
+
+    def _audit_workspace_and_dcc_writer_group(self, upload_workspace, managed_group):
+        upload_cycle = upload_workspace.upload_cycle
+        current_sharing = self._get_current_sharing(upload_workspace, managed_group)
+        combined_workspace = self._get_combined_workspace(upload_cycle)
+
+        audit_result_args = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        if upload_cycle.is_future:
+            note = self.DCC_WRITERS_FUTURE_CYCLE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    ShareWithCompute(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_current:
+            note = self.DCC_WRITERS_CURRENT_CYCLE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    ShareWithCompute(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_past and not upload_workspace.date_qc_completed:
+            note = self.DCC_WRITERS_PAST_CYCLE_BEFORE_QC_COMPLETE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    ShareWithCompute(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_past and upload_workspace.date_qc_completed and not combined_workspace:
+            note = self.DCC_WRITERS_PAST_CYCLE_AFTER_QC_COMPLETE
+            if not current_sharing:
+                self.verified.append(
+                    VerifiedNotShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    StopSharing(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_past and combined_workspace:
+            note = self.DCC_WRITERS_PAST_CYCLE_COMBINED_WORKSPACE_READY
+            if not current_sharing:
+                self.verified.append(
+                    VerifiedNotShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    StopSharing(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+
+        else:
+            raise ValueError("No case matched for DCC writer group.")
