@@ -758,7 +758,7 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for past cycles before QC is complete.
 
     Expectations at this point in the upload cycle:
-    - RC uploader group should be readers.
+    - RC uploader group should not have direct access.
     - DCC writer group should not have direct access.
     """
 
@@ -783,7 +783,7 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
+        self.assertIsInstance(record, upload_workspace_audit.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -794,11 +794,11 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
     def test_uploaders_not_shared(self):
         audit = upload_workspace_audit.UploadWorkspaceAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
-        self.assertEqual(len(audit.verified), 0)
-        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
-        record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -819,7 +819,7 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
+        self.assertIsInstance(record, upload_workspace_audit.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -833,11 +833,11 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
         )
         audit = upload_workspace_audit.UploadWorkspaceAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
-        self.assertEqual(len(audit.verified), 1)
-        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
-        record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -855,7 +855,7 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
+        self.assertIsInstance(record, upload_workspace_audit.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)

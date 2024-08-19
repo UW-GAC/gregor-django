@@ -153,9 +153,7 @@ class UploadWorkspaceAudit(GREGoRAudit):
         "Uploaders should have write access before compute is enabled for this upload cycle."
     )
     RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE = "Uploaders should have write access with compute for this upload cycle."
-    RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE = (
-        "Uploaders should have read access to upload workspaces before QC is complete."
-    )
+    RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE = "Uploaders should not have direct access before QC is complete."
     RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE = "Uploader group should not have direct access after QC is complete."
     RC_UPLOADERS_PAST_CYCLE_COMBINED_WORKSPACE_READY = (
         "Uploader group should not have direct access when the combined workspace is ready to share or shared."
@@ -317,16 +315,16 @@ class UploadWorkspaceAudit(GREGoRAudit):
                 )
         elif upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE
-            if current_sharing and current_sharing.access == WorkspaceGroupSharing.READER:
+            if not current_sharing:
                 self.verified.append(
-                    VerifiedShared(
+                    VerifiedNotShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    ShareAsReader(
+                    StopSharing(
                         note=note,
                         **audit_result_args,
                     )
