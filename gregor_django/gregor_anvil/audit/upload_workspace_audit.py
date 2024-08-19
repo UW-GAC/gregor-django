@@ -149,8 +149,10 @@ class UploadWorkspaceAudit(GREGoRAudit):
 
     # Reasons for access/sharing.
     RC_UPLOADERS_FUTURE_CYCLE = "Uploaders should have write access for future cycles."
-    RC_UPLOADERS_BEFORE_COMPUTE = "Uploaders should have write access before compute is enabled for this upload cycle."
-    RC_UPLOADERS_WITH_COMPUTE = "Uploaders should have write access with compute for this upload cycle."
+    RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE = (
+        "Uploaders should have write access before compute is enabled for this upload cycle."
+    )
+    RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE = "Uploaders should have write access with compute for this upload cycle."
 
     results_table_class = UploadWorkspaceAuditTable
 
@@ -195,46 +197,86 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_rc_uploader_group(upload_workspace, managed_group)
 
     def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
-        """Audit access for a specific UploadWorkspace and RC uploader group."""
+        """Audit access for a specific UploadWorkspace and RC uploader group.
+
+        Sharing expectations:
+        - Write access to future upload cycle.
+        - Write access before compute is enabled for current upload cycle.
+        - Write+compute access after compute is enabled for current upload cycle.
+        - Read access to past upload cycle workspaces before QC is completed.
+        - No access to past upload cycle workspaces after QC is completed (read access via auth domain).
+        """
+        upload_cycle = upload_workspace.upload_cycle
         try:
             current_sharing = WorkspaceGroupSharing.objects.get(
                 workspace=upload_workspace.workspace, group=managed_group
             )
         except WorkspaceGroupSharing.DoesNotExist:
-            self.needs_action.append(
-                ShareAsWriter(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_UPLOADERS_FUTURE_CYCLE,
-                )
-            )
-            return
-        # Make sure sharing is correct.
-        if current_sharing.access == WorkspaceGroupSharing.WRITER:
-            if current_sharing.can_compute:
-                self.needs_action.append(
-                    ShareAsWriter(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_UPLOADERS_FUTURE_CYCLE,
-                        current_sharing_instance=current_sharing,
+            current_sharing = None
+
+        audit_result_args = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        if upload_cycle.is_future:
+            note = self.RC_UPLOADERS_FUTURE_CYCLE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and not current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
                     )
                 )
             else:
-                self.verified.append(
-                    VerifiedShared(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_UPLOADERS_FUTURE_CYCLE,
-                        current_sharing_instance=current_sharing,
+                self.needs_action.append(
+                    ShareAsWriter(
+                        note=note,
+                        **audit_result_args,
                     )
                 )
-        else:
-            self.needs_action.append(
-                ShareAsWriter(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_UPLOADERS_FUTURE_CYCLE,
-                    current_sharing_instance=current_sharing,
+        elif upload_cycle.is_current and not upload_cycle.is_ready_for_compute:
+            note = self.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and not current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
                 )
-            )
+            else:
+                self.needs_action.append(
+                    ShareAsWriter(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_current and upload_cycle.is_ready_for_compute:
+            note = self.RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and current_sharing.can_compute
+            ):
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    ShareWithCompute(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
