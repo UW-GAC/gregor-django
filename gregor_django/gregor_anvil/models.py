@@ -279,6 +279,12 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
+    date_completed = models.DateTimeField(
+        help_text="Date that data preparation in this workspace was completed.",
+        blank=True,
+        null=True,
+        default=None,
+    )
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
