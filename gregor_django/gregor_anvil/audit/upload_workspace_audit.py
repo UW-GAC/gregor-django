@@ -147,12 +147,16 @@ class UploadWorkspaceAuditTable(tables.Table):
 class UploadWorkspaceAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace audit."""
 
-    # Reasons for access/sharing.
+    # RC uploader statues.
     RC_UPLOADERS_FUTURE_CYCLE = "Uploaders should have write access for future cycles."
     RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE = (
         "Uploaders should have write access before compute is enabled for this upload cycle."
     )
     RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE = "Uploaders should have write access with compute for this upload cycle."
+    RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE = (
+        "Uploaders should have read access to upload workspaces before QC is complete."
+    )
+    RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE = "Upload group should not have direct access after QC is complete."
 
     results_table_class = UploadWorkspaceAuditTable
 
@@ -280,3 +284,37 @@ class UploadWorkspaceAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
+        elif upload_cycle.is_past and not upload_workspace.date_qc_completed:
+            note = self.RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE
+            if current_sharing and current_sharing.access == WorkspaceGroupSharing.READER:
+                self.verified.append(
+                    VerifiedShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    ShareAsReader(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif upload_cycle.is_past and upload_workspace.date_qc_completed:
+            note = self.RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE
+            if not current_sharing:
+                self.verified.append(
+                    VerifiedNotShared(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    StopSharing(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        else:
+            raise ValueError("No case matched for RC uploader group.")
