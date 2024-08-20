@@ -5,7 +5,8 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from anvil_consortium_manager.models import WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceGroupSharingFactory
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from faker import Faker
 
@@ -189,6 +190,7 @@ class UploadWorkspaceAuditFutureCycleTest(TestCase):
         super().setUp()
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
             research_center=self.research_center, upload_cycle__is_future=True
@@ -438,8 +440,104 @@ class UploadWorkspaceAuditFutureCycleTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
 
-    def test_dcc_admin(self):
-        pass
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
 
     def test_anvil_groups(self):
         pass
@@ -461,6 +559,7 @@ class UploadWorkspaceAuditCurrentCycleBeforeComputeTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
@@ -724,6 +823,105 @@ class UploadWorkspaceAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
 
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
 
 class UploadWorkspaceAuditCurrentCycleAfterComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for current cycle UploadWorkspaces after compute is enabled.
@@ -735,6 +933,7 @@ class UploadWorkspaceAuditCurrentCycleAfterComputeTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
@@ -996,6 +1195,105 @@ class UploadWorkspaceAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
 
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
 
 class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for past cycles before QC is complete.
@@ -1007,6 +1305,7 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
@@ -1279,6 +1578,105 @@ class UploadWorkspaceAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
 
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
 
 class UploadWorkspaceAuditPastCycleAfterQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for past cycles before QC is complete.
@@ -1290,6 +1688,7 @@ class UploadWorkspaceAuditPastCycleAfterQCCompleteTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
@@ -1565,6 +1964,105 @@ class UploadWorkspaceAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
 
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
 
 class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for past cycles after the combined workspace is ready to share.
@@ -1576,6 +2074,7 @@ class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
@@ -1857,3 +2356,102 @@ class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_not_shared(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)

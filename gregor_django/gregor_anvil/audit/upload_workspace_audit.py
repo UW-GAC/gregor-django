@@ -170,6 +170,9 @@ class UploadWorkspaceAudit(GREGoRAudit):
         "DCC writers should not have direct access when the combined workspace is ready to share or shared."
     )
 
+    # DCC admin group status.
+    DCC_ADMIN_AS_OWNER = "The DCC admin group should always be an owner."
+
     # Auth domain status.
     AUTH_DOMAIN_AS_READER = "The auth domain should always be a reader."
 
@@ -218,6 +221,8 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_dcc_writer_group(upload_workspace, managed_group)
         elif managed_group in upload_workspace.workspace.authorization_domains.all():
             self._audit_workspace_and_auth_domain(upload_workspace, managed_group)
+        elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
+            self._audit_workspace_and_dcc_admin_group(upload_workspace, managed_group)
 
     def _get_current_sharing(self, upload_workspace, managed_group):
         try:
@@ -508,6 +513,36 @@ class UploadWorkspaceAudit(GREGoRAudit):
         else:
             self.needs_action.append(
                 ShareAsReader(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
+
+    def _audit_workspace_and_dcc_admin_group(self, upload_workspace, managed_group):
+        """Audit access for a specific UploadWorkspace and the DCC admin group.
+
+        Sharing expectations:
+        - Owner access at all times.
+        """
+        current_sharing = self._get_current_sharing(upload_workspace, managed_group)
+
+        audit_result_args = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        note = self.DCC_ADMIN_AS_OWNER
+        if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
+            self.verified.append(
+                VerifiedShared(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
+        else:
+            self.needs_action.append(
+                ShareAsOwner(
                     note=note,
                     **audit_result_args,
                 )
