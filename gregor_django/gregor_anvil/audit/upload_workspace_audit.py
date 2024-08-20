@@ -217,12 +217,18 @@ class UploadWorkspaceAudit(GREGoRAudit):
         # Get a list of managed groups that should be included in this audit.
         # This includes the members group for the RC, the DCC groups, GREGOR_ALL, and the auth domain.
         research_center = upload_workspace.research_center
+        group_names_to_include = [
+            "GREGOR_DCC_WRITERS",  # DCC writers
+            settings.ANVIL_DCC_ADMINS_GROUP_NAME,  # DCC admins
+            "anvil-admins",  # AnVIL admins
+            "anvil_devs",  # AnVIL devs
+        ]
         groups_to_audit = ManagedGroup.objects.filter(
             # RC uploader group.
             Q(research_center_of_uploaders=research_center)
             |
-            # Specific groups.
-            Q(name__in=["GREGOR_DCC_WRITERS", "GREGOR_ALL", settings.ANVIL_DCC_ADMINS_GROUP_NAME])
+            # Specific groups from above.
+            Q(name__in=group_names_to_include)
             |
             # Auth domain.
             Q(workspaceauthorizationdomain__workspace=upload_workspace.workspace)
@@ -245,8 +251,16 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_auth_domain(upload_workspace, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
             self._audit_workspace_and_dcc_admin_group(upload_workspace, managed_group)
+        elif managed_group.name in ["anvil-admins", "anvil_devs"]:
+            self._audit_workspace_and_anvil_group(upload_workspace, managed_group)
         else:
             self._audit_workspace_and_other_group(upload_workspace, managed_group)
+
+    def _audit_workspace_and_anvil_group(self, upload_workspace, managed_group):
+        """Ignore the AnVIL groups in this audit.
+
+        We don't want to make assumptions about what access level AnVIL has."""
+        pass
 
     def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and RC uploader group.
