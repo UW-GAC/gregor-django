@@ -170,6 +170,9 @@ class UploadWorkspaceAudit(GREGoRAudit):
         "DCC writers should not have direct access when the combined workspace is ready to share or shared."
     )
 
+    # Auth domain status.
+    AUTH_DOMAIN_AS_READER = "The auth domain should always be a reader."
+
     results_table_class = UploadWorkspaceAuditTable
 
     def __init__(self, queryset=None):
@@ -213,6 +216,8 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_rc_uploader_group(upload_workspace, managed_group)
         elif managed_group.name == "GREGOR_DCC_WRITERS":
             self._audit_workspace_and_dcc_writer_group(upload_workspace, managed_group)
+        elif managed_group in upload_workspace.workspace.authorization_domains.all():
+            self._audit_workspace_and_auth_domain(upload_workspace, managed_group)
 
     def _get_current_sharing(self, upload_workspace, managed_group):
         try:
@@ -365,6 +370,13 @@ class UploadWorkspaceAudit(GREGoRAudit):
             raise ValueError("No case matched for RC uploader group.")
 
     def _audit_workspace_and_dcc_writer_group(self, upload_workspace, managed_group):
+        """Audit access for a specific UploadWorkspace and the DCC writer group.
+
+        Sharing expectations:
+        - Write+compute access to future and current upload cycles.
+        - Write+compute access to past upload cycles before QC is complete.
+        - No direct access to past upload cycle workspaces after QC is completed (read access via auth domain).
+        """
         upload_cycle = upload_workspace.upload_cycle
         current_sharing = self._get_current_sharing(upload_workspace, managed_group)
         combined_workspace = self._get_combined_workspace(upload_cycle)
@@ -470,3 +482,33 @@ class UploadWorkspaceAudit(GREGoRAudit):
 
         else:
             raise ValueError("No case matched for DCC writer group.")
+
+    def _audit_workspace_and_auth_domain(self, upload_workspace, managed_group):
+        """Audit access for a specific UploadWorkspace and its auth domain.
+
+        Sharing expectations:
+        - Read access at all times.
+        """
+        current_sharing = self._get_current_sharing(upload_workspace, managed_group)
+
+        audit_result_args = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        note = self.AUTH_DOMAIN_AS_READER
+        if current_sharing and current_sharing.access == WorkspaceGroupSharing.READER:
+            self.verified.append(
+                VerifiedShared(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
+        else:
+            self.needs_action.append(
+                ShareAsReader(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
