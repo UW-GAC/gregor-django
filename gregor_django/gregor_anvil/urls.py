@@ -47,7 +47,7 @@ workspace_report_patterns = (
 
 upload_workspace_audit_patterns = (
     [
-        path("all/", views.UploadWorkspaceAuditAll.as_view(), name="all"),
+        # path("all/", views.UploadWorkspaceAuditAll.as_view(), name="all"),
         path(
             "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>",
             views.UploadWorkspaceAuditResolve.as_view(),
@@ -58,7 +58,7 @@ upload_workspace_audit_patterns = (
             views.UploadWorkspaceAuditByWorkspace.as_view(),
             name="upload_workspace",
         ),
-        path("upload_cycle/<int:cycle>/", views.UploadWorkspaceAuditByUploadCycle.as_view(), name="upload_cycle"),
+        # path("upload_cycle/<int:cycle>/", views.UploadWorkspaceAuditByUploadCycle.as_view(), name="upload_cycle"),
     ],
     "upload_workspaces",
 )

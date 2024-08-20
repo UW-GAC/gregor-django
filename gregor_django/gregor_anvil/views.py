@@ -172,23 +172,6 @@ class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class UploadWorkspaceAuditAll(AnVILConsortiumManagerStaffViewRequired, TemplateView):
-    """View to audit UploadWorkspace sharing."""
-
-    template_name = "gregor_anvil/upload_workspace_audit.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
-        audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
-
-
 class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
@@ -217,32 +200,6 @@ class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, D
         context = super().get_context_data(**kwargs)
         # Run the audit.
         audit = upload_workspace_audit.UploadWorkspaceAudit(queryset=self.model.objects.filter(pk=self.object.pk))
-        audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
-
-
-class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
-    """View to audit UploadWorkspace sharing for a specific upload cycle."""
-
-    template_name = "gregor_anvil/upload_workspace_audit.html"
-    model = models.UploadCycle
-
-    def get_object(self, queryset=None):
-        """Look up the UploadCycle by cycle number."""
-        try:
-            obj = models.UploadCycle.objects.get(cycle=self.kwargs.get("cycle", None))
-        except models.UploadCycle.DoesNotExist:
-            raise Http404("No UploadCycle found matching the query")
-        return obj
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
