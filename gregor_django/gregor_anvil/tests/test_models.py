@@ -141,6 +141,38 @@ class ResearchCenterTest(TestCase):
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
 
+    def test_member_group_non_member_group_must_be_different(self):
+        """The same group cannot be used as the members group and non-members group."""
+        group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=group,
+            non_member_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_non_member_group_uploader_group_must_be_different(self):
+        """The same group cannot be used as the members group and uploaders group."""
+        group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            non_member_group=group,
+            uploader_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
     def test_error_two_rcs_same_member_group(self):
         """Cannot have the same member group for two RCs."""
         member_group = ManagedGroupFactory.create()

@@ -55,6 +55,15 @@ class ResearchCenter(TimeStampedModel, models.Model):
         null=True,
     )
 
+    non_member_group = models.OneToOneField(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The AnVIL group containing non-members from this Research Center.",
+        related_name="research_center_of_non_members",
+        blank=True,
+        null=True,
+    )
+
     uploader_group = models.OneToOneField(
         ManagedGroup,
         on_delete=models.PROTECT,
@@ -83,6 +92,10 @@ class ResearchCenter(TimeStampedModel, models.Model):
         # Members group and uploaders group must be different.
         if self.member_group and self.uploader_group and self.member_group == self.uploader_group:
             raise ValidationError("member_group and uploader_group must be different!")
+        if self.non_member_group and self.uploader_group and self.non_member_group == self.uploader_group:
+            raise ValidationError("non_member_group and uploader_group must be different!")
+        if self.member_group and self.non_member_group and self.member_group == self.non_member_group:
+            raise ValidationError("member_group and non_member_group must be different!")
 
 
 class PartnerGroup(TimeStampedModel, models.Model):

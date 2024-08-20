@@ -311,6 +311,14 @@ class ResearchCenterDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertContains(response, member_group.get_absolute_url())
 
+    def test_link_to_non_member_group(self):
+        """Response includes a link to the non-members group if it exists."""
+        non_member_group = acm_factories.ManagedGroupFactory.create()
+        obj = self.model_factory.create(non_member_group=non_member_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, non_member_group.get_absolute_url())
+
     def test_link_to_uploader_group(self):
         """Response includes a link to the uploader group if it exists."""
         uploader_group = acm_factories.ManagedGroupFactory.create()
