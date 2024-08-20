@@ -246,6 +246,9 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
             ),
         ]
 
+    def __str__(self):
+        return self.workspace.name
+
 
 class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about a partner workspace."""

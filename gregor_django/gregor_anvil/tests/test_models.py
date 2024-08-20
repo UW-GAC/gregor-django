@@ -493,7 +493,7 @@ class UploadWorkspaceTest(TestCase):
         instance = factories.UploadWorkspaceFactory.create()
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+        self.assertEqual(instance.__str__(), instance.workspace.name)
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
