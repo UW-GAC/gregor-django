@@ -1102,9 +1102,6 @@ class UploadWorkspaceDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_contains_share_with_auth_domain_button(self):
-        acm_factories.WorkspaceAuthorizationDomainFactory.create(
-            workspace=self.object.workspace, group__name="test_auth"
-        )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
@@ -1112,7 +1109,7 @@ class UploadWorkspaceDetailTest(TestCase):
             args=[
                 self.object.workspace.billing_project.name,
                 self.object.workspace.name,
-                "test_auth",
+                "auth_" + self.object.workspace.name,
             ],
         )
         self.assertContains(response, url)
