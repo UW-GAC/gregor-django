@@ -1,0 +1,19 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Upload workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Upload workspace audit</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+    Auditing sharing for all Upload workspaces
+</div>
+
+<h2>Audit results</h2>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

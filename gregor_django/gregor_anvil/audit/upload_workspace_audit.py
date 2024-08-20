@@ -225,10 +225,10 @@ class UploadWorkspaceAudit(GREGoRAudit):
             Q(name__in=["GREGOR_DCC_WRITERS", "GREGOR_ALL", settings.ANVIL_DCC_ADMINS_GROUP_NAME])
             |
             # Auth domain.
-            Q(authorization_domains__workspace=upload_workspace.workspace)
+            Q(workspaceauthorizationdomain__workspace=upload_workspace.workspace)
             |
             # Groups that the workspace is shared with.
-            Q(workspace_group_sharing__workspace=upload_workspace.workspace)
+            Q(workspacegroupsharing__workspace=upload_workspace.workspace)
         )
 
         for group in groups_to_audit:

@@ -45,6 +45,19 @@ workspace_report_patterns = (
     "reports",
 )
 
+upload_workspace_audit_patterns = (
+    [
+        path("all/", views.UploadWorkspaceAuditAll.as_view(), name="all"),
+    ],
+    "upload_workspaces",
+)
+audit_patterns = (
+    [
+        path("upload_workspaces/", include(upload_workspace_audit_patterns)),
+    ],
+    "audit",
+)
+
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
@@ -52,4 +65,5 @@ urlpatterns = [
     path("consent_groups/", include(consent_group_patterns)),
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
+    path("audit/", include(audit_patterns)),
 ]
