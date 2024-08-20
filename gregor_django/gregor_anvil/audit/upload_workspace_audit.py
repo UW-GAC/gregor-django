@@ -193,6 +193,25 @@ class UploadWorkspaceAudit(GREGoRAudit):
         for workspace in self.queryset:
             self.audit_upload_workspace(workspace)
 
+    def _get_current_sharing(self, upload_workspace, managed_group):
+        try:
+            current_sharing = WorkspaceGroupSharing.objects.get(
+                workspace=upload_workspace.workspace, group=managed_group
+            )
+        except WorkspaceGroupSharing.DoesNotExist:
+            current_sharing = None
+        return current_sharing
+
+    def _get_combined_workspace(self, upload_cycle):
+        """Returns the combined workspace, but only if it is ready for sharing."""
+        try:
+            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
+                upload_cycle=upload_cycle, date_completed__isnull=False
+            )
+        except CombinedConsortiumDataWorkspace.DoesNotExist:
+            combined_workspace = None
+        return combined_workspace
+
     def audit_upload_workspace(self, upload_workspace):
         """Audit access for a specific UploadWorkspace."""
         # Get a list of managed groups that should be included in this audit.
@@ -228,25 +247,6 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_dcc_admin_group(upload_workspace, managed_group)
         else:
             self._audit_workspace_and_other_group(upload_workspace, managed_group)
-
-    def _get_current_sharing(self, upload_workspace, managed_group):
-        try:
-            current_sharing = WorkspaceGroupSharing.objects.get(
-                workspace=upload_workspace.workspace, group=managed_group
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            current_sharing = None
-        return current_sharing
-
-    def _get_combined_workspace(self, upload_cycle):
-        """Returns the combined workspace, but only if it is ready for sharing."""
-        try:
-            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
-                upload_cycle=upload_cycle, date_completed__isnull=False
-            )
-        except CombinedConsortiumDataWorkspace.DoesNotExist:
-            combined_workspace = None
-        return combined_workspace
 
     def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and RC uploader group.
