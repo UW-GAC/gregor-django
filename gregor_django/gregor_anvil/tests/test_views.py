@@ -1109,15 +1109,14 @@ class UploadWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
-    def test_contains_share_with_auth_domain_button(self):
+    def test_contains_audit_consortium_access_button(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
-            "anvil_consortium_manager:workspaces:sharing:new_by_group",
+            "gregor_anvil:audit:upload_workspaces:upload_workspace",
             args=[
                 self.object.workspace.billing_project.name,
                 self.object.workspace.name,
-                "auth_" + self.object.workspace.name,
             ],
         )
         self.assertContains(response, url)
