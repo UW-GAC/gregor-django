@@ -38,11 +38,11 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
         row = {
             "workspace": self.workspace,
             "managed_group": self.managed_group,
-            "is_shared": self.is_shared,
+            "access": self.current_sharing_instance.access if self.current_sharing_instance else None,
+            "can_compute": self.current_sharing_instance.can_compute if self.current_sharing_instance else None,
             "note": self.note,
             "action": self.action,
             "action_url": self.get_action_url(),
-            "current_sharing_instance": self.current_sharing_instance,
         }
         return row
 
@@ -134,11 +134,12 @@ class UploadWorkspaceAuditTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     managed_group = tables.Column(linkify=True)
-    is_shared = tables.Column()
+    # is_shared = tables.Column()
+    access = tables.Column()
+    can_compute = tables.Column()
     note = tables.Column()
-    action = tables.Column()
-    current_sharing_instance = tables.Column(linkify=True)
-    # action = tables.TemplateColumn(template_name="gregor_anvil/snippets/upload_workspace_audit_action_button.html")
+    # action = tables.Column()
+    action = tables.TemplateColumn(template_name="gregor_anvil/snippets/upload_workspace_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}

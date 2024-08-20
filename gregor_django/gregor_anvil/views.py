@@ -264,7 +264,7 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, Templ
         # Filter the queryset based on kwargs.
         billing_project_slug = self.kwargs.get("billing_project_slug", None)
         workspace_slug = self.kwargs.get("workspace_slug", None)
-        queryset = models.UploadWorkspaceWorkspace.objects.filter(
+        queryset = models.UploadWorkspace.objects.filter(
             workspace__billing_project__name=billing_project_slug,
             workspace__name=workspace_slug,
         )
