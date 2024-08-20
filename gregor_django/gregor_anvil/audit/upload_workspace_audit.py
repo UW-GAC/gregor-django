@@ -176,6 +176,9 @@ class UploadWorkspaceAudit(GREGoRAudit):
     # Auth domain status.
     AUTH_DOMAIN_AS_READER = "The auth domain should always be a reader."
 
+    # Other group.
+    OTHER_GROUP_NO_ACCESS = "Other groups should not have direct access."
+
     results_table_class = UploadWorkspaceAuditTable
 
     def __init__(self, queryset=None):
@@ -223,6 +226,8 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self._audit_workspace_and_auth_domain(upload_workspace, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
             self._audit_workspace_and_dcc_admin_group(upload_workspace, managed_group)
+        else:
+            self._audit_workspace_and_other_group(upload_workspace, managed_group)
 
     def _get_current_sharing(self, upload_workspace, managed_group):
         try:
@@ -544,6 +549,35 @@ class UploadWorkspaceAudit(GREGoRAudit):
             self.needs_action.append(
                 ShareAsOwner(
                     note=note,
+                    **audit_result_args,
+                )
+            )
+
+    def _audit_workspace_and_other_group(self, upload_workspace, managed_group):
+        """Audit access for a specific UploadWorkspace and other groups.
+
+        Sharing expectations:
+        - No access.
+        """
+        current_sharing = self._get_current_sharing(upload_workspace, managed_group)
+
+        audit_result_args = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        if not current_sharing:
+            self.verified.append(
+                VerifiedNotShared(
+                    note=self.OTHER_GROUP_NO_ACCESS,
+                    **audit_result_args,
+                )
+            )
+        else:
+            self.errors.append(
+                StopSharing(
+                    note=self.OTHER_GROUP_NO_ACCESS,
                     **audit_result_args,
                 )
             )
