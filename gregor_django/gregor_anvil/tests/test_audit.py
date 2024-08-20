@@ -177,6 +177,148 @@ class UploadWorkspaceAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
+    def test_one_upload_workspace_no_groups(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_audit.ShareAsReader)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, upload_workspace.workspace.authorization_domains.first())
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_one_upload_workspace_rc_upload_group(self):
+        group = ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            research_center__uploader_group=group, upload_cycle__is_future=True
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_one_upload_workspace_dcc_writer_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=True
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_one_upload_workspace_auth_domain(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = upload_workspace.workspace.authorization_domains.first()
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)  # auth domain is shared
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_one_upload_workspace_dcc_admin_group(self):
+        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_one_upload_workspace_dcc_admin_group_different_name(self):
+        group = ManagedGroupFactory.create(name="foo")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_one_upload_workspace_anvil_admin_group(self):
+        group = ManagedGroupFactory.create(name="anvil-admins")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(workspace=upload_workspace.workspace, group=group)
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_one_upload_workspace_anvil_dev_group(self):
+        group = ManagedGroupFactory.create(name="anvil_devs")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(workspace=upload_workspace.workspace, group=group)
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_one_upload_workspace_other_group_shared(self):
+        group = ManagedGroupFactory.create(name="foo")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
+        )
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_audit.StopSharing)
+        self.assertEqual(record.workspace, upload_workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_one_upload_workspace_other_group_not_shared(self):
+        ManagedGroupFactory.create(name="foo")
+        factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
+        self.assertEqual(len(audit.errors), 0)
+
 
 class UploadWorkspaceAuditFutureCycleTest(TestCase):
     """Tests for the `UploadWorkspaceAudit` class for future cycle UploadWorkspaces.
