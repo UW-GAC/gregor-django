@@ -9,7 +9,7 @@
 <h1>Upload workspace audit</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
-    Auditing sharing for all Upload workspaces
+    Auditing sharing for {% if object %}<a href="{{ object.get_absolute_url }}">{{ object }}</a>{% else %}all upload workspaces{% endif %}.
 </div>
 
 <h2>Audit results</h2>

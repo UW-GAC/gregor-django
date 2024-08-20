@@ -1,11 +1,17 @@
+from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
 )
-from anvil_consortium_manager.models import Account, Workspace
+from anvil_consortium_manager.models import Account, ManagedGroup, Workspace, WorkspaceGroupSharing
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db import transaction
 from django.db.models import Count, Q
+from django.forms import Form
+from django.http import Http404, HttpResponse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, TemplateView
 from django_tables2 import MultiTableMixin, SingleTableView
 
@@ -181,3 +187,172 @@ class UploadWorkspaceAuditAll(AnVILConsortiumManagerStaffViewRequired, TemplateV
         context["needs_action_table"] = audit.get_needs_action_table()
         context["audit_results"] = audit
         return context
+
+
+class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+    """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
+
+    template_name = "gregor_anvil/upload_workspace_audit.html"
+    model = models.UploadWorkspace
+
+    def get_object(self, queryset=None):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.UploadWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = upload_workspace_audit.UploadWorkspaceAudit(queryset=self.model.objects.filter(pk=self.object.pk))
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
+
+
+class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
+    """View to audit UploadWorkspace sharing for a specific upload cycle."""
+
+    template_name = "gregor_anvil/upload_workspace_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        """Look up the UploadCycle by cycle number."""
+        try:
+            obj = models.UploadCycle.objects.get(cycle=self.kwargs.get("cycle", None))
+        except models.UploadCycle.DoesNotExist:
+            raise Http404("No UploadCycle found matching the query")
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
+
+
+class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, TemplateView):
+    """View to resolve UploadWorkspace audit results."""
+
+    form_class = Form
+    template_name = "gregor_anvil/upload_workspace_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_upload_workspace(self):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.UploadWorkspaceWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_managed_group(self, queryset=None):
+        """Look up the ManagedGroup by name."""
+        try:
+            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
+        except ManagedGroup.DoesNotExist:
+            raise Http404("No ManagedGroups found matching the query")
+        return obj
+
+    def get_audit_result(self):
+        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        # No way to set the group queryset, since it is dynamically determined by the workspace.
+        audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.upload_workspace = self.get_upload_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.upload_workspace = self.get_upload_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["upload_workspace"] = self.upload_workspace
+        context["managed_group"] = self.managed_group
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.upload_workspace.get_absolute_url()
+
+    def form_valid(self, form):
+        # Handle the result.
+        try:
+            if self.audit_result.current_sharing_instance:
+                sharing = self.audit_result.current_sharing_instance
+            else:
+                sharing = WorkspaceGroupSharing(
+                    workspace=self.upload_workspace.workspace,
+                    group=self.managed_group,
+                )
+            with transaction.atomic():
+                if isinstance(self.audit_result, upload_workspace_audit.StopSharing):
+                    sharing.anvil_delete()
+                    sharing.delete()
+                else:
+                    if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
+                        sharing.access = WorkspaceGroupSharing.READER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = True
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
+                        sharing.access = WorkspaceGroupSharing.OWNER
+                        sharing.can_compute = True
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
