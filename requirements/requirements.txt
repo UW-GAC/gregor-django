@@ -94,7 +94,7 @@ google-auth==2.11.0
     # via django-anvil-consortium-manager
 idna==3.7
     # via requests
-jsonapi-requests==0.7.0
+jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
 mysqlclient==2.2.4
     # via -r requirements/requirements.in
