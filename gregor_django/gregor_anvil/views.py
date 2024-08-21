@@ -12,7 +12,7 @@ from django.db.models import Count, Q
 from django.forms import Form
 from django.http import Http404, HttpResponse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, FormView, TemplateView
 from django_tables2 import MultiTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
@@ -208,7 +208,7 @@ class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, D
         return context
 
 
-class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, TemplateView):
+class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     """View to resolve UploadWorkspace audit results."""
 
     form_class = Form
@@ -275,6 +275,7 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, Templ
     def form_valid(self, form):
         # Handle the result.
         try:
+            # Set up the sharing instance.
             if self.audit_result.current_sharing_instance:
                 sharing = self.audit_result.current_sharing_instance
             else:
@@ -283,25 +284,33 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, Templ
                     group=self.managed_group,
                 )
             with transaction.atomic():
-                if isinstance(self.audit_result, upload_workspace_audit.StopSharing):
-                    sharing.anvil_delete()
-                    sharing.delete()
-                else:
-                    if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
-                        sharing.access = WorkspaceGroupSharing.READER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = True
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
-                        sharing.access = WorkspaceGroupSharing.OWNER
-                        sharing.can_compute = True
+                if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
+                    sharing.access = WorkspaceGroupSharing.READER
+                    sharing.can_compute = False
                     sharing.full_clean()
                     sharing.save()
                     sharing.anvil_create_or_update()
+                elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
+                    sharing.access = WorkspaceGroupSharing.WRITER
+                    sharing.can_compute = False
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
+                elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
+                    sharing.access = WorkspaceGroupSharing.WRITER
+                    sharing.can_compute = True
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
+                elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
+                    sharing.access = WorkspaceGroupSharing.OWNER
+                    sharing.can_compute = True
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
+                elif isinstance(self.audit_result, upload_workspace_audit.StopSharing):
+                    sharing.anvil_delete()
+                    sharing.delete()
         except AnVILAPIError as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)

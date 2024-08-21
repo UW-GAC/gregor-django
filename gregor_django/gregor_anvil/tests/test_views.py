@@ -6,6 +6,7 @@ import responses
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
 from anvil_consortium_manager.tests import factories as acm_factories
+from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from constance.test import override_config
 from django.conf import settings
@@ -17,11 +18,14 @@ from django.http.response import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
 
 from gregor_django.users.tables import UserTable
 from gregor_django.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
+from ..audit import upload_workspace_audit
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -2144,3 +2148,1071 @@ class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.parent_group, new_group)
         self.assertEqual(membership.child_group, self.admins_group)
         self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+
+class UploadWorkspaceAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
+    def test_tests(self):
+        self.fail("write tests")
+
+
+class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:upload_workspaces:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadWorkspaceAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar", "foobar"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_get_upload_workspace_does_not_exist(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_group_does_not_exist(self):
+        """get request raises a 404 error with an non-existent email."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                upload_workspace.workspace.billing_project.name,
+                upload_workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The data_access_audit exists in the context."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            upload_workspace_audit.UploadWorkspaceAuditResult,
+        )
+
+    def test_get_verified_shared(self):
+        """Get request with VerifiedShared result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = upload_workspace.workspace.authorization_domains.first()
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.VerifiedShared)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_get_verified_not_shared(self):
+        """Get request with VerifiedNotShared result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.VerifiedNotShared)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.OTHER_GROUP_NO_ACCESS)
+
+    def test_get_share_as_reader(self):
+        """Get request with ShareAsReader result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = upload_workspace.workspace.authorization_domains.first()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsReader)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_get_share_as_writer(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsWriter)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE)
+
+    def test_get_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareWithCompute)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_WRITERS_FUTURE_CYCLE)
+
+    def test_get_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsOwner)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
+
+    def test_post_upload_workspace_does_not_exist(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url("foo", "bar", "foobar"))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_group_does_not_exist(self):
+        """post request raises a 404 error with an non-existent email."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                upload_workspace.workspace.billing_project.name,
+                upload_workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_shared(self):
+        """Post request with VerifiedShared result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = upload_workspace.workspace.authorization_domains.first()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+
+    def test_post_verified_not_shared(self):
+        """Post request with VerifiedNotShared result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_new_share_as_reader(self):
+        """Post request with ShareAsReader result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = upload_workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_as_writer(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_stop_sharing(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace,
+            group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "NO ACCESS",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_update_share_as_reader(self):
+        """Post request with ShareAsReader result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = upload_workspace.workspace.authorization_domains.first()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.WRITER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_update_share_as_writer(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_update_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_update_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_share_as_reader_htmx(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = upload_workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_as_writer_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_with_compute_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_share_as_owner_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=upload_workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_stop_sharing_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace,
+            group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "NO ACCESS",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_share_as_reader_anvil_api_error(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = upload_workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsReader)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_share_as_writer_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsWriter)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_share_with_compute_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareWithCompute)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_share_as_owner_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.ShareAsOwner)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_stop_sharing_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+            )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_audit.StopSharing)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_share_as_reader_anvil_api_error_htmx(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = upload_workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_as_writer_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_with_compute_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_as_owner_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_stop_sharing_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=upload_workspace.workspace,
+                group=group,
+            )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
