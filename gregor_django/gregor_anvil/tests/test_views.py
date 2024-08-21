@@ -2151,8 +2151,368 @@ class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):
 
 
 class UploadWorkspaceAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
-    def test_tests(self):
-        self.fail("write tests")
+    """Tests for the UploadWorkspaceAuditByWorkspace view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:upload_workspaces:upload_workspace",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadWorkspaceAuditByWorkspace.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_slug=self.upload_workspace.workspace.billing_project.name,
+                workspace_slug=self.upload_workspace.workspace.name,
+            )
+
+    def test_invalid_billing_project_name(self):
+        """Raises a 404 error with an invalid object billing project."""
+        request = self.factory.get(self.get_url("foo", self.upload_workspace.workspace.name))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug="foo",
+                workspace_slug=self.upload_workspace.workspace.name,
+            )
+
+    def test_invalid_workspace_name(self):
+        """Raises a 404 error with an invalid workspace name."""
+        request = self.factory.get(self.get_url(self.upload_workspace.workspace.billing_project.name, "foo"))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug=self.upload_workspace.workspace.billing_project.name,
+                workspace_slug="foo",
+            )
+
+    def test_context_audit_results(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            upload_workspace_audit.UploadWorkspaceAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(self.upload_workspace, audit_results.queryset)
+
+    def test_context_audit_results_does_not_include_other_workspaces(self):
+        """The audit_results does not include other workspaces."""
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        audit_results = response.context_data["audit_results"]
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertNotIn(other_workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace, group=group, access=acm_models.WorkspaceGroupSharing.OWNER
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = self.upload_workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_writer(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create()
+        rc = self.upload_workspace.research_center
+        rc.uploader_group = group
+        rc.save()
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.upload_workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_FUTURE_CYCLE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.upload_workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.DCC_WRITERS_FUTURE_CYCLE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.upload_workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Change upload workspace end dates so it's in the past.
+        self.upload_workspace.upload_cycle.start_date = timezone.now() - timedelta(days=20)
+        self.upload_workspace.upload_cycle.end_date = timezone.now() - timedelta(days=10)
+        self.upload_workspace.upload_cycle.save()
+        self.upload_workspace.date_qc_completed = timezone.now() - timedelta(days=1)
+        self.upload_workspace.save()
+        group = acm_factories.ManagedGroupFactory.create()
+        rc = self.upload_workspace.research_center
+        rc.uploader_group = group
+        rc.save()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.upload_workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.upload_workspace.workspace,
+            group=self.upload_workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            upload_workspace_audit.UploadWorkspaceAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            upload_workspace_audit.UploadWorkspaceAudit.OTHER_GROUP_NO_ACCESS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
 
 class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
@@ -2228,10 +2588,20 @@ class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
-    def test_get_upload_workspace_does_not_exist(self):
-        """Raises a 404 error with an invalid object dbgap_application_pk."""
+    def test_get_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        response = self.client.get(self.get_url("foo", upload_workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(upload_workspace.workspace.billing_project.name, "foo", group.name))
         self.assertEqual(response.status_code, 404)
 
     def test_get_group_does_not_exist(self):
@@ -2248,7 +2618,7 @@ class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_context_audit_result(self):
-        """The data_access_audit exists in the context."""
+        """The audit_results exists in the context."""
         upload_workspace = factories.UploadWorkspaceFactory.create()
         group = acm_factories.ManagedGroupFactory.create()
         self.client.force_login(self.user)
@@ -2356,10 +2726,20 @@ class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(audit_result.note, upload_workspace_audit.UploadWorkspaceAudit.DCC_ADMIN_AS_OWNER)
 
-    def test_post_upload_workspace_does_not_exist(self):
-        """Raises a 404 error with an invalid object dbgap_application_pk."""
+    def test_post_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
         self.client.force_login(self.user)
-        response = self.client.post(self.get_url("foo", "bar", "foobar"))
+        response = self.client.post(self.get_url("foo", upload_workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(upload_workspace.workspace.billing_project.name, "foo", group.name))
         self.assertEqual(response.status_code, 404)
 
     def test_post_group_does_not_exist(self):

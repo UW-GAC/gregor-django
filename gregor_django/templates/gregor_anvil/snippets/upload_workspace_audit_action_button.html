@@ -1,6 +1,6 @@
 <div>
     {% if record.action %}
-        <a href="{% url 'gregor_anvil:audit:upload_workspaces:resolve' record.workspace.workspace.billing_project.name record.workspace.workspace.name record.managed_group.name %}">{{ record.action }} FOO</a>
+        <a href="{% url 'gregor_anvil:audit:upload_workspaces:resolve' record.workspace.workspace.billing_project.name record.workspace.workspace.name record.managed_group.name %}">{{ record.action }}</a>
     {% else %}
     &mdash;
     {% endif %}
