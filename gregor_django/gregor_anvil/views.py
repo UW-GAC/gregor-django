@@ -284,33 +284,31 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormV
                     group=self.managed_group,
                 )
             with transaction.atomic():
-                if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
-                    sharing.access = WorkspaceGroupSharing.READER
-                    sharing.can_compute = False
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
-                elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
-                    sharing.access = WorkspaceGroupSharing.WRITER
-                    sharing.can_compute = False
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
-                elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
-                    sharing.access = WorkspaceGroupSharing.WRITER
-                    sharing.can_compute = True
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
-                elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
-                    sharing.access = WorkspaceGroupSharing.OWNER
-                    sharing.can_compute = True
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
+                if isinstance(self.audit_result, upload_workspace_audit.VerifiedShared):
+                    # No changes needed.
+                    pass
+                elif isinstance(self.audit_result, upload_workspace_audit.VerifiedNotShared):
+                    # No changes needed.
+                    pass
                 elif isinstance(self.audit_result, upload_workspace_audit.StopSharing):
                     sharing.anvil_delete()
                     sharing.delete()
+                else:
+                    if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
+                        sharing.access = WorkspaceGroupSharing.READER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = True
+                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
+                        sharing.access = WorkspaceGroupSharing.OWNER
+                        sharing.can_compute = True
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
         except AnVILAPIError as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
