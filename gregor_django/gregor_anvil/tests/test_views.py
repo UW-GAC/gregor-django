@@ -3930,3 +3930,42 @@ class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # No messages were added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_as_writer_group_not_found_on_anvil_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+            research_center__uploader_group=group,
+        )
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            # Successful error code, but with usersNotFound
+            status=200,
+            json={"invitesSent": [], "usersNotFound": acls, "usersUpdated": []},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuditResolve.htmx_error)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # sharing.refresh_from_db()
+        # self.assertEqual(sharing.created, date_created)
+        # self.assertEqual(sharing.modified, date_created)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)

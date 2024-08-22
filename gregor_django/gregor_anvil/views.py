@@ -3,6 +3,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
 )
+from anvil_consortium_manager.exceptions import AnVILGroupNotFound
 from anvil_consortium_manager.models import Account, ManagedGroup, Workspace, WorkspaceGroupSharing
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -343,7 +344,7 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormV
                     sharing.full_clean()
                     sharing.save()
                     sharing.anvil_create_or_update()
-        except AnVILAPIError as e:
+        except (AnVILAPIError, AnVILGroupNotFound) as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
             else:
