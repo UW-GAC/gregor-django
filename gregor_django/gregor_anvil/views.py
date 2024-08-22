@@ -105,7 +105,7 @@ class UploadCycleCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageM
     """View to create a new UploadCycle object."""
 
     model = models.UploadCycle
-    form_class = forms.UploadCycleForm
+    form_class = forms.UploadCycleCreateForm
     success_message = "Successfully created Upload Cycle."
 
 

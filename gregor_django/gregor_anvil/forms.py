@@ -19,13 +19,29 @@ class UploadCycleForm(forms.ModelForm):
             "cycle",
             "start_date",
             "end_date",
+            "date_ready_for_compute",
             "note",
         )
 
         widgets = {
             "start_date": CustomDateInput(),
             "end_date": CustomDateInput(),
+            "date_ready_for_compute": CustomDateInput(),
         }
+
+
+class UploadCycleCreateForm(UploadCycleForm):
+    """Form to create an UploadCycle object."""
+
+    class Meta(UploadCycleForm.Meta):
+        exclude = ("date_ready_for_compute",)  # noqa: DJ006
+
+
+class UploadCycleUpdateForm(UploadCycleForm):
+    """Form to update an UploadCycle object."""
+
+    class Meta(UploadCycleForm.Meta):
+        exclude = ("cycle",)  # noqa: DJ006
 
 
 class UploadWorkspaceForm(forms.ModelForm):

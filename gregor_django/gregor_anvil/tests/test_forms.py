@@ -9,10 +9,10 @@ from .. import forms
 from . import factories
 
 
-class UploadCycleForm(TestCase):
-    """Tests for the UploadCycleForm class."""
+class UploadCycleCreateFormTest(TestCase):
+    """Tests for the UploadCycleCreateForm class."""
 
-    form_class = forms.UploadCycleForm
+    form_class = forms.UploadCycleCreateForm
 
     def test_valid(self):
         """Form is valid with necessary input."""
@@ -73,6 +73,67 @@ class UploadCycleForm(TestCase):
             "start_date": date.today(),
             "end_date": date.today() + timedelta(days=1),
             "note": "my test note",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+
+class UploadCycleUpdateFormTest(TestCase):
+    """Tests for the UploadCycleUpdateForm class."""
+
+    form_class = forms.UploadCycleUpdateForm
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_start_date(self):
+        """Form is invalid when missing start_date."""
+        form_data = {
+            # "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("start_date", form.errors)
+        self.assertEqual(len(form.errors["start_date"]), 1)
+        self.assertIn("required", form.errors["start_date"][0])
+
+    def test_invalid_missing_end_date(self):
+        """Form is invalid when missing cycle."""
+        form_data = {
+            "start_date": date.today(),
+            # "end_date": date.today() + timedelta(days=1),
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("end_date", form.errors)
+        self.assertEqual(len(form.errors["end_date"]), 1)
+        self.assertIn("required", form.errors["end_date"][0])
+
+    def test_valid_note(self):
+        """Form is valid with a note."""
+        form_data = {
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=1),
+            "note": "my test note",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_date_ready_for_compute(self):
+        """Form is valid with date_ready_for_compute."""
+        form_data = {
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=60),
+            "date_ready_for_compute": date.today() + timedelta(days=10),
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())

@@ -731,7 +731,7 @@ class UploadCycleCreateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertTrue("form" in response.context_data)
-        self.assertIsInstance(response.context_data["form"], forms.UploadCycleForm)
+        self.assertIsInstance(response.context_data["form"], forms.UploadCycleCreateForm)
 
     def test_can_create_an_object(self):
         """Posting valid data to the form creates an object."""
