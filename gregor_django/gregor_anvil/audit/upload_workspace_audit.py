@@ -236,7 +236,7 @@ class UploadWorkspaceAudit(GREGoRAudit):
             |
             # Groups that the workspace is shared with.
             Q(workspacegroupsharing__workspace=upload_workspace.workspace)
-        )
+        ).distinct()
 
         for group in groups_to_audit:
             self.audit_workspace_and_group(upload_workspace, group)
