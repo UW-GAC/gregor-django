@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
+from ..tables import BooleanIconColumn
 
 # from primed.primed_anvil.tables import BooleanIconColumn
 from .base import GREGoRAudit, GREGoRAuditResult
@@ -136,7 +137,7 @@ class UploadWorkspaceAuditTable(tables.Table):
     managed_group = tables.Column(linkify=True)
     # is_shared = tables.Column()
     access = tables.Column()
-    can_compute = tables.Column()
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True)
     note = tables.Column()
     # action = tables.Column()
     action = tables.TemplateColumn(template_name="gregor_anvil/snippets/upload_workspace_audit_action_button.html")
