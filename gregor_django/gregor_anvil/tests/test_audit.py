@@ -2576,9 +2576,7 @@ class UploadWorkspaceAuditPastCycleAfterQCCompleteTest(TestCase):
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
             research_center=self.research_center,
             upload_cycle__is_past=True,
-            date_qc_completed=fake.date_time_this_year(
-                before_now=True, after_now=False, tzinfo=timezone.get_current_timezone()
-            ),
+            date_qc_completed=fake.date_this_year(before_today=True, after_today=False),
         )
         self.auth_domain = self.upload_workspace.workspace.authorization_domains.get()
         self.other_group = ManagedGroupFactory.create()
@@ -3148,9 +3146,7 @@ class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
             research_center=self.research_center,
             upload_cycle__is_past=True,
-            date_qc_completed=fake.date_time_this_year(
-                before_now=True, after_now=False, tzinfo=timezone.get_current_timezone()
-            ),
+            date_qc_completed=fake.date_this_year(before_today=True, after_today=False),
         )
         self.auth_domain = self.upload_workspace.workspace.authorization_domains.get()
         # Create a corresponding combined workspace.

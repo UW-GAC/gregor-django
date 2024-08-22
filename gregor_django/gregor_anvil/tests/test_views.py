@@ -2432,7 +2432,7 @@ class UploadWorkspaceAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
         self.upload_workspace.upload_cycle.start_date = timezone.now() - timedelta(days=20)
         self.upload_workspace.upload_cycle.end_date = timezone.now() - timedelta(days=10)
         self.upload_workspace.upload_cycle.save()
-        self.upload_workspace.date_qc_completed = timezone.now() - timedelta(days=1)
+        self.upload_workspace.date_qc_completed = timezone.localdate() - timedelta(days=1)
         self.upload_workspace.save()
         group = acm_factories.ManagedGroupFactory.create()
         rc = self.upload_workspace.research_center
@@ -2776,7 +2776,7 @@ class UploadWorkspaceAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             upload_cycle=self.upload_cycle,
             research_center__uploader_group=group,
-            date_qc_completed=timezone.now() - timedelta(days=1),
+            date_qc_completed=timezone.localdate() - timedelta(days=1),
         )
         self.upload_cycle.start_date = timezone.now() - timedelta(days=20)
         self.upload_cycle.end_date = timezone.now() - timedelta(days=10)
