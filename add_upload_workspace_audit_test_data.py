@@ -1,5 +1,7 @@
+from anvil_consortium_manager.models import WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
+    WorkspaceGroupSharingFactory,
 )
 from django.conf import settings
 from django.utils import timezone
@@ -29,7 +31,7 @@ upload_cycle = factories.UploadCycleFactory.create(
     is_future=True,
     is_ready_for_compute=False,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U01_RC1",
@@ -46,44 +48,153 @@ workspace = factories.UploadWorkspaceFactory.create(
     research_center=rc,
     workspace__name="TEST_U02_RC1",
 )
+# Create records as appropriate for the previous point in the cycle - future cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# RC uploaders.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=rc_1_uploader_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=False,
+)
 
 
-# Create a current upload cycle before compute.
+# Create a current upload cycle after compute.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=3,
     is_current=True,
     is_ready_for_compute=True,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U03_RC1",
 )
+# Create records as appropriate for the previous point in the cycle - current cycle before compute.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# RC uploaders.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=rc_1_uploader_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=False,
+)
 
-# Create a past upload cycle before QC is completed.
+# Create a past upload cycle before qc is completed.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=4,
-    is_current=True,
+    is_past=True,
     is_ready_for_compute=True,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U04_RC1",
     date_qc_completed=None,
 )
+# Create records as appropriate for the previous point in the cycle - current cycle after compute.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# RC uploaders.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=rc_1_uploader_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
 
 # Create a past upload cycle after QC is completed.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=5,
-    is_current=True,
+    is_past=True,
     is_ready_for_compute=True,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U05_RC1",
     date_qc_completed=timezone.now(),
+)
+# Create records as appropriate for the previous point in the cycle - past cycle before QC complete.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
 )
 
 # Create a past upload cycle with a combined workspace.
@@ -92,7 +203,7 @@ upload_cycle = factories.UploadCycleFactory.create(
     is_past=True,
     is_ready_for_compute=True,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U06_RC1",
@@ -102,4 +213,19 @@ factories.CombinedConsortiumDataWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     date_completed=timezone.now(),
     workspace__name="TEST_U06_COMBINED",
+)
+# Create records as appropriate for the previous point in the cycle - past cycle before QC complete.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
 )
