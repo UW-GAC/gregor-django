@@ -10,7 +10,8 @@ from gregor_django.gregor_anvil.tests import factories
 dcc_admin_group = ManagedGroupFactory(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
 dcc_writer_group = ManagedGroupFactory(name="GREGOR_DCC_WRITERS")
 rc_1_member_group = ManagedGroupFactory(name="DEMO_RC1_MEMBERS")
-rc_1_uploader_group = ManagedGroupFactory(name="DMEO_RC1_UPLOADERS")
+rc_1_uploader_group = ManagedGroupFactory(name="DEMO_RC1_UPLOADERS")
+rc_1_nonmember_group = ManagedGroupFactory(name="DEMO_RC1_NONMEMBERS")
 
 # Create an RC
 rc = factories.ResearchCenterFactory.create(
@@ -18,6 +19,7 @@ rc = factories.ResearchCenterFactory.create(
     short_name="RC1",
     member_group=rc_1_member_group,
     uploader_group=rc_1_uploader_group,
+    non_member_group=rc_1_nonmember_group,
 )
 
 
@@ -39,11 +41,12 @@ upload_cycle = factories.UploadCycleFactory.create(
     is_current=True,
     is_ready_for_compute=False,
 )
-factories.UploadWorkspaceFactory.create(
+workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
     workspace__name="TEST_U02_RC1",
 )
+
 
 # Create a current upload cycle before compute.
 upload_cycle = factories.UploadCycleFactory.create(
