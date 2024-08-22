@@ -43,6 +43,7 @@ class UploadCycleFactory(DjangoModelFactory):
         is_past = Trait(
             start_date=timezone.localdate() - timedelta(days=100),
             end_date=timezone.localdate() - timedelta(days=10),
+            date_ready_for_compute=timezone.localdate() - timedelta(days=90),
         )
         is_current = Trait(
             start_date=timezone.localdate() - timedelta(days=45),

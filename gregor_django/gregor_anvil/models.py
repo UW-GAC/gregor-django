@@ -159,8 +159,11 @@ class UploadCycle(TimeStampedModel, models.Model):
     )
     start_date = models.DateField(help_text="The start date of this upload cycle.")
     end_date = models.DateField(help_text="The end date of this upload cycle.")
-    is_ready_for_compute = models.BooleanField(
-        help_text="Boolean indicator of whether workspace writers should be able to run compute.", default=False
+    date_ready_for_compute = models.DateField(
+        help_text="Date that this workspace was ready for RC uploaders to run compute.",
+        blank=True,
+        null=True,
+        default=None,
     )
     note = models.TextField(blank=True, help_text="Additional notes.")
 

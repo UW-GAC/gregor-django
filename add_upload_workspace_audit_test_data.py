@@ -29,7 +29,6 @@ rc = factories.ResearchCenterFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=1,
     is_future=True,
-    is_ready_for_compute=False,
 )
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
@@ -41,7 +40,6 @@ workspace = factories.UploadWorkspaceFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=2,
     is_current=True,
-    is_ready_for_compute=False,
 )
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
@@ -83,8 +81,9 @@ WorkspaceGroupSharingFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=3,
     is_current=True,
-    is_ready_for_compute=True,
 )
+upload_cycle.date_ready_for_compute = upload_cycle.start_date
+upload_cycle.save()
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
     research_center=rc,
@@ -124,7 +123,6 @@ WorkspaceGroupSharingFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=4,
     is_past=True,
-    is_ready_for_compute=True,
 )
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
@@ -166,7 +164,6 @@ WorkspaceGroupSharingFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=5,
     is_past=True,
-    is_ready_for_compute=True,
 )
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,
@@ -201,7 +198,6 @@ WorkspaceGroupSharingFactory.create(
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=6,
     is_past=True,
-    is_ready_for_compute=True,
 )
 workspace = factories.UploadWorkspaceFactory.create(
     upload_cycle=upload_cycle,

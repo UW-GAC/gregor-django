@@ -219,7 +219,7 @@ class UploadCycleTest(TestCase):
         instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.UploadCycle)
-        self.assertEqual(instance.is_ready_for_compute, False)
+        self.assertIsNone(instance.date_ready_for_compute)
 
     def test_model_saving_with_note(self):
         """Creation using the model constructor and .save() works."""
@@ -410,7 +410,6 @@ class UploadCycleTest(TestCase):
             version=2,
             date_completed=None,
         )
-        # import ipdb; ipdb.set_trace()
         included_workspaces = upload_cycle.get_partner_upload_workspaces()
         self.assertEqual(included_workspaces.count(), 2)
         self.assertNotIn(workspace_1, included_workspaces)
@@ -418,13 +417,14 @@ class UploadCycleTest(TestCase):
         self.assertIn(workspace_3, included_workspaces)
         self.assertNotIn(workspace_4, included_workspaces)
 
-    def test_is_ready_for_compute(self):
+    def test_date_ready_for_compute(self):
         """UploadCycle is ready for compute if all PartnerUploadWorkspaces have date_completed."""
         upload_cycle = factories.UploadCycleFactory.create()
-        self.assertFalse(upload_cycle.is_ready_for_compute)
-        upload_cycle.is_ready_for_compute = True
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
+        date = timezone.localdate()
+        upload_cycle.date_ready_for_compute = date
         upload_cycle.save()
-        self.assertEqual(upload_cycle.is_ready_for_compute, True)
+        self.assertEqual(upload_cycle.date_ready_for_compute, date)
 
     def test_is_current_is_past_is_future(self):
         # Previous cycle.

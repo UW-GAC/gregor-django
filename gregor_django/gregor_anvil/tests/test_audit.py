@@ -885,7 +885,7 @@ class UploadWorkspaceAuditCurrentCycleBeforeComputeTest(TestCase):
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
             research_center=self.research_center,
             upload_cycle__is_current=True,
-            upload_cycle__is_ready_for_compute=False,
+            upload_cycle__date_ready_for_compute=None,
         )
         self.auth_domain = self.upload_workspace.workspace.authorization_domains.get()
         self.other_group = ManagedGroupFactory.create()
@@ -1443,8 +1443,12 @@ class UploadWorkspaceAuditCurrentCycleAfterComputeTest(TestCase):
         self.rc_uploader_group = ManagedGroupFactory.create()
         self.research_center = factories.ResearchCenterFactory.create(uploader_group=self.rc_uploader_group)
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
-            research_center=self.research_center, upload_cycle__is_current=True, upload_cycle__is_ready_for_compute=True
+            research_center=self.research_center,
+            upload_cycle__is_current=True,
         )
+        # Set date ready for compute to a non-null value.
+        self.upload_workspace.upload_cycle.date_ready_for_compute = self.upload_workspace.upload_cycle.start_date
+        self.upload_workspace.upload_cycle.save()
         self.auth_domain = self.upload_workspace.workspace.authorization_domains.get()
         self.other_group = ManagedGroupFactory.create()
         self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")

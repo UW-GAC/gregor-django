@@ -304,7 +304,7 @@ class UploadWorkspaceAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
-        elif upload_cycle.is_current and not upload_cycle.is_ready_for_compute:
+        elif upload_cycle.is_current and not upload_cycle.date_ready_for_compute:
             note = self.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE
             if (
                 current_sharing
@@ -324,7 +324,7 @@ class UploadWorkspaceAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
-        elif upload_cycle.is_current and upload_cycle.is_ready_for_compute:
+        elif upload_cycle.is_current and upload_cycle.date_ready_for_compute:
             note = self.RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE
             if (
                 current_sharing

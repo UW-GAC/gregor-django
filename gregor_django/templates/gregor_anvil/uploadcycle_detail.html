@@ -17,11 +17,11 @@
     <li>Start date: {{ object.start_date }}</li>
     <li>End date: {{ object.end_date }}</li>
     <li>
-      Ready for compute:
-      {% if object.is_ready_for_compute %}
-      <i style="color:green;" class="ps-1 bi bi-check-circle-fill"></i> Yes
+      Date ready for compute:
+      {% if object.date_ready_for_compute %}
+        {{ object.date_ready_for_compute }}
       {% else %}
-      <i style="color:red;" class="ps-1 bi bi-x-circle-fill"></i> No
+        &mdash;
       {% endif %}
     </li>
   </ul>
