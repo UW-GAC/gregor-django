@@ -208,6 +208,40 @@ class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, D
         return context
 
 
+class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
+    """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
+
+    template_name = "gregor_anvil/upload_workspace_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        cycle = self.kwargs.get("cycle", None)
+        queryset = self.model.objects.filter(cycle=cycle)
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = upload_workspace_audit.UploadWorkspaceAudit(
+            queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
+        )
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
+
+
 class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     """View to resolve UploadWorkspace audit results."""
 
