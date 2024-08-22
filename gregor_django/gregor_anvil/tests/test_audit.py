@@ -7,7 +7,6 @@ from anvil_consortium_manager.models import WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceGroupSharingFactory
 from django.conf import settings
 from django.test import TestCase, override_settings
-from django.utils import timezone
 from faker import Faker
 
 from ..audit import upload_workspace_audit
@@ -3152,8 +3151,9 @@ class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
         # Create a corresponding combined workspace.
         self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
             upload_cycle=self.upload_workspace.upload_cycle,
-            date_completed=fake.date_time_this_year(
-                before_now=True, after_now=False, tzinfo=timezone.get_current_timezone()
+            date_completed=fake.date_this_year(
+                before_today=True,
+                after_today=False,
             ),
         )
         self.other_group = ManagedGroupFactory.create()
