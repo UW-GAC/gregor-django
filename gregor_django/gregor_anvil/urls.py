@@ -56,7 +56,7 @@ upload_workspace_audit_patterns = (
         path(
             "<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.UploadWorkspaceAuditByWorkspace.as_view(),
-            name="upload_workspace",
+            name="by_upload_workspace",
         ),
         # path("upload_cycle/<int:cycle>/", views.UploadWorkspaceAuditByUploadCycle.as_view(), name="upload_cycle"),
     ],

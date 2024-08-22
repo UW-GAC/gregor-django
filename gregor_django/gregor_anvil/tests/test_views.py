@@ -1117,7 +1117,7 @@ class UploadWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
-            "gregor_anvil:audit:upload_workspaces:upload_workspace",
+            "gregor_anvil:audit:upload_workspaces:by_upload_workspace",
             args=[
                 self.object.workspace.billing_project.name,
                 self.object.workspace.name,
@@ -2167,7 +2167,7 @@ class UploadWorkspaceAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "gregor_anvil:audit:upload_workspaces:upload_workspace",
+            "gregor_anvil:audit:upload_workspaces:by_upload_workspace",
             args=args,
         )
 
