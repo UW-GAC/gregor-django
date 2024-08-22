@@ -14,11 +14,13 @@
     <li>Upload workspace: <a href="{{ audit_result.workspace.get_absolute_url }}">{{ audit_result.workspace }}</a></li>
     <li>Managed group: <a href="{{ audit_result.managed_group.get_absolute_url }}">{{ audit_result.managed_group }}</a></li>
   </ul>
+
+  {% include "gregor_anvil/snippets/upload_workspace_audit_explanation.html" %}
+
 </div>
 
 <h2>Audit results</h2>
 
-{% include "gregor_anvil/snippets/upload_workspace_audit_explanation.html" %}
 
 <div class="card container-fluid mt-3 mb-3">
   <div class="card-body">
