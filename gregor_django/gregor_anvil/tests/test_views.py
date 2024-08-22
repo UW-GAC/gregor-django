@@ -985,6 +985,13 @@ class UploadCycleDetailTest(TestCase):
         self.assertIn(workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
 
+    def test_link_to_audit(self):
+        """Response includes a link to the audit page."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertContains(response, reverse("gregor_anvil:audit:upload_workspaces:by_upload_cycle", args=[obj.cycle]))
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""

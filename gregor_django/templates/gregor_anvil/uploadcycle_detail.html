@@ -59,3 +59,14 @@
 </div>
 
 {% endblock after_panel %}
+
+{% block action_buttons %}
+  <p>
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
+    Audit consortium sharing
+  </a>
+  <a href="#" class="btn btn-secondary" role="button">
+    Audit auth domain membership
+  </a>
+  </p>
+{% endblock action_buttons %}
