@@ -303,7 +303,38 @@ class UploadCycleTest(TestCase):
         self.assertEqual(len(e.exception.message_dict), 1)
         self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("end_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
         self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_start_date_after_date_ready_for_compute(self):
+        today = date.today()
+        instance = factories.UploadCycleFactory.build(
+            start_date=today + timedelta(days=1),
+            end_date=today + timedelta(days=10),
+            date_ready_for_compute=today,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("date_ready_for_compute", e.exception.message_dict[NON_FIELD_ERRORS][0])
+        self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_date_ready_for_compute_after_end_date(self):
+        today = date.today()
+        instance = factories.UploadCycleFactory.build(
+            start_date=today,
+            end_date=today + timedelta(days=10),
+            date_ready_for_compute=today + timedelta(days=11),
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("date_ready_for_compute", e.exception.message_dict[NON_FIELD_ERRORS][0])
+        self.assertIn("before end_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
     def test_get_partner_upload_workspaces_no_date_completed(self):
         """PartnerUploadWorkspace with no date_completed is not included."""

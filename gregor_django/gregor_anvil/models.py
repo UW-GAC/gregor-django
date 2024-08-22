@@ -187,6 +187,12 @@ class UploadCycle(TimeStampedModel, models.Model):
         # End date must be after start date.
         if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
+        # date_ready_for_compute must be after start_date
+        if self.start_date and self.date_ready_for_compute and self.start_date > self.date_ready_for_compute:
+            raise ValidationError("date_ready_for_compute must be after start_date!")
+        # date_ready_for_compute must be before end_date
+        if self.end_date and self.date_ready_for_compute and self.end_date < self.date_ready_for_compute:
+            raise ValidationError("date_ready_for_compute must be before end_date!")
 
     def get_partner_upload_workspaces(self):
         """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
