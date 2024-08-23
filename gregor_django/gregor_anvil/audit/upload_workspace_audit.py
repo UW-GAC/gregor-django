@@ -7,8 +7,6 @@ from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
 from ..tables import BooleanIconColumn
-
-# from primed.primed_anvil.tables import BooleanIconColumn
 from .base import GREGoRAudit, GREGoRAuditResult
 
 
