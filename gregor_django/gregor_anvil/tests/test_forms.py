@@ -450,10 +450,9 @@ class CombinedConsortiumDataWorkspaceFormTest(TestCase):
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
         upload_cycle = factories.UploadCycleFactory.create()
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle)
         form_data = {
             "upload_cycle": upload_cycle,
-            "upload_workspaces": [upload_workspace],
+            # "workspace": workspace,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -473,6 +472,18 @@ class CombinedConsortiumDataWorkspaceFormTest(TestCase):
         self.assertIn("upload_cycle", form.errors)
         self.assertEqual(len(form.errors["upload_cycle"]), 1)
         self.assertIn("required", form.errors["upload_cycle"][0])
+
+    def test_valid_date_qc_completed(self):
+        """Form is invalid with a duplicated object."""
+        upload_cycle = factories.UploadCycleFactory(is_past=True)
+        workspace = WorkspaceFactory.create()
+        form_data = {
+            "upload_cycle": upload_cycle,
+            "workspace": workspace,
+            "date_completed": date.today(),
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
 
 
 class ReleaseWorkspaceFormTest(TestCase):

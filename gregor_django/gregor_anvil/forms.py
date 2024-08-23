@@ -118,7 +118,11 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
         fields = (
             "workspace",
             "upload_cycle",
+            "date_completed",
         )
+        widgets = {
+            "date_completed": CustomDateInput(),
+        }
 
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
