@@ -61,6 +61,13 @@
 {% endblock after_panel %}
 
 {% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+  <p>
+    <a href="{% url 'gregor_anvil:upload_cycles:update' slug=object.cycle %}" class="btn btn-secondary" role="button">
+      Update
+    </a>
+  </p>
+  {% endif %}
   <p>
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
     Audit consortium sharing

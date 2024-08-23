@@ -1154,6 +1154,23 @@ class UploadCycleDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.cycle))
         self.assertContains(response, reverse("gregor_anvil:audit:upload_workspaces:by_upload_cycle", args=[obj.cycle]))
 
+    def test_link_to_update_view_staff_edit(self):
+        """Response includes a link to the update view for staff edit users."""
+        obj = self.model_factory.create()
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
+
+    def test_link_to_update_view_staff_view(self):
+        """Response includes a link to the update view for staff edit users."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertNotContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
