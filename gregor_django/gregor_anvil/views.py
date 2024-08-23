@@ -13,7 +13,7 @@ from django.db.models import Count, Q
 from django.forms import Form
 from django.http import Http404, HttpResponse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, DetailView, FormView, TemplateView
+from django.views.generic import CreateView, DetailView, FormView, TemplateView, UpdateView
 from django_tables2 import MultiTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
@@ -107,6 +107,15 @@ class UploadCycleCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageM
     model = models.UploadCycle
     form_class = forms.UploadCycleCreateForm
     success_message = "Successfully created Upload Cycle."
+
+
+class UploadCycleUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """View to create a new UploadCycle object."""
+
+    model = models.UploadCycle
+    slug_field = "cycle"
+    form_class = forms.UploadCycleUpdateForm
+    success_message = "Successfully updated Upload Cycle."
 
 
 class UploadCycleDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):

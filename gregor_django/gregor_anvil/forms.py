@@ -34,14 +34,24 @@ class UploadCycleCreateForm(UploadCycleForm):
     """Form to create an UploadCycle object."""
 
     class Meta(UploadCycleForm.Meta):
-        exclude = ("date_ready_for_compute",)  # noqa: DJ006
+        fields = (
+            "cycle",
+            "start_date",
+            "end_date",
+            "note",
+        )
 
 
 class UploadCycleUpdateForm(UploadCycleForm):
     """Form to update an UploadCycle object."""
 
     class Meta(UploadCycleForm.Meta):
-        exclude = ("cycle",)  # noqa: DJ006
+        fields = (
+            "start_date",
+            "end_date",
+            "date_ready_for_compute",
+            "note",
+        )
 
 
 class UploadWorkspaceForm(forms.ModelForm):
