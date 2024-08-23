@@ -63,8 +63,12 @@ class UploadWorkspaceForm(forms.ModelForm):
             "research_center",
             "consent_group",
             "upload_cycle",
+            "date_qc_completed",
             "workspace",
         )
+        widgets = {
+            "date_qc_completed": CustomDateInput(),
+        }
 
 
 class PartnerUploadWorkspaceForm(forms.ModelForm):

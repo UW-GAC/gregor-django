@@ -242,6 +242,21 @@ class UploadWorkspaceFormTest(TestCase):
         self.assertEqual(len(non_field_errors), 1)
         self.assertIn("already exists", non_field_errors[0])
 
+    def test_valid_date_qc_completed(self):
+        """Form is invalid with a duplicated object."""
+        research_center = factories.ResearchCenterFactory()
+        consent_group = factories.ConsentGroupFactory()
+        upload_cycle = factories.UploadCycleFactory(is_past=True)
+        form_data = {
+            "research_center": research_center,
+            "consent_group": consent_group,
+            "upload_cycle": upload_cycle,
+            "workspace": self.workspace,
+            "date_qc_completed": date.today(),
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
 
 class PartnerUploadWorkspaceFormTest(TestCase):
     """Tests for the PartnerUploadWorkspace class."""
