@@ -606,6 +606,16 @@ class UploadWorkspaceTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance_2.save()
 
+    def test_date_qc_completed_before_upload_cycle_end_date(self):
+        instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_current=True)
+        instance.date_qc_completed = timezone.localdate()
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
 
 class PartnerGroupTest(TestCase):
     """Tests for the ResearchCenter model."""
@@ -866,6 +876,16 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_date_completed_before_upload_cycle_end_date(self):
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        instance.date_completed = timezone.localdate()
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
 
 
 class ReleaseWorkspaceTest(TestCase):

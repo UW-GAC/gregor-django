@@ -258,6 +258,12 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     def __str__(self):
         return self.workspace.name
 
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_qc_completed is after the upload cycle end date.
+        if self.date_qc_completed and self.upload_cycle.end_date > self.date_qc_completed:
+            raise ValidationError("date_qc_completed must after end_date of associated upload_cycle.")
+
 
 class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about a partner workspace."""
@@ -310,6 +316,12 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         null=True,
         default=None,
     )
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_qc_completed is after the upload cycle end date.
+        if self.date_completed and self.upload_cycle.end_date > self.date_completed:
+            raise ValidationError("date_completed must after end_date of associated upload_cycle.")
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):

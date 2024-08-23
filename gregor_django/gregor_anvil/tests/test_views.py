@@ -903,7 +903,7 @@ class UploadCycleUpdateTest(TestCase):
         obj = factories.UploadCycleFactory.create(is_current=True)
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(obj.pk),
+            self.get_url(obj.cycle),
             {
                 "start_date": obj.start_date,
                 "end_date": obj.end_date,
