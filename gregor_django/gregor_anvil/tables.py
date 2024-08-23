@@ -120,6 +120,7 @@ class UploadCycleTable(tables.Table):
             "cycle",
             "start_date",
             "end_date",
+            "date_ready_for_compute",
         )
 
     def render_cycle(self, record):
@@ -188,6 +189,7 @@ class UploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
             "uploadworkspace__upload_cycle",
             "uploadworkspace__research_center",
             "uploadworkspace__consent_group",
+            "uploadworkspace__date_qc_completed",
             "consortium_access",
         )
 
@@ -251,6 +253,7 @@ class CombinedConsortiumDataWorkspaceTable(WorkspaceConsortiumAccessTable, table
         fields = (
             "name",
             "combinedconsortiumdataworkspace__upload_cycle",
+            "combinedconsortiumdataworkspace__date_completed",
         )
 
 
