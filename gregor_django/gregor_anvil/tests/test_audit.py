@@ -9,7 +9,7 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 from faker import Faker
 
-from ..audit import upload_workspace_audit
+from ..audit import upload_workspace_audit, upload_workspace_auth_domain_audit
 from ..audit.base import GREGoRAudit, GREGoRAuditResult
 from ..tests import factories
 
@@ -3704,3 +3704,48 @@ class UploadWorkspaceAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceAudit.OTHER_GROUP_NO_ACCESS)
+
+
+class UploadWorkspaceAuthDomainAuditTest(TestCase):
+    """General tests of the `UploadWorkspaceAuthDomainAudit` class."""
+
+    def test_completed(self):
+        """The completed attribute is set appropriately."""
+        # Instantiate the class.
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_upload_workspaces(self):
+        """The audit works if there are no UploadWorkspaces."""
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_one_upload_workspace_no_groups(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        self.assertEqual(len(audit.queryset), 1)
+        self.assertIn(upload_workspace, audit.queryset)
+
+    def test_two_upload_workspace_no_groups(self):
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        self.assertEqual(len(audit.queryset), 2)
+        self.assertIn(upload_workspace_1, audit.queryset)
+        self.assertIn(upload_workspace_2, audit.queryset)
+
+    def test_finish_tests(self):
+        self.fail()
