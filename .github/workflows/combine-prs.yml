@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Use GitHub App Token
-        uses: actions/create-github-app-token@1.10.3
+        uses: actions/create-github-app-token@v1.10.3
         id: app-token
         with:
           app-id: ${{ secrets.COMBINE_PRS_APP_ID }} # The ID of the GitHub App
