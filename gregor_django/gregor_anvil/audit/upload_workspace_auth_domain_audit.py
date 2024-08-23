@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
+from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
@@ -126,19 +127,18 @@ class UploadWorkspaceAuthDomainAuditTable(tables.Table):
 class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace auth domain audit."""
 
-    # Before combined workspace.
+    # RC notes.
     RC_BEFORE_COMBINED = (
         "RC uploader and member group should be members of the auth domain before the combined workspace is complete."
     )
-
-    # After combined workspace.
     RC_AFTER_COMBINED = (
         "RC uploader and member group should not be direct members of the auth domain"
         " after the combined workspace is complete."
     )
-
-    # Non-member groups.
     RC_NON_MEMBERS = "RC non-member group should always be a member of the auth domain."
+
+    # DCC notes.
+    DCC_ADMINS = "DCC admin group should always be an admin of the auth domain."
 
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
@@ -194,6 +194,8 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
         elif managed_group == upload_workspace.research_center.non_member_group:
             self._audit_workspace_and_group_for_rc_non_members(upload_workspace, managed_group)
+        elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
+            self._audit_workspace_and_group_for_dcc_admin(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
@@ -250,6 +252,36 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                     workspace=upload_workspace,
                     managed_group=managed_group,
                     note=self.RC_NON_MEMBERS,
+                    current_membership_instance=membership,
+                )
+            )
+
+    def _audit_workspace_and_group_for_dcc_admin(self, upload_workspace, managed_group):
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        if not membership:
+            self.needs_action.append(
+                AddAdmin(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.DCC_ADMINS,
+                    current_membership_instance=membership,
+                )
+            )
+        elif membership.role == GroupGroupMembership.ADMIN:
+            self.verified.append(
+                VerifiedAdmin(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.DCC_ADMINS,
+                    current_membership_instance=membership,
+                )
+            )
+        else:
+            self.needs_action.append(
+                ChangeToAdmin(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.DCC_ADMINS,
                     current_membership_instance=membership,
                 )
             )
