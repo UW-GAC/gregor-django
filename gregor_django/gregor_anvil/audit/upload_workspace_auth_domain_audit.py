@@ -192,6 +192,8 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
         elif managed_group == upload_workspace.research_center.member_group:
             self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
+        elif managed_group == upload_workspace.research_center.non_member_group:
+            self._audit_workspace_and_group_for_rc_non_members(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
@@ -221,3 +223,33 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.errors.append(Remove(**result_kwargs))
             else:
                 self.needs_action.append(Remove(**result_kwargs))
+
+    def _audit_workspace_and_group_for_rc_non_members(self, upload_workspace, managed_group):
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        if not membership:
+            self.needs_action.append(
+                AddMember(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.RC_NON_MEMBERS,
+                    current_membership_instance=membership,
+                )
+            )
+        elif membership.role == GroupGroupMembership.MEMBER:
+            self.verified.append(
+                VerifiedMember(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.RC_NON_MEMBERS,
+                    current_membership_instance=membership,
+                )
+            )
+        else:
+            self.errors.append(
+                ChangeToMember(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.RC_NON_MEMBERS,
+                    current_membership_instance=membership,
+                )
+            )
