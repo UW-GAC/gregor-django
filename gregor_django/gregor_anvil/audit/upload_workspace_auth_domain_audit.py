@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 
-from ..models import UploadWorkspace
+from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
 from .base import GREGoRAudit, GREGoRAuditResult
 
 
@@ -18,20 +18,14 @@ class UploadWorkspaceAuthDomainAuditResult(GREGoRAuditResult):
     action: str = None
     current_membership_instance: GroupGroupMembership = None
 
-    def get_action_url(self):
-        """The URL that handles the action needed."""
-        return ""
-
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
         row = {
             "workspace": self.workspace,
             "managed_group": self.managed_group,
-            "access": self.current_membership_instance.access if self.current_membership_instance else None,
-            "can_compute": self.current_membership_instance.can_compute if self.current_membership_instance else None,
+            "role": self.current_membership_instance.role if self.current_membership_instance else None,
             "note": self.note,
             "action": self.action,
-            "action_url": self.get_action_url(),
         }
         return row
 
@@ -39,8 +33,6 @@ class UploadWorkspaceAuthDomainAuditResult(GREGoRAuditResult):
 @dataclass
 class VerifiedMember(UploadWorkspaceAuthDomainAuditResult):
     """Audit results class for when member membership has been verified."""
-
-    is_shared: bool = True
 
     def __str__(self):
         return f"Verified member: {self.note}"
@@ -57,10 +49,37 @@ class VerifiedAdmin(UploadWorkspaceAuthDomainAuditResult):
 
 
 @dataclass
+class VerifiedNotMember(UploadWorkspaceAuthDomainAuditResult):
+    """Audit results class for when member membership has been verified."""
+
+    def __str__(self):
+        return f"Verified member: {self.note}"
+
+
+@dataclass
+class AddMember(UploadWorkspaceAuthDomainAuditResult):
+    """Audit results class for when a member role should be added."""
+
+    action: str = "Add member"
+
+    def __str__(self):
+        return f"Add member: {self.note}"
+
+
+@dataclass
+class AddAdmin(UploadWorkspaceAuthDomainAuditResult):
+    """Audit results class for when an admin role should be added."""
+
+    action: str = "Add admin"
+
+    def __str__(self):
+        return f"Add admin: {self.note}"
+
+
+@dataclass
 class ChangeToMember(UploadWorkspaceAuthDomainAuditResult):
     """Audit results class for when an admin role should be changed to a member role."""
 
-    is_shared: bool = False
     action: str = "Change to member"
 
     def __str__(self):
@@ -71,7 +90,6 @@ class ChangeToMember(UploadWorkspaceAuthDomainAuditResult):
 class ChangeToAdmin(UploadWorkspaceAuthDomainAuditResult):
     """Audit results class for when a member role should be changed to an admin role."""
 
-    is_shared: bool = False
     action: str = "Change to admin"
 
     def __str__(self):
@@ -82,7 +100,6 @@ class ChangeToAdmin(UploadWorkspaceAuthDomainAuditResult):
 class Remove(UploadWorkspaceAuthDomainAuditResult):
     """Audit results class for when group membership should be removed."""
 
-    is_shared: bool = False
     action: str = "Share as owner"
 
     def __str__(self):
@@ -109,6 +126,17 @@ class UploadWorkspaceAuthDomainAuditTable(tables.Table):
 class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace auth domain audit."""
 
+    # Before combined workspace.
+    RC_BEFORE_COMBINED = (
+        "RC uploader and member group should be members of the auth domain before the combined workspace is complete."
+    )
+
+    # After combined workspace.
+    RC_AFTER_COMBINED = (
+        "RC uploader and member group should not be direct members of the auth domain"
+        " after the combined workspace is complete."
+    )
+
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
     def __init__(self, queryset=None):
@@ -123,6 +151,96 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         for workspace in self.queryset:
             self.audit_upload_workspace(workspace)
 
+    def _get_current_membership(self, upload_workspace, managed_group):
+        try:
+            current_membership = GroupGroupMembership.objects.get(
+                parent_group=upload_workspace.workspace.authorization_domains.first(), child_group=managed_group
+            )
+        except GroupGroupMembership.DoesNotExist:
+            current_membership = None
+        return current_membership
+
+    def _get_combined_workspace(self, upload_cycle):
+        """Returns the combined workspace, but only if it is ready for sharing."""
+        try:
+            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
+                upload_cycle=upload_cycle, date_completed__isnull=False
+            )
+        except CombinedConsortiumDataWorkspace.DoesNotExist:
+            combined_workspace = None
+        return combined_workspace
+
     def audit_upload_workspace(self, upload_workspace):
         """Audit the auth domain membership of a single UploadWorkspace."""
-        pass
+        research_center = upload_workspace.research_center
+        groups_to_audit = ManagedGroup.objects.filter(
+            # RC uploader group.
+            Q(research_center_of_uploaders=research_center)
+        ).distinct()
+
+        for group in groups_to_audit:
+            self.audit_workspace_and_group(upload_workspace, group)
+
+    def audit_workspace_and_group(self, upload_workspace, managed_group):
+        if managed_group.research_center_of_uploaders == upload_workspace.research_center:
+            self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
+
+    def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
+        combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        if not combined_workspace and not membership:
+            self.needs_action.append(
+                AddMember(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.RC_BEFORE_COMBINED,
+                    current_membership_instance=membership,
+                )
+            )
+        elif not combined_workspace and membership:
+            if membership.role == GroupGroupMembership.MEMBER:
+                self.verified.append(
+                    VerifiedMember(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_BEFORE_COMBINED,
+                        current_membership_instance=membership,
+                    )
+                )
+            else:
+                self.errors.append(
+                    ChangeToMember(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_BEFORE_COMBINED,
+                        current_membership_instance=membership,
+                    )
+                )
+        elif combined_workspace and not membership:
+            self.verified.append(
+                VerifiedNotMember(
+                    workspace=upload_workspace,
+                    managed_group=managed_group,
+                    note=self.RC_AFTER_COMBINED,
+                    current_membership_instance=membership,
+                )
+            )
+        elif combined_workspace and membership:
+            if membership.role == "ADMIN":
+                self.errors.append(
+                    Remove(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_AFTER_COMBINED,
+                        current_membership_instance=membership,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    Remove(
+                        workspace=upload_workspace,
+                        managed_group=managed_group,
+                        note=self.RC_AFTER_COMBINED,
+                        current_membership_instance=membership,
+                    )
+                )
