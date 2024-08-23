@@ -137,6 +137,9 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         " after the combined workspace is complete."
     )
 
+    # Non-member groups.
+    RC_NON_MEMBERS = "RC non-member group should always be a member of the auth domain."
+
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
     def __init__(self, queryset=None):
@@ -176,71 +179,45 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         groups_to_audit = ManagedGroup.objects.filter(
             # RC uploader group.
             Q(research_center_of_uploaders=research_center)
+            |
+            # RC member group.
+            Q(research_center_of_members=research_center)
         ).distinct()
 
         for group in groups_to_audit:
             self.audit_workspace_and_group(upload_workspace, group)
 
     def audit_workspace_and_group(self, upload_workspace, managed_group):
-        if managed_group.research_center_of_uploaders == upload_workspace.research_center:
+        if managed_group == upload_workspace.research_center.uploader_group:
+            self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
+        elif managed_group == upload_workspace.research_center.member_group:
             self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
         membership = self._get_current_membership(upload_workspace, managed_group)
+        if combined_workspace:
+            note = self.RC_AFTER_COMBINED
+        else:
+            note = self.RC_BEFORE_COMBINED
+        result_kwargs = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": membership,
+            "note": note,
+        }
+
         if not combined_workspace and not membership:
-            self.needs_action.append(
-                AddMember(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_BEFORE_COMBINED,
-                    current_membership_instance=membership,
-                )
-            )
+            self.needs_action.append(AddMember(**result_kwargs))
         elif not combined_workspace and membership:
             if membership.role == GroupGroupMembership.MEMBER:
-                self.verified.append(
-                    VerifiedMember(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_BEFORE_COMBINED,
-                        current_membership_instance=membership,
-                    )
-                )
+                self.verified.append(VerifiedMember(**result_kwargs))
             else:
-                self.errors.append(
-                    ChangeToMember(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_BEFORE_COMBINED,
-                        current_membership_instance=membership,
-                    )
-                )
+                self.errors.append(ChangeToMember(**result_kwargs))
         elif combined_workspace and not membership:
-            self.verified.append(
-                VerifiedNotMember(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_AFTER_COMBINED,
-                    current_membership_instance=membership,
-                )
-            )
+            self.verified.append(VerifiedNotMember(**result_kwargs))
         elif combined_workspace and membership:
             if membership.role == "ADMIN":
-                self.errors.append(
-                    Remove(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_AFTER_COMBINED,
-                        current_membership_instance=membership,
-                    )
-                )
+                self.errors.append(Remove(**result_kwargs))
             else:
-                self.needs_action.append(
-                    Remove(
-                        workspace=upload_workspace,
-                        managed_group=managed_group,
-                        note=self.RC_AFTER_COMBINED,
-                        current_membership_instance=membership,
-                    )
-                )
+                self.needs_action.append(Remove(**result_kwargs))
