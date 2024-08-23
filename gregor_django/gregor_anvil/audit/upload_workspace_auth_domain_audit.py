@@ -139,6 +139,10 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
     # DCC notes.
     DCC_ADMINS = "DCC admin group should always be an admin of the auth domain."
+    DCC_BEFORE_COMBINED = "DCC groups should be a member of the auth domain before the combined workspace is complete."
+    DCC_AFTER_COMBINED = (
+        "DCC groups should not be direct members of the auth domain after the combined workspace is complete."
+    )
 
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
@@ -196,6 +200,8 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_rc_non_members(upload_workspace, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
             self._audit_workspace_and_group_for_dcc_admin(upload_workspace, managed_group)
+        elif managed_group.name == "GREGOR_DCC_WRITERS":
+            self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
@@ -285,3 +291,32 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                     current_membership_instance=membership,
                 )
             )
+
+    def _audit_workspace_and_group_for_dcc(self, upload_workspace, managed_group):
+        combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        if combined_workspace:
+            note = self.DCC_AFTER_COMBINED
+        else:
+            note = self.DCC_BEFORE_COMBINED
+        result_kwargs = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": membership,
+            "note": note,
+        }
+
+        if not combined_workspace and not membership:
+            self.needs_action.append(AddMember(**result_kwargs))
+        elif not combined_workspace and membership:
+            if membership.role == GroupGroupMembership.MEMBER:
+                self.verified.append(VerifiedMember(**result_kwargs))
+            else:
+                self.errors.append(ChangeToMember(**result_kwargs))
+        elif combined_workspace and not membership:
+            self.verified.append(VerifiedNotMember(**result_kwargs))
+        elif combined_workspace and membership:
+            if membership.role == "ADMIN":
+                self.errors.append(Remove(**result_kwargs))
+            else:
+                self.needs_action.append(Remove(**result_kwargs))

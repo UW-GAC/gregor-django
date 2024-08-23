@@ -4003,6 +4003,61 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
 
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces before compute."""
@@ -4254,6 +4309,61 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
 
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces after compute."""
@@ -4457,6 +4567,61 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
@@ -4713,6 +4878,61 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
 
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for past cycles before QC is complete.
@@ -4968,6 +5188,61 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
@@ -5227,3 +5502,58 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+
+    def test_dcc_writers_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED
+        )
