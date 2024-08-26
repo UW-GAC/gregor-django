@@ -136,7 +136,6 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         " after the combined workspace is complete."
     )
     RC_NON_MEMBERS = "RC non-member group should always be a member of the auth domain."
-    GREGOR_ALL_BEFORE_COMBINED = "GREGOR_ALL should not have access before the combined workspace is complete."
 
     # DCC notes.
     DCC_ADMINS = "DCC admin group should always be an admin of the auth domain."
@@ -144,9 +143,15 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     DCC_AFTER_COMBINED = (
         "DCC groups should not be direct members of the auth domain after the combined workspace is complete."
     )
+
+    # GREGOR_ALL notes.
+    GREGOR_ALL_BEFORE_COMBINED = "GREGOR_ALL should not have access before the combined workspace is complete."
     GREGOR_ALL_AFTER_COMBINED = (
         "GREGOR_ALL should be a member of the auth domain after the combined workspace is complete."
     )
+
+    # Other group notes.
+    OTHER_GROUP = "This group should not have access to the auth domain."
 
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
@@ -210,6 +215,8 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
         elif managed_group.name == "GREGOR_ALL":
             self._audit_workspace_and_group_for_gregor_all(upload_workspace, managed_group)
+        else:
+            self._audit_workspace_and_other_group(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
@@ -354,3 +361,17 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(VerifiedMember(**result_kwargs))
             else:
                 self.errors.append(ChangeToMember(**result_kwargs))
+
+    def _audit_workspace_and_other_group(self, upload_workspace, managed_group):
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        result_kwargs = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": membership,
+            "note": self.OTHER_GROUP,
+        }
+
+        if not membership:
+            self.verified.append(VerifiedNotMember(**result_kwargs))
+        elif membership:
+            self.errors.append(Remove(**result_kwargs))

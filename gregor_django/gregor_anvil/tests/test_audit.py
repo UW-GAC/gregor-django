@@ -4168,6 +4168,55 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED
         )
 
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces before compute."""
@@ -4584,6 +4633,55 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED
         )
 
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces after compute."""
@@ -4952,6 +5050,55 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED
         )
+
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
@@ -5373,6 +5520,55 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED
         )
 
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for past cycles before QC is complete.
@@ -5793,6 +5989,55 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED
         )
+
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
@@ -6217,3 +6462,52 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(
             record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED
         )
+
+    def test_other_group_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(record.workspace, self.upload_workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
