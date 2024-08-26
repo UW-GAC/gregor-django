@@ -68,17 +68,28 @@ upload_workspace_sharing_audit_patterns = (
     "sharing",
 )
 
-upload_workspace_sharing_audit_patterns = (
+upload_workspace_auth_domain_audit_patterns = (
+    [
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.UploadWorkspaceAuthDomainAuditByWorkspace.as_view(),
+            name="by_upload_workspace",
+        ),
+    ],
+    "auth_domains",
+)
+
+upload_workspace_audit_patterns = (
     [
         path("sharing/", include(upload_workspace_sharing_audit_patterns)),
-        # path("auth_domain/", include(upload_workspace_auth_domain_audit_patterns)),
+        path("auth_domain/", include(upload_workspace_auth_domain_audit_patterns)),
     ],
     "upload_workspaces",
 )
 
 audit_patterns = (
     [
-        path("upload_workspaces/", include(upload_workspace_sharing_audit_patterns)),
+        path("upload_workspaces/", include(upload_workspace_audit_patterns)),
     ],
     "audit",
 )
