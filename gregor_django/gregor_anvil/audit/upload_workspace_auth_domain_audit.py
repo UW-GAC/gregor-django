@@ -189,12 +189,26 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     def audit_upload_workspace(self, upload_workspace):
         """Audit the auth domain membership of a single UploadWorkspace."""
         research_center = upload_workspace.research_center
+        group_names = [
+            "GREGOR_DCC_MEMBERS",
+            "GREGOR_DCC_WRITERS",
+            settings.ANVIL_DCC_ADMINS_GROUP_NAME,
+        ]
         groups_to_audit = ManagedGroup.objects.filter(
             # RC uploader group.
             Q(research_center_of_uploaders=research_center)
             |
             # RC member group.
             Q(research_center_of_members=research_center)
+            |
+            # RC non-member group.
+            Q(research_center_of_non_members=research_center)
+            |
+            # Other sepcific groups to include.
+            Q(name__in=group_names)
+            |
+            # Any other groups that are members.
+            Q(parent_memberships__parent_group=upload_workspace.workspace.authorization_domains.first())
         ).distinct()
 
         for group in groups_to_audit:
