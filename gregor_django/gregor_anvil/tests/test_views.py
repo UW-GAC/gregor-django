@@ -1152,7 +1152,9 @@ class UploadCycleDetailTest(TestCase):
         obj = self.model_factory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
-        self.assertContains(response, reverse("gregor_anvil:audit:upload_workspaces:by_upload_cycle", args=[obj.cycle]))
+        self.assertContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
+        )
 
     def test_link_to_update_view_staff_edit(self):
         """Response includes a link to the update view for staff edit users."""
@@ -1303,7 +1305,7 @@ class UploadWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
-            "gregor_anvil:audit:upload_workspaces:by_upload_workspace",
+            "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
             args=[
                 self.object.workspace.billing_project.name,
                 self.object.workspace.name,
@@ -2353,7 +2355,7 @@ class UploadWorkspaceAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "gregor_anvil:audit:upload_workspaces:by_upload_workspace",
+            "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
             args=args,
         )
 
@@ -2718,7 +2720,7 @@ class UploadWorkspaceAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "gregor_anvil:audit:upload_workspaces:by_upload_cycle",
+            "gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle",
             args=args,
         )
 
@@ -3052,7 +3054,7 @@ class UploadWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "gregor_anvil:audit:upload_workspaces:resolve",
+            "gregor_anvil:audit:upload_workspaces:sharing:resolve",
             args=args,
         )
 

@@ -23,7 +23,7 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
     def get_action_url(self):
         """The URL that handles the action needed."""
         # return reverse(
-        #     "gregor_anvil:audit:upload_workspaces:resolve",
+        #     "gregor_anvil:audit:upload_workspaces:sharing:resolve",
         #     args=[
         #         self.dbgap_application.dbgap_project_id,
         #         self.workspace.workspace.billing_project.name,
