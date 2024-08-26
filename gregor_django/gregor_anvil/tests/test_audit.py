@@ -4217,6 +4217,68 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
 
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces before compute."""
@@ -4682,6 +4744,68 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
 
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
 
 class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for current cycle UploadWorkspaces after compute."""
@@ -5099,6 +5223,68 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
@@ -5569,6 +5755,68 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
 
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
     """Tests for the `UploadWorkspaceAuthDomainAudit` class for past cycles before QC is complete.
@@ -6038,6 +6286,68 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
 
 class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(TestCase):
@@ -6511,3 +6821,65 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP)
+
+    def test_anvil_admins_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.upload_workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)

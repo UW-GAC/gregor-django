@@ -215,6 +215,10 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
         elif managed_group.name == "GREGOR_ALL":
             self._audit_workspace_and_group_for_gregor_all(upload_workspace, managed_group)
+        elif managed_group.name == "anvil-admins":
+            self._audit_workspace_and_anvil_group(upload_workspace, managed_group)
+        elif managed_group.name == "anvil_devs":
+            self._audit_workspace_and_anvil_group(upload_workspace, managed_group)
         else:
             self._audit_workspace_and_other_group(upload_workspace, managed_group)
 
@@ -361,6 +365,12 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(VerifiedMember(**result_kwargs))
             else:
                 self.errors.append(ChangeToMember(**result_kwargs))
+
+    def _audit_workspace_and_anvil_group(self, upload_workspace, managed_group):
+        """Ignore the AnVIL groups in this audit.
+
+        We don't want to make assumptions about what access level AnVIL has."""
+        pass
 
     def _audit_workspace_and_other_group(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
