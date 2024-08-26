@@ -48,40 +48,27 @@ workspace_report_patterns = (
 
 upload_workspace_sharing_audit_patterns = (
     [
-        # path("all/", views.UploadWorkspaceAuditAll.as_view(), name="all"),
+        # path("all/", views.UploadWorkspaceSharingAuditAll.as_view(), name="all"),
         path(
             "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>",
-            views.UploadWorkspaceAuditResolve.as_view(),
+            views.UploadWorkspaceSharingAuditResolve.as_view(),
             name="resolve",
         ),
-        path("upload_cycle/<int:cycle>/", views.UploadWorkspaceAuditByUploadCycle.as_view(), name="by_upload_cycle"),
+        path(
+            "upload_cycle/<int:cycle>/",
+            views.UploadWorkspaceSharingAuditByUploadCycle.as_view(),
+            name="by_upload_cycle",
+        ),
         path(
             "<slug:billing_project_slug>/<slug:workspace_slug>/",
-            views.UploadWorkspaceAuditByWorkspace.as_view(),
+            views.UploadWorkspaceSharingAuditByWorkspace.as_view(),
             name="by_upload_workspace",
         ),
     ],
     "sharing",
 )
 
-# upload_workspace_auth_domain_audit_patterns = (
-#     [
-#         # path(
-#         #     "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>",
-#         #     views.UploadWorkspaceAuditResolve.as_view(),
-#         #     name="resolve",
-#         # ),
-#         path("upload_cycle/<int:cycle>/", views.UploadWorkspaceAuditByUploadCycle.as_view(), name="by_upload_cycle"),
-#         path(
-#             "<slug:billing_project_slug>/<slug:workspace_slug>/",
-#             views.UploadWorkspaceAuditByWorkspace.as_view(),
-#             name="by_upload_workspace",
-#         ),
-#     ],
-#     "auth_domains",
-# )
-
-upload_workspace_audit_patterns = (
+upload_workspace_sharing_audit_patterns = (
     [
         path("sharing/", include(upload_workspace_sharing_audit_patterns)),
         # path("auth_domain/", include(upload_workspace_auth_domain_audit_patterns)),
@@ -91,7 +78,7 @@ upload_workspace_audit_patterns = (
 
 audit_patterns = (
     [
-        path("upload_workspaces/", include(upload_workspace_audit_patterns)),
+        path("upload_workspaces/", include(upload_workspace_sharing_audit_patterns)),
     ],
     "audit",
 )

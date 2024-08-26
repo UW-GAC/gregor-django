@@ -19,7 +19,7 @@ from django_tables2 import MultiTableMixin, SingleTableView
 from gregor_django.users.tables import UserTable
 
 from . import forms, models, tables
-from .audit import upload_workspace_audit
+from .audit import upload_workspace_sharing_audit
 
 User = get_user_model()
 
@@ -182,10 +182,10 @@ class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class UploadWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
-    template_name = "gregor_anvil/upload_workspace_audit.html"
+    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
     model = models.UploadWorkspace
 
     def get_object(self, queryset=None):
@@ -209,7 +209,9 @@ class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, D
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_audit.UploadWorkspaceAudit(queryset=self.model.objects.filter(pk=self.object.pk))
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+            queryset=self.model.objects.filter(pk=self.object.pk)
+        )
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
@@ -218,10 +220,10 @@ class UploadWorkspaceAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, D
         return context
 
 
-class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class UploadWorkspaceSharingAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
-    template_name = "gregor_anvil/upload_workspace_audit.html"
+    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
     model = models.UploadCycle
 
     def get_object(self, queryset=None):
@@ -241,7 +243,7 @@ class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired,
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_audit.UploadWorkspaceAudit(
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
             queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
         )
         audit.run_audit()
@@ -252,11 +254,11 @@ class UploadWorkspaceAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired,
         return context
 
 
-class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     """View to resolve UploadWorkspace audit results."""
 
     form_class = Form
-    template_name = "gregor_anvil/upload_workspace_audit_resolve.html"
+    template_name = "gregor_anvil/upload_workspace_sharing_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
@@ -287,7 +289,7 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormV
         return obj
 
     def get_audit_result(self):
-        audit = upload_workspace_audit.UploadWorkspaceAudit()
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
         audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
         # Set to completed, because we are just running this one specific check.
@@ -328,26 +330,26 @@ class UploadWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormV
                     group=self.managed_group,
                 )
             with transaction.atomic():
-                if isinstance(self.audit_result, upload_workspace_audit.VerifiedShared):
+                if isinstance(self.audit_result, upload_workspace_sharing_audit.VerifiedShared):
                     # No changes needed.
                     pass
-                elif isinstance(self.audit_result, upload_workspace_audit.VerifiedNotShared):
+                elif isinstance(self.audit_result, upload_workspace_sharing_audit.VerifiedNotShared):
                     # No changes needed.
                     pass
-                elif isinstance(self.audit_result, upload_workspace_audit.StopSharing):
+                elif isinstance(self.audit_result, upload_workspace_sharing_audit.StopSharing):
                     sharing.anvil_delete()
                     sharing.delete()
                 else:
-                    if isinstance(self.audit_result, upload_workspace_audit.ShareAsReader):
+                    if isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsReader):
                         sharing.access = WorkspaceGroupSharing.READER
                         sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsWriter):
+                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsWriter):
                         sharing.access = WorkspaceGroupSharing.WRITER
                         sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareWithCompute):
+                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareWithCompute):
                         sharing.access = WorkspaceGroupSharing.WRITER
                         sharing.can_compute = True
-                    elif isinstance(self.audit_result, upload_workspace_audit.ShareAsOwner):
+                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsOwner):
                         sharing.access = WorkspaceGroupSharing.OWNER
                         sharing.can_compute = True
                     sharing.full_clean()

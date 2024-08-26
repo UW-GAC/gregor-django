@@ -11,7 +11,7 @@ from .base import GREGoRAudit, GREGoRAuditResult
 
 
 @dataclass
-class UploadWorkspaceAuditResult(GREGoRAuditResult):
+class UploadWorkspaceSharingAuditResult(GREGoRAuditResult):
     """Base class to hold results for auditing upload workspace sharing."""
 
     workspace: UploadWorkspace
@@ -47,7 +47,7 @@ class UploadWorkspaceAuditResult(GREGoRAuditResult):
 
 
 @dataclass
-class VerifiedShared(UploadWorkspaceAuditResult):
+class VerifiedShared(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing has been verified."""
 
     is_shared: bool = True
@@ -57,7 +57,7 @@ class VerifiedShared(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class VerifiedNotShared(UploadWorkspaceAuditResult):
+class VerifiedNotShared(UploadWorkspaceSharingAuditResult):
     """Audit results class for when no Sharing has been verified."""
 
     is_shared: bool = False
@@ -67,7 +67,7 @@ class VerifiedNotShared(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class ShareAsReader(UploadWorkspaceAuditResult):
+class ShareAsReader(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as a reader."""
 
     is_shared: bool = False
@@ -78,7 +78,7 @@ class ShareAsReader(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class ShareAsWriter(UploadWorkspaceAuditResult):
+class ShareAsWriter(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as a writer."""
 
     is_shared: bool = False
@@ -89,7 +89,7 @@ class ShareAsWriter(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class ShareAsOwner(UploadWorkspaceAuditResult):
+class ShareAsOwner(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as an owner."""
 
     is_shared: bool = False
@@ -100,7 +100,7 @@ class ShareAsOwner(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class ShareWithCompute(UploadWorkspaceAuditResult):
+class ShareWithCompute(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted with compute access."""
 
     is_shared: bool = False
@@ -111,7 +111,7 @@ class ShareWithCompute(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class StopSharing(UploadWorkspaceAuditResult):
+class StopSharing(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be removed for a known reason."""
 
     is_shared: bool = True
@@ -122,14 +122,14 @@ class StopSharing(UploadWorkspaceAuditResult):
 
 
 @dataclass
-class Error(UploadWorkspaceAuditResult):
+class Error(UploadWorkspaceSharingAuditResult):
     """Audit results class for when an error has been detected (e.g., shared and never should have been)."""
 
     pass
 
 
-class UploadWorkspaceAuditTable(tables.Table):
-    """A table to show results from a UploadWorkspaceAudit subclass."""
+class UploadWorkspaceSharingAuditTable(tables.Table):
+    """A table to show results from a UploadWorkspaceSharingAudit subclass."""
 
     workspace = tables.Column(linkify=True)
     managed_group = tables.Column(linkify=True)
@@ -138,13 +138,15 @@ class UploadWorkspaceAuditTable(tables.Table):
     can_compute = BooleanIconColumn(show_false_icon=True, null=True)
     note = tables.Column()
     # action = tables.Column()
-    action = tables.TemplateColumn(template_name="gregor_anvil/snippets/upload_workspace_audit_action_button.html")
+    action = tables.TemplateColumn(
+        template_name="gregor_anvil/snippets/upload_workspace_sharing_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
 
-class UploadWorkspaceAudit(GREGoRAudit):
+class UploadWorkspaceSharingAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace audit."""
 
     # RC uploader statues.
@@ -179,7 +181,7 @@ class UploadWorkspaceAudit(GREGoRAudit):
     # Other group.
     OTHER_GROUP_NO_ACCESS = "Other groups should not have direct access."
 
-    results_table_class = UploadWorkspaceAuditTable
+    results_table_class = UploadWorkspaceSharingAuditTable
 
     def __init__(self, queryset=None):
         super().__init__()
