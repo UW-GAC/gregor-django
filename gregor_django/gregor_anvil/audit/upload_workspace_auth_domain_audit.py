@@ -202,6 +202,8 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_dcc_admin(upload_workspace, managed_group)
         elif managed_group.name == "GREGOR_DCC_WRITERS":
             self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
+        elif managed_group.name == "GREGOR_DCC_MEMBERS":
+            self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
 
     def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
