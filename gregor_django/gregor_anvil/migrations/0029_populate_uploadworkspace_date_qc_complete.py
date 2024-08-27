@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("gregor_anvil", "0028_populate_uploadcycle_is_ready_for_compute"),
+        ("gregor_anvil", "0028_populate_uploadcycle_date_ready_for_compute"),
     ]
 
     operations = []

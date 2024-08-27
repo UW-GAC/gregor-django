@@ -1,9 +1,10 @@
 """Tests for data migrations in the app."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import factory
 from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
+from django.utils import timezone
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
 
 from . import factories
@@ -314,14 +315,43 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
         self.assertEqual(workspace.exampleworkspace, example_workspace)
 
 
-class PopulateUploadCycleIsReadyForCompute(MigratorTestCase):
+class PopulateUploadCycleIsReadyForComputeForwardMigrationTest(MigratorTestCase):
     """Tests for the 0028_populate_uploadcycle_is_ready_for_compute migration."""
 
     migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
-    migrate_to = ("gregor_anvil", "0028_populate_uploadcycle_is_ready_for_compute")
+    migrate_to = ("gregor_anvil", "0028_populate_uploadcycle_date_ready_for_compute")
 
     def prepare(self):
         """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        # Create a past upload cycle.
+        self.upload_cycle_past = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        # Create a current upload cycle - nothing should change for this one.
+        self.upload_cycle_current = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        # Create a future upload cycle - nothing should change for this one.
+        self.upload_cycle_future = UploadCycle.objects.create(
+            cycle=3,
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=20),
+        )
+
+    def test_date_completed(self):
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_past.pk)
+        self.assertEqual(upload_cycle.date_ready_for_compute, upload_cycle.start_date + timedelta(days=7))
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_current.pk)
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_future.pk)
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
 
 
 class PopulateUploadWorkspaceDateQCComplete(MigratorTestCase):
