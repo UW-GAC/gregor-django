@@ -101,7 +101,7 @@ class ChangeToAdmin(UploadWorkspaceAuthDomainAuditResult):
 class Remove(UploadWorkspaceAuthDomainAuditResult):
     """Audit results class for when group membership should be removed."""
 
-    action: str = "Share as owner"
+    action: str = "Remove"
 
     def __str__(self):
         return f"Share as owner: {self.note}"
