@@ -312,3 +312,33 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
         self.assertTrue(hasattr(workspace, "exampleworkspace"))
         self.assertIsInstance(workspace.exampleworkspace, ExampleWorkspace)
         self.assertEqual(workspace.exampleworkspace, example_workspace)
+
+
+class PopulateUploadCycleIsReadyForCompute(MigratorTestCase):
+    """Tests for the 0028_populate_uploadcycle_is_ready_for_compute migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0028_populate_uploadcycle_is_ready_for_compute")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
+
+
+class PopulateUploadWorkspaceDateQCComplete(MigratorTestCase):
+    """Tests for the 0029_populate_uploadworkspace_date_qc_complete migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_complete")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
+
+
+class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
+    """Tests for the 0030_populate_consortiumcombineddataworkspace_date_complete migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0030_populate_consortiumcombineddataworkspace_date_complete")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
