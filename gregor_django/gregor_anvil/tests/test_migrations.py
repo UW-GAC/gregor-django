@@ -6,6 +6,7 @@ import factory
 from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
 from django.utils import timezone
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
+from freezegun import freeze_time
 
 from . import factories
 
@@ -438,7 +439,66 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
     """Tests for the 0030_populate_consortiumcombineddataworkspace_date_complete migration."""
 
     migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
-    migrate_to = ("gregor_anvil", "0030_populate_consortiumcombineddataworkspace_date_complete")
+    migrate_to = ("gregor_anvil", "0030_populate_consortiumcombineddataworkspace_date_completed")
 
     def prepare(self):
         """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ManagedGroup = self.old_state.apps.get_model("anvil_consortium_manager", "ManagedGroup")
+        WorkspaceGroupSharing = self.old_state.apps.get_model("anvil_consortium_manager", "WorkspaceGroupSharing")
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        # Create fks - just the gregor all group here.
+        gregor_all_group = ManagedGroup.objects.create(
+            name="GREGOR_ALL",
+            email="GREGOR_ALL@firecloud.org",
+            is_managed_by_app=True,
+        )
+        # Create a shared combined workspace.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=50),
+            end_date=timezone.localdate() - timedelta(days=40),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.combined_workspace_shared = CombinedConsortiumDataWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+        self.date_shared = timezone.localdate() - timedelta(days=35)
+        with freeze_time(self.date_shared):
+            WorkspaceGroupSharing.objects.create(
+                workspace=workspace,
+                group=gregor_all_group,
+                access="READER",
+                can_compute=False,
+            )
+        # Create a combined workspace that has not been shared.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.combined_workspace_not_shared = CombinedConsortiumDataWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+
+
+    def test_date_completed(self):
+        CombinedConsortiumDataWorkspace = self.new_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_shared.pk)
+        self.assertEqual(workspace.date_completed, self.date_shared)
+        workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_not_shared.pk)
+        self.assertIsNone(workspace.date_completed)
