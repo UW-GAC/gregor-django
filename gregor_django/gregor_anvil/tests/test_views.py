@@ -1173,6 +1173,20 @@ class UploadCycleDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.cycle))
         self.assertNotContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
 
+    def test_contains_sharing_audit_button(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        url = reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
+        self.assertContains(response, url)
+
+    def test_contains_auth_domain_audit_button(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        url = reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        self.assertContains(response, url)
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
