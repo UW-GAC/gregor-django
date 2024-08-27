@@ -10,15 +10,22 @@
 
             <p>
                 This audit checks that auth domain membership is appropriate for the current point in the upload cycle.
-                Membership for the following groups are checked:
+                Membership is expected to be as follows.
                 <ul>
-                    <li>GREGOR_DCC_ADMINS</li>
-                    <li>GREGOR_DCC_WRITERS</li>
-                    <li>GREGOR_DCC_MEMBERS</li>
-                    <li>The upload group for the Research Center associated with this upload workspace</li>
-                    <li>The member group for the Research Center associated with this upload workspace</li>
-                    <li>The non-member group for the Research Center associated with this upload workspace</li>
-                    <li>Any additional groups that the workspace is shared with</li>
+                    <li>Before the combined workspace is completed:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_DCC_WRITERS</li>
+                      <li>GREGOR_DCC_MEMBERS</li>
+                      <li>The upload group for the Research Center associated with this upload workspace</li>
+                      <li>The member group for the Research Center associated with this upload workspace</li>
+                      <li>The non-member group for the Research Center associated with this upload workspace</li>
+                    </ul>
+                    <li>After the combined workspace is completed:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_ALL</li>
+                    </ul>
                 </ul>
                 Note that groups associated with AnVIL (e.g., anvil-admins, anvil-devs) are ignored by the audit.
             </p>

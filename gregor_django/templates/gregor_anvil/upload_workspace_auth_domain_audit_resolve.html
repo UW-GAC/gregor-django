@@ -7,7 +7,7 @@
 
 {% block content %}
 
-<h1>Resolve upload workspace sharing audit</h1>
+<h1>Resolve upload workspace auth domain audit</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
@@ -15,7 +15,7 @@
     <li>Managed group: <a href="{{ audit_result.managed_group.get_absolute_url }}">{{ audit_result.managed_group }}</a></li>
   </ul>
 
-  {% include "gregor_anvil/snippets/upload_workspace_sharing_audit_explanation.html" %}
+  {% include "gregor_anvil/snippets/upload_workspace_auth_domain_audit_explanation.html" %}
 
 </div>
 

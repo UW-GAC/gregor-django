@@ -4547,3 +4547,1339 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+
+class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the UploadWorkspaceAuthDomainAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:upload_workspaces:auth_domains:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploadWorkspaceAuthDomainAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar", "foobar"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_get_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", upload_workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(upload_workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_group_does_not_exist(self):
+        """get request raises a 404 error with an non-existent email."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                upload_workspace.workspace.billing_project.name,
+                upload_workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The audit_results exists in the context."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult,
+        )
+
+    def test_get_verified_member(self):
+        """Get request with VerifiedMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_get_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_get_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_get_add_member(self):
+        """Get request with AddMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.AddMember)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_get_add_admin(self):
+        """Get request with AddAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_get_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
+        )
+
+    def test_get_change_to_admin(self):
+        """Get request with ChangeToAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_get_remove(self):
+        """Get request with ChangeToAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_post_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url("foo", upload_workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(upload_workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_group_does_not_exist(self):
+        """post request raises a 404 error with an non-existent email."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                upload_workspace.workspace.billing_project.name,
+                upload_workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_member(self):
+        """Get request with VerifiedMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_add_member(self):
+        """Get request with AddMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_add_admin(self):
+        """Get request with AddAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_change_to_admin(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, upload_workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_verified_member(self):
+        """Get request with VerifiedMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_htmx_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_htmx_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_add_member(self):
+        """Get request with AddMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_htmx_add_admin(self):
+        """Get request with AddAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_htmx_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_htmx_change_to_admin(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_htmx_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_api_error_add_member(self):
+        """Get request with AddMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_add_admin(self):
+        """Get request with AddAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_member_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_member_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_admin_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_admin_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_htmx_api_error_add_member(self):
+        """Get request with AddMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_add_admin(self):
+        """Get request with AddAdmin result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_member_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_member_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_admin_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_admin_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=upload_workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(upload_workspace.workspace.billing_project.name, upload_workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploadWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
