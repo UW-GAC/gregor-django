@@ -76,6 +76,11 @@ upload_workspace_auth_domain_audit_patterns = (
             name="resolve",
         ),
         path(
+            "upload_cycle/<int:cycle>/",
+            views.UploadWorkspaceAuthDomainAuditByUploadCycle.as_view(),
+            name="by_upload_cycle",
+        ),
+        path(
             "<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.UploadWorkspaceAuthDomainAuditByWorkspace.as_view(),
             name="by_upload_workspace",
