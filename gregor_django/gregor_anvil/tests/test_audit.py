@@ -3985,16 +3985,13 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
     def test_one_upload_workspace_gregor_all_group(self):
         group = ManagedGroupFactory.create(name="GREGOR_ALL")
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
-        GroupGroupMembershipFactory.create(
-            parent_group=upload_workspace.workspace.authorization_domains.first(), child_group=group
-        )
         audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
-        self.assertEqual(len(audit.errors), 1)
-        record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 

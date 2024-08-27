@@ -190,6 +190,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         """Audit the auth domain membership of a single UploadWorkspace."""
         research_center = upload_workspace.research_center
         group_names = [
+            "GREGOR_ALL",
             "GREGOR_DCC_MEMBERS",
             "GREGOR_DCC_WRITERS",
             settings.ANVIL_DCC_ADMINS_GROUP_NAME,
