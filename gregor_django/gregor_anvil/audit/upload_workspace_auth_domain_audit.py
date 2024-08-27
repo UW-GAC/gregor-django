@@ -115,10 +115,10 @@ class UploadWorkspaceAuthDomainAuditTable(tables.Table):
     # is_shared = tables.Column()
     role = tables.Column()
     note = tables.Column()
-    action = tables.Column()
-    # action = tables.TemplateColumn(
-    #     template_name="gregor_anvil/snippets/upload_workspace_auth_domain_audit_action_button.html"
-    # )
+    # action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="gregor_anvil/snippets/upload_workspace_auth_domain_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
