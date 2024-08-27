@@ -619,6 +619,8 @@ def get_drupal_json_api():
             "API_ROOT": api_root,
             "AUTH": OAuth2(client=client, client_id=json_api_client_id, token=token),
             "VALIDATE_SSL": True,
+            "TIMEOUT": 5,  # default is 1
+            "RETRIES": 5,  # default is 3
         }
     )
     return drupal_api
