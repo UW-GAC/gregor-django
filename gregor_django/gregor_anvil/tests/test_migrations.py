@@ -3,7 +3,11 @@
 from datetime import date, timedelta
 
 import factory
-from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
+    WorkspaceAuthorizationDomainFactory,
+    WorkspaceFactory,
+)
 from django.utils import timezone
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
 from freezegun import freeze_time
@@ -444,17 +448,19 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
     def prepare(self):
         """Prepare some data before the migration."""
         # Get model definition for the old state.
+        ManagedGroup = self.old_state.apps.get_model("anvil_consortium_manager", "ManagedGroup")
         BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
         Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
-        ManagedGroup = self.old_state.apps.get_model("anvil_consortium_manager", "ManagedGroup")
+        WorkspaceAuthorizationDomain = self.old_state.apps.get_model(
+            "anvil_consortium_manager", "WorkspaceAuthorizationDomain"
+        )
         WorkspaceGroupSharing = self.old_state.apps.get_model("anvil_consortium_manager", "WorkspaceGroupSharing")
         UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
         CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
-        # Create fks - just the gregor all group here.
-        gregor_all_group = ManagedGroup.objects.create(
-            name="GREGOR_ALL",
-            email="GREGOR_ALL@firecloud.org",
-            is_managed_by_app=True,
+        # Create an auth domain for the combined workspaces.
+        auth_domain_group = ManagedGroup.objects.create(
+            name="auth_domain",
+            email="auth_domain@firecloud.org",
         )
         # Create a shared combined workspace.
         upload_cycle = UploadCycle.objects.create(
@@ -467,15 +473,22 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
         )
+        factory.create(
+            WorkspaceAuthorizationDomain,
+            FACTORY_CLASS=WorkspaceAuthorizationDomainFactory,
+            workspace=workspace,
+            group=auth_domain_group,
+        )
         self.combined_workspace_shared = CombinedConsortiumDataWorkspace.objects.create(
             upload_cycle=upload_cycle,
             workspace=workspace,
         )
+        # Shared with its auth domain.
         self.date_shared = timezone.localdate() - timedelta(days=35)
         with freeze_time(self.date_shared):
             WorkspaceGroupSharing.objects.create(
                 workspace=workspace,
-                group=gregor_all_group,
+                group=auth_domain_group,
                 access="READER",
                 can_compute=False,
             )
@@ -489,6 +502,12 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
             Workspace,
             FACTORY_CLASS=WorkspaceFactory,
             billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        factory.create(
+            WorkspaceAuthorizationDomain,
+            FACTORY_CLASS=WorkspaceAuthorizationDomainFactory,
+            workspace=workspace,
+            group=auth_domain_group,
         )
         self.combined_workspace_not_shared = CombinedConsortiumDataWorkspace.objects.create(
             upload_cycle=upload_cycle,

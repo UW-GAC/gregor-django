@@ -13,7 +13,7 @@ def populate_combinedworkspace_date_completed(apps, schema_editor):
         try:
             workspace_group_sharing = WorkspaceGroupSharing.objects.get(
                 workspace=row.workspace,
-                group__name="GREGOR_ALL",
+                group=row.workspace.authorization_domains.first(),
             )
         except WorkspaceGroupSharing.DoesNotExist:
             continue
