@@ -44,7 +44,7 @@
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
     Audit consortium sharing
   </a>
-  <a href="#" class="btn btn-secondary" role="button">
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
     Audit auth domain membership
   </a>
   </p>

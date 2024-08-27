@@ -1301,11 +1301,23 @@ class UploadWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
-    def test_contains_audit_consortium_access_button(self):
+    def test_contains_sharing_audit_button(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         url = reverse(
             "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+            ],
+        )
+        self.assertContains(response, url)
+
+    def test_contains_auth_domain_audit_button(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        url = reverse(
+            "gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace",
             args=[
                 self.object.workspace.billing_project.name,
                 self.object.workspace.name,
