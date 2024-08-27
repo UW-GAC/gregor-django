@@ -358,10 +358,80 @@ class PopulateUploadWorkspaceDateQCComplete(MigratorTestCase):
     """Tests for the 0029_populate_uploadworkspace_date_qc_complete migration."""
 
     migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
-    migrate_to = ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_complete")
+    migrate_to = ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_completed")
 
     def prepare(self):
         """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResearchCenter = self.old_state.apps.get_model("gregor_anvil", "ResearchCenter")
+        ConsentGroup = self.old_state.apps.get_model("gregor_anvil", "ConsentGroup")
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
+        # Make FKs.
+        consent_group = factory.create(ConsentGroup, FACTORY_CLASS=factories.ConsentGroupFactory)
+        research_center = ResearchCenter.objects.create(short_name="rc", full_name="Research Center")
+        # Create an upload workspace from a past upload cycle.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_past = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+        # Create a current upload cycle - nothing should change for this one.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_current = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+        # Create a future upload cycle - nothing should change for this one.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=3,
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_future = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+
+    def test_date_qc_completed(self):
+        UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_past.pk)
+        self.assertEqual(upload_workspace.date_qc_completed, upload_workspace.upload_cycle.end_date + timedelta(days=7))
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_current.pk)
+        self.assertIsNone(upload_workspace.date_qc_completed)
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_future.pk)
+        self.assertIsNone(upload_workspace.date_qc_completed)
 
 
 class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):

@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_complete"),
+        ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_completed"),
     ]
 
     operations = []
