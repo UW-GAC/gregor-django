@@ -113,7 +113,7 @@ class UploadWorkspaceAuthDomainAuditTable(tables.Table):
     workspace = tables.Column(linkify=True)
     managed_group = tables.Column(linkify=True)
     # is_shared = tables.Column()
-    role = tables.Column()
+    role = tables.Column(verbose_name="Current role")
     note = tables.Column()
     # action = tables.Column()
     action = tables.TemplateColumn(
