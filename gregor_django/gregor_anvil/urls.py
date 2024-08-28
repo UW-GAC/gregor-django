@@ -70,6 +70,7 @@ upload_workspace_sharing_audit_patterns = (
 
 upload_workspace_auth_domain_audit_patterns = (
     [
+        path("all/", views.UploadWorkspaceAuthDomainAudit.as_view(), name="all"),
         path(
             "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
             views.UploadWorkspaceAuthDomainAuditResolve.as_view(),

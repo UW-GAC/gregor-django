@@ -189,7 +189,7 @@ class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
 
 
 class UploadWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
-    """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
+    """View to audit UploadWorkspace sharing for all UploadWorkspaces."""
 
     template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
 
@@ -389,6 +389,23 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
             return HttpResponse(self.htmx_success)
         else:
             return super().form_valid(form)
+
+
+class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit UploadWorkspace auth domain membership for all UploadWorkspaces."""
+
+    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
 
 
 class UploadWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditRequired, DetailView):
