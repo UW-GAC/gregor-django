@@ -1187,6 +1187,13 @@ class UploadCycleDetailTest(TestCase):
         url = reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
         self.assertContains(response, url)
 
+    def test_includes_date_ready_for_compute(self):
+        obj = self.model_factory.create(is_past=True, date_ready_for_compute="2022-01-01")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jan. 1, 2022")
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
@@ -1261,14 +1268,6 @@ class UploadCycleListTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
-
-    def test_includes_date_ready_for_compute(self):
-        self.object.date_ready_for_compute = "2022-01-01"
-        self.object.save()
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.object.cycle))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Jan. 1, 2022")
 
 
 class AccountListTest(TestCase):
