@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
-from ...audit import upload_workspace_sharing_audit
+from ...audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
 
 
 class Command(BaseCommand):
@@ -19,6 +19,12 @@ class Command(BaseCommand):
     def run_sharing_audit(self, *args, **options):
         self.stdout.write("Running UploadWorkspace sharing audit... ", ending="")
         audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit.run_audit()
+        self._handle_audit_results(audit, "", **options)
+
+    def run_auth_domain_audit(self, *args, **options):
+        self.stdout.write("Running UploadWorkspace auth domain audit... ", ending="")
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
         self._handle_audit_results(audit, "", **options)
 
@@ -62,4 +68,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.run_sharing_audit(*args, **options)
-        # self.run_auth_domain_audit(*args, **options)
+        self.run_auth_domain_audit(*args, **options)
