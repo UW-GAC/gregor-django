@@ -34,7 +34,7 @@
       <h2>Errors - {{audit_results.errors|length }} record(s)</h2>
       <div class="container">
         <ul>
-          {% for record in data_access_audit.errors %}
+          {% for record in audit_results.errors %}
             <li>{{ record|stringformat:'r' }}</li>
           {% endfor %}
           </ul>
