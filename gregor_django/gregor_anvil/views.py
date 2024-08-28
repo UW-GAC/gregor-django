@@ -188,6 +188,23 @@ class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
+class UploadWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
+
+    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
+
+
 class UploadWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
