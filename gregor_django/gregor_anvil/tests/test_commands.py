@@ -4,12 +4,13 @@ from io import StringIO
 
 from anvil_consortium_manager.models import WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
-    GroupGroupMembershipFactory,
     WorkspaceGroupSharingFactory,
 )
+from django.contrib.sites.models import Site
 from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from . import factories
 
@@ -64,7 +65,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_access_audit_one_instance_needs_action(self):
+    def test_sharing_audit_one_instance_needs_action(self):
         """Test command output with one needs_action instance."""
         # Create a workspace and matching DAR.
         factories.UploadWorkspaceFactory.create()
@@ -82,7 +83,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_access_audit_one_instance_error(self):
+    def test_sharing_audit_one_instance_error(self):
         """Test command output with one error instance."""
         workspace = factories.UploadWorkspaceFactory.create()
         WorkspaceGroupSharingFactory.create(
@@ -104,22 +105,22 @@ class RunUploadWorkspaceAuditTest(TestCase):
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_access_audit_one_instance_verified_email(self):
+    def test_sharing_audit_one_instance_verified_email(self):
         """No email is sent when there are no errors."""
-        # Create a workspace and matching DAR.
-        factories.dbGaPWorkspaceFactory.create()
-        factories.dbGaPApplicationFactory.create()
+        workspace = factories.UploadWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+        )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running UploadWorkspace sharing audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_access_audit_one_instance_needs_action_email(self):
+    def test_sharing_audit_one_instance_needs_action_email(self):
         """Email is sent for one needs_action instance."""
-        # Create a workspace and matching DAR.
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=dbgap_workspace)
+        factories.UploadWorkspaceFactory.create()
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", email="test@example.com", stdout=out)
         expected_string = "\n".join(
@@ -135,16 +136,16 @@ class RunUploadWorkspaceAuditTest(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
-        self.assertEqual(email.subject, "dbGaPAccessAudit - problems found")
+        self.assertEqual(email.subject, "UploadWorkspaceSharingAudit - problems found")
 
-    def test_access_audit_one_instance_error_email(self):
+    def test_sharing_audit_one_instance_error_email(self):
         """Test command output with one error instance."""
         # Create a workspace and matching DAR.
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_application = factories.dbGaPApplicationFactory.create()
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=dbgap_application.anvil_access_group,
+        workspace = factories.UploadWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=WorkspaceGroupSharing.OWNER,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -161,19 +162,27 @@ class RunUploadWorkspaceAuditTest(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
-        self.assertEqual(email.subject, "dbGaPAccessAudit - problems found")
+        self.assertEqual(email.subject, "UploadWorkspaceSharingAudit - problems found")
 
-    # def test_access_audit_different_domain(self):
-    #     """Test command output when a different domain is specified."""
-    #     site = Site.objects.create(domain="foobar.com", name="test")
-    #     site.save()
-    #     with self.settings(SITE_ID=site.id):
-    #         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-    #         factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=dbgap_workspace)
-    #         out = StringIO()
-    #         call_command("run_upload_workspace_audit", "--no-color", stdout=out)
-    #         self.assertIn("Running UploadWorkspace sharing audit... problems found.", out.getvalue())
-    #         self.assertIn("https://foobar.com", out.getvalue())
+    def test_sharing_audit_one_instance_needs_action_link_in_output(self):
+        factories.UploadWorkspaceFactory.create()
+        out = StringIO()
+        call_command("run_upload_workspace_audit", "--no-color", stdout=out)
+        url = reverse("gregor_anvil:audit:upload_workspaces:sharing:all")
+        self.assertIn(url, out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_sharing_audit_different_domain(self):
+        """Test command output when a different domain is specified."""
+        site = Site.objects.create(domain="foobar.com", name="test")
+        site.save()
+        with self.settings(SITE_ID=site.id):
+            factories.UploadWorkspaceFactory.create()
+            out = StringIO()
+            call_command("run_upload_workspace_audit", "--no-color", stdout=out)
+            self.assertIn("Running UploadWorkspace sharing audit... problems found.", out.getvalue())
+            self.assertIn("https://foobar.com", out.getvalue())
 
     # def test_collaborator_audit_one_instance_verified(self):
     #     """Test command output with one verified instance."""
