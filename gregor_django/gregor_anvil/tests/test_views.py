@@ -1262,6 +1262,14 @@ class UploadCycleListTest(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
+    def test_includes_date_ready_for_compute(self):
+        self.object.date_ready_for_compute = "2022-01-01"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.cycle))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jan. 1, 2022")
+
 
 class AccountListTest(TestCase):
     def setUp(self):
@@ -1338,6 +1346,14 @@ class UploadWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
+
+    def test_includes_date_qc_completed(self):
+        self.object.date_qc_completed = "2022-01-01"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jan. 1, 2022")
 
 
 class UploadWorkspaceListTest(TestCase):
@@ -1906,6 +1922,14 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
+
+    def test_includes_date_completed(self):
+        self.object.date_completed = "2022-01-01"
+        self.object.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jan. 1, 2022")
 
 
 class ReleaseWorkspaceDetailTest(TestCase):
