@@ -360,7 +360,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", stdout=out)
-        url = reverse("gregor_anvil:audit:upload_workspaces:auth_domain:all")
+        url = reverse("gregor_anvil:audit:upload_workspaces:auth_domains:all")
         self.assertIn(url, out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)

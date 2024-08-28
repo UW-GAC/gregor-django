@@ -2,6 +2,7 @@ from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from ...audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
 
@@ -20,13 +21,13 @@ class Command(BaseCommand):
         self.stdout.write("Running UploadWorkspace sharing audit... ", ending="")
         audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
         audit.run_audit()
-        self._handle_audit_results(audit, "", **options)
+        self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:sharing:all"), **options)
 
     def run_auth_domain_audit(self, *args, **options):
         self.stdout.write("Running UploadWorkspace auth domain audit... ", ending="")
         audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
-        self._handle_audit_results(audit, "", **options)
+        self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:all"), **options)
 
     def _handle_audit_results(self, audit, url, **options):
         # Report errors and needs access.
