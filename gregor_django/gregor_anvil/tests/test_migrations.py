@@ -352,7 +352,7 @@ class PopulateUploadCycleIsReadyForComputeForwardMigrationTest(MigratorTestCase)
     def test_date_completed(self):
         UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
         upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_past.pk)
-        self.assertEqual(upload_cycle.date_ready_for_compute, upload_cycle.start_date + timedelta(days=7))
+        self.assertEqual(upload_cycle.date_ready_for_compute, upload_cycle.start_date + timedelta(weeks=4))
         upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_current.pk)
         self.assertIsNone(upload_cycle.date_ready_for_compute)
         upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_future.pk)
@@ -432,7 +432,9 @@ class PopulateUploadWorkspaceDateQCComplete(MigratorTestCase):
     def test_date_qc_completed(self):
         UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
         upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_past.pk)
-        self.assertEqual(upload_workspace.date_qc_completed, upload_workspace.upload_cycle.end_date + timedelta(days=7))
+        self.assertEqual(
+            upload_workspace.date_qc_completed, upload_workspace.upload_cycle.end_date + timedelta(weeks=2)
+        )
         upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_current.pk)
         self.assertIsNone(upload_workspace.date_qc_completed)
         upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_future.pk)
@@ -513,7 +515,6 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
             upload_cycle=upload_cycle,
             workspace=workspace,
         )
-
 
     def test_date_completed(self):
         CombinedConsortiumDataWorkspace = self.new_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")

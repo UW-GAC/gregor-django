@@ -9,7 +9,7 @@ def populate_uploadworkspace_date_qc_complete(apps, schema_editor):
     UploadWorkspace = apps.get_model("gregor_anvil", "UploadWorkspace")
     # Create one UploadWorkspace for each unique version.
     for row in UploadWorkspace.objects.all():
-        assumed_date_qc_completed = row.upload_cycle.end_date + timedelta(days=7)
+        assumed_date_qc_completed = row.upload_cycle.end_date + timedelta(weeks=2)
         if assumed_date_qc_completed <= timezone.localdate():
             row.date_qc_completed = assumed_date_qc_completed
             row.full_clean()

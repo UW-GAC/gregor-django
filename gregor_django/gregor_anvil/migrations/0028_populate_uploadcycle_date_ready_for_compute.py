@@ -10,7 +10,7 @@ def populate_uploadcycle_date_ready_for_compute(apps, schema_editor):
     UploadCycle = apps.get_model("gregor_anvil", "UploadCycle")
     # Create one UploadCycle for each unique version.
     for row in UploadCycle.objects.all():
-        assumed_date_ready_for_compute = row.start_date + timedelta(days=7)
+        assumed_date_ready_for_compute = row.start_date + timedelta(weeks=4)
         if row.end_date <= timezone.localdate():
             row.date_ready_for_compute = assumed_date_ready_for_compute
             row.full_clean()
