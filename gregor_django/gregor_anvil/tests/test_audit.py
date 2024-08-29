@@ -13,6 +13,7 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 from faker import Faker
 
+from .. import models
 from ..audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
 from ..audit.base import GREGoRAudit, GREGoRAuditResult
 from ..tests import factories
@@ -318,6 +319,78 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 0)
+
+    def test_two_upload_workspaces(self):
+        """Audit works with two UploadWorkspaces."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace,
+            group=upload_workspace_1.workspace.authorization_domains.first(),
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace_1)
+        self.assertEqual(record.managed_group, upload_workspace_1.workspace.authorization_domains.first())
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertEqual(record.workspace, upload_workspace_2)
+        self.assertEqual(record.managed_group, upload_workspace_2.workspace.authorization_domains.first())
+        self.assertIsNone(record.current_sharing_instance)
+        self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of dbGaPApplications."""
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace_1.workspace,
+            group=upload_workspace_1.workspace.authorization_domains.first(),
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        # First application
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+            queryset=models.UploadWorkspace.objects.filter(pk=upload_workspace_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertEqual(record.workspace, upload_workspace_1)
+        self.assertEqual(record.managed_group, upload_workspace_1.workspace.authorization_domains.first())
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER)
+        # Second application
+        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+            queryset=models.UploadWorkspace.objects.filter(pk=upload_workspace_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertEqual(record.workspace, upload_workspace_2)
+        self.assertEqual(record.managed_group, upload_workspace_2.workspace.authorization_domains.first())
+        self.assertIsNone(record.current_sharing_instance)
+        self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+                queryset=models.CombinedConsortiumDataWorkspace.objects.all()
+            )
 
 
 class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
@@ -4009,6 +4082,82 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
+
+    def test_two_upload_workspaces(self):
+        """Audit works with two UploadWorkspaces."""
+        admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace_1.workspace.authorization_domains.first(),
+            child_group=admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertEqual(record.workspace, upload_workspace_1)
+        self.assertEqual(record.managed_group, admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertEqual(record.workspace, upload_workspace_2)
+        self.assertEqual(record.managed_group, admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of UploadWorkspaces."""
+        admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace_1.workspace.authorization_domains.first(),
+            child_group=admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        # First application
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(
+            queryset=models.UploadWorkspace.objects.filter(pk=upload_workspace_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertEqual(record.workspace, upload_workspace_1)
+        self.assertEqual(record.managed_group, admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+        # Second application
+        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(
+            queryset=models.UploadWorkspace.objects.filter(pk=upload_workspace_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertEqual(record.workspace, upload_workspace_2)
+        self.assertEqual(record.managed_group, admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(
+                queryset=models.CombinedConsortiumDataWorkspace.objects.all()
+            )
 
 
 class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
