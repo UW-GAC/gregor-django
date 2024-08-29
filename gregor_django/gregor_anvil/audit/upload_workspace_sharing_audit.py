@@ -268,7 +268,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         """Audit access for a specific UploadWorkspace and RC uploader group.
 
         Sharing expectations:
-        - Write access to future upload cycle.
+        - No access to future upload cycle.
         - Write access before compute is enabled for current upload cycle.
         - Write+compute access after compute is enabled for current upload cycle.
         - Read access to past upload cycle workspaces before QC is completed.
@@ -286,16 +286,12 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
 
         if upload_cycle.is_future:
             note = self.RC_UPLOADERS_FUTURE_CYCLE
-            if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareAsWriter(note=note, **audit_result_args))
-            elif (
-                current_sharing
-                and current_sharing.access == WorkspaceGroupSharing.WRITER
-                and not current_sharing.can_compute
-            ):
-                self.verified.append(VerifiedShared(note=note, **audit_result_args))
+            if not current_sharing:
+                self.verified.append(VerifiedNotShared(note=note, **audit_result_args))
+            elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
+                self.errors.append(StopSharing(note=note, **audit_result_args))
             else:
-                self.needs_action.append(ShareAsWriter(note=note, **audit_result_args))
+                self.needs_action.append(StopSharing(note=note, **audit_result_args))
         elif upload_cycle.is_current and not upload_cycle.date_ready_for_compute:
             note = self.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:

@@ -128,12 +128,14 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace auth domain audit."""
 
     # RC notes.
-    RC_BEFORE_COMBINED = (
-        "RC uploader and member group should be members of the auth domain before the combined workspace is complete."
+    RC_FUTURE_CYCLE = "RC groups should not be in the auth domain until the upload cycle starts."
+    RC_UPLOADERS_BEFORE_QC = "RC uploader group should be a member of the auth domain before QC is complete."
+    RC_UPLOADERS_AFTER_QC = "RC uploader group should not be a member of the auth domain after QC is complete."
+    RC_MEMBERS_BEFORE_COMBINED = (
+        "RC member group should be a member of the auth domain before the combined workspace is complete."
     )
-    RC_AFTER_COMBINED = (
-        "RC uploader and member group should not be direct members of the auth domain"
-        " after the combined workspace is complete."
+    RC_MEMBERS_AFTER_COMBINED = (
+        "RC member group should not be a member of the auth domain after the combined workspace is complete."
     )
     RC_NON_MEMBERS = "RC non-member group should always be a member of the auth domain."
 
@@ -152,6 +154,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
     # Other group notes.
     OTHER_GROUP = "This group should not have access to the auth domain."
+    UNEXPECTED_ADMIN = "Only the DCC admins group should be an admin of the auth domain."
 
     results_table_class = UploadWorkspaceAuthDomainAuditTable
 
@@ -217,9 +220,9 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
     def audit_workspace_and_group(self, upload_workspace, managed_group):
         if managed_group == upload_workspace.research_center.uploader_group:
-            self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
+            self._audit_workspace_and_group_for_rc_uploaders(upload_workspace, managed_group)
         elif managed_group == upload_workspace.research_center.member_group:
-            self._audit_workspace_and_group_for_rc(upload_workspace, managed_group)
+            self._audit_workspace_and_group_for_rc_members(upload_workspace, managed_group)
         elif managed_group == upload_workspace.research_center.non_member_group:
             self._audit_workspace_and_group_for_rc_non_members(upload_workspace, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
@@ -237,13 +240,55 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         else:
             self._audit_workspace_and_other_group(upload_workspace, managed_group)
 
-    def _audit_workspace_and_group_for_rc(self, upload_workspace, managed_group):
+    def _audit_workspace_and_group_for_rc_uploaders(self, upload_workspace, managed_group):
+        membership = self._get_current_membership(upload_workspace, managed_group)
+        result_kwargs = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": membership,
+        }
+
+        # Otherwise, proceed with other checks.
+        if upload_workspace.upload_cycle.is_future:
+            note = self.RC_FUTURE_CYCLE
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(Remove(note=note, **result_kwargs))
+            elif membership:
+                self.needs_action.append(Remove(note=note, **result_kwargs))
+            else:
+                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+        elif upload_workspace.upload_cycle.is_current:
+            note = self.RC_UPLOADERS_BEFORE_QC
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+            elif membership:
+                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+            else:
+                self.needs_action.append(AddMember(note=note, **result_kwargs))
+        elif upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
+            note = self.RC_UPLOADERS_BEFORE_QC
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+            elif membership:
+                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+            else:
+                self.needs_action.append(AddMember(note=note, **result_kwargs))
+        else:
+            note = self.RC_UPLOADERS_AFTER_QC
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(Remove(note=note, **result_kwargs))
+            elif membership:
+                self.needs_action.append(Remove(note=note, **result_kwargs))
+            else:
+                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+
+    def _audit_workspace_and_group_for_rc_members(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
         membership = self._get_current_membership(upload_workspace, managed_group)
         if combined_workspace:
-            note = self.RC_AFTER_COMBINED
+            note = self.RC_MEMBERS_AFTER_COMBINED
         else:
-            note = self.RC_BEFORE_COMBINED
+            note = self.RC_MEMBERS_BEFORE_COMBINED
         result_kwargs = {
             "workspace": upload_workspace,
             "managed_group": managed_group,
