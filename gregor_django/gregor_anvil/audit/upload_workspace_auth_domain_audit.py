@@ -137,7 +137,9 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     RC_MEMBERS_AFTER_COMBINED = (
         "RC member group should not be a member of the auth domain after the combined workspace is complete."
     )
-    RC_NON_MEMBERS = "RC non-member group should always be a member of the auth domain."
+    RC_NON_MEMBERS_AFTER_START = (
+        "RC non-member group should be a member of the auth domain for current and past upload cycles."
+    )
 
     # DCC notes.
     DCC_ADMINS = "DCC admin group should always be an admin of the auth domain."
@@ -318,33 +320,28 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
     def _audit_workspace_and_group_for_rc_non_members(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
-        if not membership:
-            self.needs_action.append(
-                AddMember(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_NON_MEMBERS,
-                    current_membership_instance=membership,
-                )
-            )
-        elif membership.role == GroupGroupMembership.MEMBER:
-            self.verified.append(
-                VerifiedMember(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_NON_MEMBERS,
-                    current_membership_instance=membership,
-                )
-            )
+        result_kwargs = {
+            "workspace": upload_workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": membership,
+        }
+
+        if upload_workspace.upload_cycle.is_future:
+            note = self.RC_FUTURE_CYCLE
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(Remove(note=note, **result_kwargs))
+            elif membership:
+                self.needs_action.append(Remove(note=note, **result_kwargs))
+            else:
+                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
         else:
-            self.errors.append(
-                ChangeToMember(
-                    workspace=upload_workspace,
-                    managed_group=managed_group,
-                    note=self.RC_NON_MEMBERS,
-                    current_membership_instance=membership,
-                )
-            )
+            note = self.RC_NON_MEMBERS_AFTER_START
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+            elif membership:
+                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+            else:
+                self.needs_action.append(AddMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_dcc_admin(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
