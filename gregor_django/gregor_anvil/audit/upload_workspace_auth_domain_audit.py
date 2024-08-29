@@ -283,33 +283,38 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_rc_members(self, upload_workspace, managed_group):
-        combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
         membership = self._get_current_membership(upload_workspace, managed_group)
-        if combined_workspace:
-            note = self.RC_MEMBERS_AFTER_COMBINED
-        else:
-            note = self.RC_MEMBERS_BEFORE_COMBINED
+        combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
         result_kwargs = {
             "workspace": upload_workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
-            "note": note,
         }
 
-        if not combined_workspace and not membership:
-            self.needs_action.append(AddMember(**result_kwargs))
-        elif not combined_workspace and membership:
-            if membership.role == GroupGroupMembership.MEMBER:
-                self.verified.append(VerifiedMember(**result_kwargs))
+        if upload_workspace.upload_cycle.is_future:
+            note = self.RC_FUTURE_CYCLE
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(Remove(note=note, **result_kwargs))
+            elif membership:
+                self.needs_action.append(Remove(note=note, **result_kwargs))
             else:
-                self.errors.append(ChangeToMember(**result_kwargs))
-        elif combined_workspace and not membership:
-            self.verified.append(VerifiedNotMember(**result_kwargs))
-        elif combined_workspace and membership:
-            if membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(**result_kwargs))
+                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+        elif not combined_workspace:
+            note = self.RC_MEMBERS_BEFORE_COMBINED
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+            elif membership:
+                self.verified.append(VerifiedMember(note=note, **result_kwargs))
             else:
-                self.needs_action.append(Remove(**result_kwargs))
+                self.needs_action.append(AddMember(note=note, **result_kwargs))
+        else:
+            note = self.RC_MEMBERS_AFTER_COMBINED
+            if membership and membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(Remove(note=note, **result_kwargs))
+            elif membership:
+                self.needs_action.append(Remove(note=note, **result_kwargs))
+            else:
+                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_rc_non_members(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
