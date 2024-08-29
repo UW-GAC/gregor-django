@@ -150,7 +150,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR UploadWorkspace audit."""
 
     # RC uploader statues.
-    RC_UPLOADERS_FUTURE_CYCLE = "Uploaders should have write access for future cycles."
+    RC_UPLOADERS_FUTURE_CYCLE = "Uploaders should not have access to future cycles."
     RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE = (
         "Uploaders should have write access before compute is enabled for this upload cycle."
     )
