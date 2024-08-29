@@ -2532,7 +2532,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
         group = acm_factories.ManagedGroupFactory.create()
         upload_workspace = factories.UploadWorkspaceFactory.create(
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Share with the auth domain to prevent that audit error.
@@ -2556,7 +2556,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_FUTURE_CYCLE,
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -2871,21 +2871,22 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
     def test_context_needs_action_table_share_as_writer(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
         group = acm_factories.ManagedGroupFactory.create()
-        rc = self.upload_workspace.research_center
-        rc.uploader_group = group
-        rc.save()
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle__is_current=True,
+            research_center__uploader_group=group,
+        )
         # Share with the auth domain to prevent that audit error.
         acm_factories.WorkspaceGroupSharingFactory.create(
-            workspace=self.upload_workspace.workspace,
-            group=self.upload_workspace.workspace.authorization_domains.first(),
+            workspace=upload_workspace.workspace,
+            group=upload_workspace.workspace.authorization_domains.first(),
             access=acm_models.WorkspaceGroupSharing.READER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
-                self.upload_workspace.workspace.billing_project.name,
-                self.upload_workspace.workspace.name,
+                upload_workspace.workspace.billing_project.name,
+                upload_workspace.workspace.name,
             )
         )
         self.assertIn("needs_action_table", response.context_data)
@@ -2895,12 +2896,12 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_FUTURE_CYCLE,
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -3227,7 +3228,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
         """needs_action_table shows a record when audit finds that access needs to be granted."""
         group = acm_factories.ManagedGroupFactory.create()
         upload_workspace = factories.UploadWorkspaceFactory.create(
-            upload_cycle=self.upload_cycle,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Share with the auth domain to prevent that audit error.
@@ -3238,7 +3239,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
         )
         # Check the table in the context.
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        response = self.client.get(self.get_url(upload_workspace.upload_cycle.cycle))
         self.assertIn("needs_action_table", response.context_data)
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
@@ -3251,7 +3252,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_FUTURE_CYCLE,
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -3568,7 +3569,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_get_share_as_writer(self):
         group = acm_factories.ManagedGroupFactory.create()
         upload_workspace = factories.UploadWorkspaceFactory.create(
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         self.client.force_login(self.user)
@@ -3581,7 +3582,8 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
-            audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_FUTURE_CYCLE
+            audit_result.note,
+            upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE,
         )
 
     def test_get_share_with_compute(self):
@@ -3714,7 +3716,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Add the mocked API response.
@@ -3889,7 +3891,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         date_created = timezone.now() - timedelta(weeks=3)
@@ -4049,7 +4051,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Add the mocked API response.
@@ -4219,7 +4221,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Add the mocked API response.
@@ -4374,7 +4376,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         # Add the mocked API response.
@@ -4492,7 +4494,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         upload_workspace = factories.UploadWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
-            upload_cycle__is_future=True,
+            upload_cycle__is_current=True,
             research_center__uploader_group=group,
         )
         acls = [
