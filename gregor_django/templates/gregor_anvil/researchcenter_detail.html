@@ -14,6 +14,13 @@
         &mdash;
       {% endif %}
     </li>
+    <li>Non-member group:
+      {% if object.non_member_group %}
+        <a href="{{ object.non_member_group.get_absolute_url }}">{{ object.non_member_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
     <li>Uploader group:
       {% if object.uploader_group %}
         <a href="{{ object.uploader_group.get_absolute_url }}">{{ object.uploader_group }}</a>

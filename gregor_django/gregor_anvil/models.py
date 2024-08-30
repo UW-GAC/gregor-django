@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
@@ -54,6 +55,15 @@ class ResearchCenter(TimeStampedModel, models.Model):
         null=True,
     )
 
+    non_member_group = models.OneToOneField(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The AnVIL group containing non-members from this Research Center.",
+        related_name="research_center_of_non_members",
+        blank=True,
+        null=True,
+    )
+
     uploader_group = models.OneToOneField(
         ManagedGroup,
         on_delete=models.PROTECT,
@@ -82,6 +92,10 @@ class ResearchCenter(TimeStampedModel, models.Model):
         # Members group and uploaders group must be different.
         if self.member_group and self.uploader_group and self.member_group == self.uploader_group:
             raise ValidationError("member_group and uploader_group must be different!")
+        if self.non_member_group and self.uploader_group and self.non_member_group == self.uploader_group:
+            raise ValidationError("non_member_group and uploader_group must be different!")
+        if self.member_group and self.non_member_group and self.member_group == self.non_member_group:
+            raise ValidationError("member_group and non_member_group must be different!")
 
 
 class PartnerGroup(TimeStampedModel, models.Model):
@@ -145,7 +159,14 @@ class UploadCycle(TimeStampedModel, models.Model):
     )
     start_date = models.DateField(help_text="The start date of this upload cycle.")
     end_date = models.DateField(help_text="The end date of this upload cycle.")
+    date_ready_for_compute = models.DateField(
+        help_text="Date that this workspace was ready for RC uploaders to run compute.",
+        blank=True,
+        null=True,
+        default=None,
+    )
     note = models.TextField(blank=True, help_text="Additional notes.")
+
     # Django simple history.
     history = HistoricalRecords()
 
@@ -166,6 +187,12 @@ class UploadCycle(TimeStampedModel, models.Model):
         # End date must be after start date.
         if self.start_date and self.end_date and self.start_date >= self.end_date:
             raise ValidationError("end_date must be after start_date!")
+        # date_ready_for_compute must be after start_date
+        if self.start_date and self.date_ready_for_compute and self.start_date > self.date_ready_for_compute:
+            raise ValidationError("date_ready_for_compute must be after start_date!")
+        # date_ready_for_compute must be before end_date
+        if self.end_date and self.date_ready_for_compute and self.end_date < self.date_ready_for_compute:
+            raise ValidationError("date_ready_for_compute must be before end_date!")
 
     def get_partner_upload_workspaces(self):
         """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
@@ -183,6 +210,21 @@ class UploadCycle(TimeStampedModel, models.Model):
                     pks_to_keep.append(instance.pk)
         return qs.filter(pk__in=pks_to_keep)
 
+    @property
+    def is_current(self):
+        """Return a boolean indicating whether this upload cycle is the current one."""
+        return self.start_date <= timezone.localdate() and self.end_date >= timezone.localdate()
+
+    @property
+    def is_past(self):
+        """Return a boolean indicating whether this upload cycle is a past cycle."""
+        return self.end_date < timezone.localdate()
+
+    @property
+    def is_future(self):
+        """Return a boolean indicating whether this upload cycle is a future cycle."""
+        return self.start_date > timezone.localdate()
+
 
 class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about an upload workspace."""
@@ -197,6 +239,13 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     """The UploadCycle associated with this workspace."""
 
+    date_qc_completed = models.DateField(
+        help_text="Date that QC was completed for this workspace. If null, QC is not complete.",
+        blank=True,
+        null=True,
+        default=None,
+    )
+
     class Meta:
         constraints = [
             # Model uniqueness.
@@ -205,6 +254,15 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
                 fields=["research_center", "consent_group", "upload_cycle"],
             ),
         ]
+
+    def __str__(self):
+        return self.workspace.name
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_qc_completed is after the upload cycle end date.
+        if self.date_qc_completed and self.upload_cycle.end_date > self.date_qc_completed:
+            raise ValidationError("date_qc_completed must after end_date of associated upload_cycle.")
 
 
 class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
@@ -252,6 +310,18 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track a workspace that has data combined from multiple upload workspaces."""
 
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
+    date_completed = models.DateField(
+        help_text="Date that data preparation in this workspace was completed.",
+        blank=True,
+        null=True,
+        default=None,
+    )
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_qc_completed is after the upload cycle end date.
+        if self.date_completed and self.upload_cycle.end_date > self.date_completed:
+            raise ValidationError("date_completed must after end_date of associated upload_cycle.")
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):

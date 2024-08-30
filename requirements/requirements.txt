@@ -12,6 +12,7 @@ asgiref==3.8.1
     # via
     #   -r requirements/requirements.in
     #   django
+    #   django-htmx
 build==1.0.3
     # via pip-tools
 cachetools==5.3.2
@@ -45,6 +46,7 @@ django==4.2.15
     #   django-dbbackup
     #   django-extensions
     #   django-filter
+    #   django-htmx
     #   django-model-utils
     #   django-picklefield
     #   django-simple-history
@@ -55,14 +57,14 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==3.1.0
+django-constance==4.0.1
     # via -r requirements/requirements.in
 django-crispy-forms==2.3
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==4.1.0
+django-dbbackup==4.2.1
     # via -r requirements/requirements.in
 django-environ==0.10.0
     # via -r requirements/requirements.in
@@ -72,6 +74,8 @@ django-extensions==3.2.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
+django-htmx==1.19.0
+    # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.21.1
@@ -79,9 +83,7 @@ django-maintenance-mode==0.21.1
 django-model-utils==4.5.1
     # via -r requirements/requirements.in
 django-picklefield==3.2
-    # via
-    #   -r requirements/requirements.in
-    #   django-constance
+    # via -r requirements/requirements.in
 django-simple-history==3.7.0
     # via
     #   -r requirements/requirements.in
@@ -94,7 +96,7 @@ google-auth==2.11.0
     # via django-anvil-consortium-manager
 idna==3.7
     # via requests
-jsonapi-requests==0.7.0
+jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
 mysqlclient==2.2.4
     # via -r requirements/requirements.in

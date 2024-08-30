@@ -1,0 +1,48 @@
+
+{% load static i18n %}<!DOCTYPE html>
+{% load render_table from django_tables2 %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+  <head>
+    <title>Audit report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" integrity="sha512-GQGU0fMMi238uA+a/bdWJfpUGKUkBdgfFdgBm72SUQ6BeyWjoY/ton0tEjH+OSH9iP4Dfh+7HM0I9f5eR0L/4w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+
+  <body>
+    <div class="container">
+
+{% block content %}
+
+      <h1>{{ title }}</h1>
+
+      <p>Please visit <a href="{{url}}">{{url}}</a> to resolve.</p>
+
+      <h2>Verified</h2>
+      <div class="container">
+        {{ audit_results.verified|length }} record(s) verified.
+      </div>
+
+      <h2>Needs action - {{audit_results.needs_action|length }} record(s)</h2>
+      <div class="container">
+        <ul>
+        {% for record in audit_results.needs_action %}
+          <li>{{ record|stringformat:'r' }}</li>
+        {% endfor %}
+        </ul>
+      </div>
+
+      <h2>Errors - {{audit_results.errors|length }} record(s)</h2>
+      <div class="container">
+        <ul>
+          {% for record in audit_results.errors %}
+            <li>{{ record|stringformat:'r' }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+
+
+{% endblock content %}
+
+    </div>
+  </body>
+</html>

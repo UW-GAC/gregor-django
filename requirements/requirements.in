@@ -55,3 +55,6 @@ jsonapi-requests
 
 # for exporting django-tables2 tables to tsv.
 tablib
+
+# for htmx
+django-htmx
