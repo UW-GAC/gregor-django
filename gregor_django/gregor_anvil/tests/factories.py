@@ -11,7 +11,7 @@ from .. import models
 class ConsentGroupFactory(DjangoModelFactory):
     """A factory for the ConsentGroup model."""
 
-    code = Faker("word")
+    code = Sequence(lambda x: "C{}".format(x))
     consent = Faker("catch_phrase")
     data_use_limitations = Faker("paragraph", nb_sentences=10)
 
@@ -23,7 +23,7 @@ class ConsentGroupFactory(DjangoModelFactory):
 class ResearchCenterFactory(DjangoModelFactory):
     """A factory for the ResearchCenter model."""
 
-    short_name = Faker("word")
+    short_name = Sequence(lambda x: "RC{}".format(x))
     full_name = Faker("company")
 
     class Meta:
@@ -62,7 +62,7 @@ class UploadCycleFactory(DjangoModelFactory):
 class PartnerGroupFactory(DjangoModelFactory):
     """A factory for the PartnerGroup model."""
 
-    short_name = Faker("word")
+    short_name = Sequence(lambda x: "PG{}".format(x))
     full_name = Faker("company")
 
     class Meta:
