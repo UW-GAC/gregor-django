@@ -4,9 +4,13 @@ from anvil_consortium_manager.tests.factories import ManagedGroupFactory, Worksp
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
+from faker import Faker
 
 from .. import models
 from . import factories
+
+fake = Faker()
 
 
 class ConsentGroupTest(TestCase):
@@ -137,6 +141,38 @@ class ResearchCenterTest(TestCase):
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
 
+    def test_member_group_non_member_group_must_be_different(self):
+        """The same group cannot be used as the members group and non-members group."""
+        group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            member_group=group,
+            non_member_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_non_member_group_uploader_group_must_be_different(self):
+        """The same group cannot be used as the members group and uploaders group."""
+        group = ManagedGroupFactory.create()
+        instance = models.ResearchCenter(
+            full_name="Test name",
+            short_name="TEST",
+            non_member_group=group,
+            uploader_group=group,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("must be different", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
     def test_error_two_rcs_same_member_group(self):
         """Cannot have the same member group for two RCs."""
         member_group = ManagedGroupFactory.create()
@@ -183,6 +219,7 @@ class UploadCycleTest(TestCase):
         instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.UploadCycle)
+        self.assertIsNone(instance.date_ready_for_compute)
 
     def test_model_saving_with_note(self):
         """Creation using the model constructor and .save() works."""
@@ -266,7 +303,38 @@ class UploadCycleTest(TestCase):
         self.assertEqual(len(e.exception.message_dict), 1)
         self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("end_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
         self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_start_date_after_date_ready_for_compute(self):
+        today = date.today()
+        instance = factories.UploadCycleFactory.build(
+            start_date=today + timedelta(days=1),
+            end_date=today + timedelta(days=10),
+            date_ready_for_compute=today,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("date_ready_for_compute", e.exception.message_dict[NON_FIELD_ERRORS][0])
+        self.assertIn("after start_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_date_ready_for_compute_after_end_date(self):
+        today = date.today()
+        instance = factories.UploadCycleFactory.build(
+            start_date=today,
+            end_date=today + timedelta(days=10),
+            date_ready_for_compute=today + timedelta(days=11),
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("date_ready_for_compute", e.exception.message_dict[NON_FIELD_ERRORS][0])
+        self.assertIn("before end_date", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
     def test_get_partner_upload_workspaces_no_date_completed(self):
         """PartnerUploadWorkspace with no date_completed is not included."""
@@ -373,13 +441,63 @@ class UploadCycleTest(TestCase):
             version=2,
             date_completed=None,
         )
-        # import ipdb; ipdb.set_trace()
         included_workspaces = upload_cycle.get_partner_upload_workspaces()
         self.assertEqual(included_workspaces.count(), 2)
         self.assertNotIn(workspace_1, included_workspaces)
         self.assertIn(workspace_2, included_workspaces)
         self.assertIn(workspace_3, included_workspaces)
         self.assertNotIn(workspace_4, included_workspaces)
+
+    def test_date_ready_for_compute(self):
+        """UploadCycle is ready for compute if all PartnerUploadWorkspaces have date_completed."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
+        date = timezone.localdate()
+        upload_cycle.date_ready_for_compute = date
+        upload_cycle.save()
+        self.assertEqual(upload_cycle.date_ready_for_compute, date)
+
+    def test_is_current_is_past_is_future(self):
+        # Previous cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=40),
+            end_date=timezone.localdate() - timedelta(days=10),
+        )
+        self.assertTrue(instance.is_past)
+        self.assertFalse(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle, end date today.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate(),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Current cycle, start date today.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate(),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertTrue(instance.is_current)
+        self.assertFalse(instance.is_future)
+        # Future cycle.
+        instance = factories.UploadCycleFactory.create(
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=40),
+        )
+        self.assertFalse(instance.is_past)
+        self.assertFalse(instance.is_current)
+        self.assertTrue(instance.is_future)
 
 
 class UploadWorkspaceTest(TestCase):
@@ -399,13 +517,14 @@ class UploadWorkspaceTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance, models.UploadWorkspace)
+        self.assertIsNone(instance.date_qc_completed)
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.UploadWorkspaceFactory.create()
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), instance.workspace.__str__())
+        self.assertEqual(instance.__str__(), instance.workspace.name)
 
     def test_unique_constraint(self):
         """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
@@ -486,6 +605,16 @@ class UploadWorkspaceTest(TestCase):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+    def test_date_qc_completed_before_upload_cycle_end_date(self):
+        instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_current=True)
+        instance.date_qc_completed = timezone.localdate()
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
 
 
 class PartnerGroupTest(TestCase):
@@ -747,6 +876,16 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), instance.workspace.__str__())
+
+    def test_date_completed_before_upload_cycle_end_date(self):
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        instance.date_completed = timezone.localdate()
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
 
 
 class ReleaseWorkspaceTest(TestCase):

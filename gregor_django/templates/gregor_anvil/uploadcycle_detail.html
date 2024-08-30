@@ -16,6 +16,14 @@
     <li>Cycle: {{ object.cycle }}</li>
     <li>Start date: {{ object.start_date }}</li>
     <li>End date: {{ object.end_date }}</li>
+    <li>
+      Date ready for compute:
+      {% if object.date_ready_for_compute %}
+        {{ object.date_ready_for_compute }}
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
   </ul>
 {% endblock panel %}
 
@@ -51,3 +59,21 @@
 </div>
 
 {% endblock after_panel %}
+
+{% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+  <p>
+    <a href="{% url 'gregor_anvil:upload_cycles:update' slug=object.cycle %}" class="btn btn-secondary" role="button">
+      Update
+    </a>
+  </p>
+  {% endif %}
+  <p>
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
+    Audit consortium sharing
+  </a>
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
+    Audit auth domain membership
+  </a>
+  </p>
+{% endblock action_buttons %}

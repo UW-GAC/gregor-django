@@ -14,7 +14,7 @@ from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2, OAuth2Session
 
 from gregor_django.drupal_oauth_provider.provider import CustomProvider
-from gregor_django.gregor_anvil.audit import GREGORAudit, GREGORAuditResult
+from gregor_django.gregor_anvil.audit.base import GREGoRAudit, GREGoRAuditResult
 from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class UserAuditResultsTable(tables.Table, TextTable):
 
 
 @dataclass
-class UserAuditResult(GREGORAuditResult):
+class UserAuditResult(GREGoRAuditResult):
     local_user: SocialAccount = None
     anvil_account: Account = None
     remote_user_data: jsonapi_requests.JsonApiObject = None
@@ -118,7 +118,7 @@ class OverDeactivateThresholdUser(UserAuditResult):
     pass
 
 
-class UserAudit(GREGORAudit):
+class UserAudit(GREGoRAudit):
     ISSUE_TYPE_USER_INACTIVE = "User is inactive in drupal"
     ISSUE_TYPE_USER_REMOVED_FROM_SITE = "User removed from site"
     USER_DEACTIVATE_THRESHOLD = 3
@@ -329,7 +329,7 @@ class SiteAuditResultsTable(tables.Table, TextTable):
 
 
 @dataclass
-class SiteAuditResult(GREGORAuditResult):
+class SiteAuditResult(GREGoRAuditResult):
     local_site: ResearchCenter
     remote_site_data: jsonapi_requests.JsonApiObject = None
     changes: dict = None
@@ -377,7 +377,7 @@ class UpdateSite(SiteAuditResult):
     changes: dict
 
 
-class SiteAudit(GREGORAudit):
+class SiteAudit(GREGoRAudit):
     ISSUE_TYPE_LOCAL_SITE_INVALID = "Local site is invalid"
     results_table_class = SiteAuditResultsTable
 
@@ -466,7 +466,7 @@ class PartnerGroupAuditResultsTable(tables.Table, TextTable):
 
 
 @dataclass
-class PartnerGroupAuditResult(GREGORAuditResult):
+class PartnerGroupAuditResult(GREGoRAuditResult):
     local_partner_group: ResearchCenter
     remote_partner_group_data: jsonapi_requests.JsonApiObject = None
     changes: dict = None
@@ -514,7 +514,7 @@ class UpdatePartnerGroup(PartnerGroupAuditResult):
     changes: dict
 
 
-class PartnerGroupAudit(GREGORAudit):
+class PartnerGroupAudit(GREGoRAudit):
     ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID = "Local PartnerGroup is invalid"
     results_table_class = PartnerGroupAuditResultsTable
 

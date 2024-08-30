@@ -1,10 +1,16 @@
 """Tests for data migrations in the app."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import factory
-from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
+    WorkspaceAuthorizationDomainFactory,
+    WorkspaceFactory,
+)
+from django.utils import timezone
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
+from freezegun import freeze_time
 
 from . import factories
 
@@ -312,3 +318,207 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
         self.assertTrue(hasattr(workspace, "exampleworkspace"))
         self.assertIsInstance(workspace.exampleworkspace, ExampleWorkspace)
         self.assertEqual(workspace.exampleworkspace, example_workspace)
+
+
+class PopulateUploadCycleIsReadyForComputeForwardMigrationTest(MigratorTestCase):
+    """Tests for the 0028_populate_uploadcycle_is_ready_for_compute migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0028_populate_uploadcycle_date_ready_for_compute")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        # Create a past upload cycle.
+        self.upload_cycle_past = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        # Create a current upload cycle - nothing should change for this one.
+        self.upload_cycle_current = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        # Create a future upload cycle - nothing should change for this one.
+        self.upload_cycle_future = UploadCycle.objects.create(
+            cycle=3,
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=20),
+        )
+
+    def test_date_completed(self):
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_past.pk)
+        self.assertEqual(upload_cycle.date_ready_for_compute, upload_cycle.start_date + timedelta(weeks=4))
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_current.pk)
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
+        upload_cycle = UploadCycle.objects.get(pk=self.upload_cycle_future.pk)
+        self.assertIsNone(upload_cycle.date_ready_for_compute)
+
+
+class PopulateUploadWorkspaceDateQCComplete(MigratorTestCase):
+    """Tests for the 0029_populate_uploadworkspace_date_qc_complete migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0029_populate_uploadworkspace_date_qc_completed")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        ResearchCenter = self.old_state.apps.get_model("gregor_anvil", "ResearchCenter")
+        ConsentGroup = self.old_state.apps.get_model("gregor_anvil", "ConsentGroup")
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
+        # Make FKs.
+        consent_group = factory.create(ConsentGroup, FACTORY_CLASS=factories.ConsentGroupFactory)
+        research_center = ResearchCenter.objects.create(short_name="rc", full_name="Research Center")
+        # Create an upload workspace from a past upload cycle.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_past = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+        # Create a current upload cycle - nothing should change for this one.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=10),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_current = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+        # Create a future upload cycle - nothing should change for this one.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=3,
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        self.upload_workspace_future = UploadWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+        )
+
+    def test_date_qc_completed(self):
+        UploadWorkspace = self.old_state.apps.get_model("gregor_anvil", "UploadWorkspace")
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_past.pk)
+        self.assertEqual(
+            upload_workspace.date_qc_completed, upload_workspace.upload_cycle.end_date + timedelta(weeks=2)
+        )
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_current.pk)
+        self.assertIsNone(upload_workspace.date_qc_completed)
+        upload_workspace = UploadWorkspace.objects.get(pk=self.upload_workspace_future.pk)
+        self.assertIsNone(upload_workspace.date_qc_completed)
+
+
+class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
+    """Tests for the 0030_populate_consortiumcombineddataworkspace_date_complete migration."""
+
+    migrate_from = ("gregor_anvil", "0027_tracking_fields_for_custom_audits")
+    migrate_to = ("gregor_anvil", "0030_populate_consortiumcombineddataworkspace_date_completed")
+
+    def prepare(self):
+        """Prepare some data before the migration."""
+        # Get model definition for the old state.
+        ManagedGroup = self.old_state.apps.get_model("anvil_consortium_manager", "ManagedGroup")
+        BillingProject = self.old_state.apps.get_model("anvil_consortium_manager", "BillingProject")
+        Workspace = self.old_state.apps.get_model("anvil_consortium_manager", "Workspace")
+        WorkspaceAuthorizationDomain = self.old_state.apps.get_model(
+            "anvil_consortium_manager", "WorkspaceAuthorizationDomain"
+        )
+        WorkspaceGroupSharing = self.old_state.apps.get_model("anvil_consortium_manager", "WorkspaceGroupSharing")
+        UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
+        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        # Create an auth domain for the combined workspaces.
+        auth_domain_group = ManagedGroup.objects.create(
+            name="auth_domain",
+            email="auth_domain@firecloud.org",
+        )
+        # Create a shared combined workspace.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=1,
+            start_date=timezone.localdate() - timedelta(days=50),
+            end_date=timezone.localdate() - timedelta(days=40),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        factory.create(
+            WorkspaceAuthorizationDomain,
+            FACTORY_CLASS=WorkspaceAuthorizationDomainFactory,
+            workspace=workspace,
+            group=auth_domain_group,
+        )
+        self.combined_workspace_shared = CombinedConsortiumDataWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+        # Shared with its auth domain.
+        self.date_shared = timezone.localdate() - timedelta(days=35)
+        with freeze_time(self.date_shared):
+            WorkspaceGroupSharing.objects.create(
+                workspace=workspace,
+                group=auth_domain_group,
+                access="READER",
+                can_compute=False,
+            )
+        # Create a combined workspace that has not been shared.
+        upload_cycle = UploadCycle.objects.create(
+            cycle=2,
+            start_date=timezone.localdate() - timedelta(days=30),
+            end_date=timezone.localdate() - timedelta(days=20),
+        )
+        workspace = factory.create(
+            Workspace,
+            FACTORY_CLASS=WorkspaceFactory,
+            billing_project=factory.create(BillingProject, FACTORY_CLASS=BillingProjectFactory),
+        )
+        factory.create(
+            WorkspaceAuthorizationDomain,
+            FACTORY_CLASS=WorkspaceAuthorizationDomainFactory,
+            workspace=workspace,
+            group=auth_domain_group,
+        )
+        self.combined_workspace_not_shared = CombinedConsortiumDataWorkspace.objects.create(
+            upload_cycle=upload_cycle,
+            workspace=workspace,
+        )
+
+    def test_date_completed(self):
+        CombinedConsortiumDataWorkspace = self.new_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_shared.pk)
+        self.assertEqual(workspace.date_completed, self.date_shared)
+        workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_not_shared.pk)
+        self.assertIsNone(workspace.date_completed)
