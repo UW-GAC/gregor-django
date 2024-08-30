@@ -25,3 +25,5 @@ pytest-django  # https://github.com/pytest-dev/pytest-django
 django_test_migrations
 # Mock json api data
 marshmallow-jsonapi
+# Freeze time in tests
+freezegun   # https://github.com/spulec/freezegun

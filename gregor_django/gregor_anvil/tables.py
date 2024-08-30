@@ -6,6 +6,52 @@ from django.utils.html import format_html
 from . import models
 
 
+class BooleanIconColumn(tables.BooleanColumn):
+    """A column that renders a boolean value as an icon.
+
+    This column renders a boolean value as a bootstrap icon. By default, the icon is a green checkmark for True,
+    and nothing for False, but this can be customized by keyword arguments.
+
+    Args:
+        show_false_icon (bool): Whether to show an icon for False values.
+        true_color (str): The color of the icon for True values. (Default: green)
+        false_color (str): The color of the icon for False values. (Default: red)
+        true_icon (str): The icon to use for True values. (Default: check-circle-fill)
+        false_icon (str): The icon to use for False values. (Default: x-circle-fill)
+    """
+
+    def __init__(
+        self,
+        show_false_icon=False,
+        true_color="green",
+        false_color="red",
+        true_icon="check-circle-fill",
+        false_icon="x-circle-fill",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.show_false_icon = show_false_icon
+        self.true_color = true_color
+        self.false_color = false_color
+        self.true_icon = true_icon
+        self.false_icon = false_icon
+
+    def render(self, value, record, bound_column):
+        value = self._get_bool_value(record, value, bound_column)
+        if value:
+            rendered_value = format_html(
+                f"""<i class="bi bi-{self.true_icon} bi-align-center px-2" style="color: {self.true_color};"></i>"""
+            )
+        else:
+            if self.show_false_icon:
+                rendered_value = format_html(
+                    f"""<i class="bi bi-{self.false_icon} bi-align-center px-2" style="color: {self.false_color};"></i>"""  # noqa: E501
+                )
+            else:
+                rendered_value = ""
+        return rendered_value
+
+
 class AccountTable(tables.Table):
     """A custom table for `Accounts`."""
 
@@ -74,6 +120,7 @@ class UploadCycleTable(tables.Table):
             "cycle",
             "start_date",
             "end_date",
+            "date_ready_for_compute",
         )
 
     def render_cycle(self, record):
@@ -142,6 +189,7 @@ class UploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
             "uploadworkspace__upload_cycle",
             "uploadworkspace__research_center",
             "uploadworkspace__consent_group",
+            "uploadworkspace__date_qc_completed",
             "consortium_access",
         )
 
@@ -205,6 +253,7 @@ class CombinedConsortiumDataWorkspaceTable(WorkspaceConsortiumAccessTable, table
         fields = (
             "name",
             "combinedconsortiumdataworkspace__upload_cycle",
+            "combinedconsortiumdataworkspace__date_completed",
         )
 
 
