@@ -394,7 +394,7 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
 class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to audit UploadWorkspace auth domain membership for all UploadWorkspaces."""
 
-    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
+    template_name = "gregor_anvil/upload_workspace_auth_domain_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
