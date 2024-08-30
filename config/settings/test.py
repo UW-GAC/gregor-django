@@ -36,3 +36,6 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
 # get the last templates entry and set debug option
 TEMPLATES[-1]["OPTIONS"]["debug"] = True  # noqa
 ANVIL_DCC_ADMINS_GROUP_NAME = "TEST_GREGOR_DCC_ADMINS"
+
+# Suppress DEBUG logging in tests without changing base.py file.
+LOGGING["root"]["level"] = "INFO"  # noqa: F405

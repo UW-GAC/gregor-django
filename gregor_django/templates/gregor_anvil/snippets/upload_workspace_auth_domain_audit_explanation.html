@@ -1,0 +1,36 @@
+<div class="accordion" id="accordionExplanation">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            Audit explanation
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExplanation">
+          <div class="accordion-body">
+
+            <p>
+                This audit checks that auth domain membership is appropriate for the current point in the upload cycle.
+                Membership is expected to be as follows.
+                <ul>
+                    <li>Before the combined workspace is completed:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_DCC_WRITERS</li>
+                      <li>GREGOR_DCC_MEMBERS</li>
+                      <li>The upload group for the Research Center associated with this upload workspace</li>
+                      <li>The member group for the Research Center associated with this upload workspace</li>
+                      <li>The non-member group for the Research Center associated with this upload workspace</li>
+                    </ul>
+                    <li>After the combined workspace is completed:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_ALL</li>
+                    </ul>
+                </ul>
+                Note that groups associated with AnVIL (e.g., anvil-admins, anvil-devs) are ignored by the audit.
+            </p>
+            <p>Any errors should be reported!</p>
+        </div>
+      </div>
+  </div>
+</div>

@@ -3,10 +3,16 @@
 {% block workspace_data %}
   <hr>
   <dl class="row">
-    <dt class="col-sm-2">Research Center</dt> <dd class="col-sm-10"><a href="{{ object.uploadworkspace.research_center.get_absolute_url }}">{{ object.uploadworkspace.research_center }}</a></dd>
-    <dt class="col-sm-2">Consent group</dt> <dd class="col-sm-10"><a href="{{ object.uploadworkspace.consent_group.get_absolute_url }}">{{ object.uploadworkspace.consent_group }}</a></dd>
-    <dt class="col-sm-2">Upload cycle</dt> <dd class="col-sm-10"><a href="{{ object.uploadworkspace.upload_cycle.get_absolute_url }}">{{ object.uploadworkspace.upload_cycle }}</a></dd>
-    <dt class="col-sm-2">Note</dt> <dd class="col-sm-10">{{ object.note }}</dd>
+    <dt class="col-sm-2">Research Center</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.research_center.get_absolute_url }}">{{ workspace_data_object.research_center }}</a></dd>
+    <dt class="col-sm-2">Consent group</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.consent_group.get_absolute_url }}">{{ workspace_data_object.consent_group }}</a></dd>
+    <dt class="col-sm-2">Upload cycle</dt> <dd class="col-sm-10"><a href="{{ workspace_data_object.upload_cycle.get_absolute_url }}">{{ workspace_data_object.upload_cycle }}</a></dd>
+    <dt class="col-sm-2">Date QC completed</dt> <dd class="col-sm-10">
+      {% if workspace_data_object.date_qc_completed %}
+        {{ workspace_data_object.date_qc_completed }}
+      {% else %}
+        &mdash;
+      {% endif %}
+    </dd>
   </dl>
 {% endblock workspace_data %}
 
@@ -22,7 +28,7 @@
       </h2>
       <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
         <div class="accordion-body">
-          {{ object.uploadworkspace.consent_group.data_use_limitations }}
+          {{ workspace_data_object.consent_group.data_use_limitations }}
         </div>
       </div>
     </div>
@@ -34,13 +40,14 @@
 
 {% block action_buttons %}
 {% if show_edit_links %}
-  {% if object.authorization_domains.first %}
   <p>
-  <a href="{% url 'anvil_consortium_manager:workspaces:sharing:new_by_group' billing_project_slug=object.billing_project.name workspace_slug=object.name group_slug=object.authorization_domains.first.name %}" class="btn btn-primary" role="button">Share with auth domain</a>
-</p>
-  {% else %}
-  <p>no auth domain</p>
-  {% endif %}
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit consortium sharing
+  </a>
+  <a href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit auth domain membership
+  </a>
+  </p>
 {% endif %}
 
 {{ block.super }}

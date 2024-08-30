@@ -1,0 +1,25 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Upload workspace sharing audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Upload workspace sharing audit: {{ object }} </h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+    <p>
+        Auditing workspace sharing for <a href="{{ object.get_absolute_url }}">{{ object }}</a>.
+        All records in the "Needs action" table should be handled by clicking on the action button.
+        Any records in the "Errors" table should be reported.
+    </p>
+    {% include "gregor_anvil/snippets/upload_workspace_sharing_audit_explanation.html" %}
+
+</div>
+
+<h2>Audit results</h2>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

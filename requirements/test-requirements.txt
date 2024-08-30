@@ -29,6 +29,8 @@ factory-boy==3.3.0
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
+freezegun==1.5.1
+    # via -r requirements/test-requirements.in
 idna==3.7
     # via
     #   -c requirements/requirements.txt
@@ -63,7 +65,9 @@ pytest-sugar==1.0.0
 pytest-xdist==3.6.1
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
-    # via faker
+    # via
+    #   faker
+    #   freezegun
 pyyaml==6.0.1
     # via responses
 requests==2.32.3

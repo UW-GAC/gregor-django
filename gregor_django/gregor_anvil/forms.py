@@ -19,13 +19,39 @@ class UploadCycleForm(forms.ModelForm):
             "cycle",
             "start_date",
             "end_date",
+            "date_ready_for_compute",
             "note",
         )
 
         widgets = {
             "start_date": CustomDateInput(),
             "end_date": CustomDateInput(),
+            "date_ready_for_compute": CustomDateInput(),
         }
+
+
+class UploadCycleCreateForm(UploadCycleForm):
+    """Form to create an UploadCycle object."""
+
+    class Meta(UploadCycleForm.Meta):
+        fields = (
+            "cycle",
+            "start_date",
+            "end_date",
+            "note",
+        )
+
+
+class UploadCycleUpdateForm(UploadCycleForm):
+    """Form to update an UploadCycle object."""
+
+    class Meta(UploadCycleForm.Meta):
+        fields = (
+            "start_date",
+            "end_date",
+            "date_ready_for_compute",
+            "note",
+        )
 
 
 class UploadWorkspaceForm(forms.ModelForm):
@@ -37,8 +63,12 @@ class UploadWorkspaceForm(forms.ModelForm):
             "research_center",
             "consent_group",
             "upload_cycle",
+            "date_qc_completed",
             "workspace",
         )
+        widgets = {
+            "date_qc_completed": CustomDateInput(),
+        }
 
 
 class PartnerUploadWorkspaceForm(forms.ModelForm):
@@ -88,7 +118,11 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
         fields = (
             "workspace",
             "upload_cycle",
+            "date_completed",
         )
+        widgets = {
+            "date_completed": CustomDateInput(),
+        }
 
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):

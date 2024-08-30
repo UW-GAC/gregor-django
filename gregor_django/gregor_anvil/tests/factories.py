@@ -1,7 +1,8 @@
 from datetime import timedelta
 
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, LazyAttribute, Sequence, SubFactory
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory, WorkspaceFactory
+from django.utils import timezone
+from factory import Faker, LazyAttribute, Sequence, SubFactory, Trait, post_generation
 from factory.django import DjangoModelFactory
 
 from .. import models
@@ -10,7 +11,7 @@ from .. import models
 class ConsentGroupFactory(DjangoModelFactory):
     """A factory for the ConsentGroup model."""
 
-    code = Faker("word")
+    code = Sequence(lambda x: "C{}".format(x))
     consent = Faker("catch_phrase")
     data_use_limitations = Faker("paragraph", nb_sentences=10)
 
@@ -22,7 +23,7 @@ class ConsentGroupFactory(DjangoModelFactory):
 class ResearchCenterFactory(DjangoModelFactory):
     """A factory for the ResearchCenter model."""
 
-    short_name = Faker("word")
+    short_name = Sequence(lambda x: "RC{}".format(x))
     full_name = Faker("company")
 
     class Meta:
@@ -39,6 +40,19 @@ class UploadCycleFactory(DjangoModelFactory):
 
     class Params:
         duration = 90
+        is_past = Trait(
+            start_date=timezone.localdate() - timedelta(days=100),
+            end_date=timezone.localdate() - timedelta(days=10),
+            date_ready_for_compute=timezone.localdate() - timedelta(days=90),
+        )
+        is_current = Trait(
+            start_date=timezone.localdate() - timedelta(days=45),
+            end_date=timezone.localdate() + timedelta(days=45),
+        )
+        is_future = Trait(
+            start_date=timezone.localdate() + timedelta(days=10),
+            end_date=timezone.localdate() + timedelta(days=100),
+        )
 
     class Meta:
         model = models.UploadCycle
@@ -48,7 +62,7 @@ class UploadCycleFactory(DjangoModelFactory):
 class PartnerGroupFactory(DjangoModelFactory):
     """A factory for the PartnerGroup model."""
 
-    short_name = Faker("word")
+    short_name = Sequence(lambda x: "PG{}".format(x))
     full_name = Faker("company")
 
     class Meta:
@@ -66,6 +80,18 @@ class UploadWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.UploadWorkspace
+        skip_postgeneration_save = True
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
+        self.workspace.authorization_domains.add(auth_domain)
 
 
 class PartnerUploadWorkspaceFactory(DjangoModelFactory):

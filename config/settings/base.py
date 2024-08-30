@@ -86,6 +86,7 @@ THIRD_PARTY_APPS = [
     "fontawesomefree",
     "simple_history",
     "constance",
+    "django_htmx",
 ]
 
 LOCAL_APPS = [
@@ -153,6 +154,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 # STATIC
