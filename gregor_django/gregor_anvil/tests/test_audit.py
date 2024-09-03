@@ -162,6 +162,67 @@ class GREGoRAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("value"), "c")
 
 
+class UploadWorkspaceSharingAuditTableTest(TestCase):
+    """General tests of the UploadWorkspaceSharingAuditTable class."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable([])
+        self.assertIsInstance(table, upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
+        )
+        data = [
+            {
+                "workspace": upload_workspace,
+                "managed_group": group,
+                "access": WorkspaceGroupSharing.READER,
+                "can_compute": None,
+                "note": "a note",
+                "action": "",
+            },
+        ]
+        table = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable(data)
+        self.assertIsInstance(table, upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group_1 = ManagedGroupFactory.create()
+        group_2 = ManagedGroupFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group_1, access=WorkspaceGroupSharing.READER
+        )
+        data = [
+            {
+                "workspace": upload_workspace,
+                "managed_group": group_1,
+                "access": WorkspaceGroupSharing.READER,
+                "can_compute": None,
+                "note": "a note",
+                "action": "",
+            },
+            {
+                "workspace": upload_workspace,
+                "managed_group": group_2,
+                "access": None,
+                "can_compute": None,
+                "note": "a note",
+                "action": "",
+            },
+        ]
+        table = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable(data)
+        self.assertIsInstance(table, upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable)
+        self.assertEqual(len(table.rows), 2)
+
+
 class UploadWorkspaceSharingAuditTest(TestCase):
     """General tests of the `UploadWorkspaceSharingAudit` class."""
 
@@ -3858,6 +3919,68 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS)
+
+
+class UploadWorkspaceAuthDomainAuditTableTest(TestCase):
+    """General tests of the UploadWorkspaceAuthDomainAuditTable class."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable([])
+        self.assertIsInstance(table, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        data = [
+            {
+                "workspace": upload_workspace,
+                "managed_group": group,
+                "role": GroupGroupMembership.MEMBER,
+                "note": "a note",
+                "action": "",
+            },
+        ]
+        table = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable(data)
+        self.assertIsInstance(table, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        group_1 = ManagedGroupFactory.create()
+        group_2 = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group_1,
+            role=GroupGroupMembership.MEMBER,
+        )
+        data = [
+            {
+                "workspace": upload_workspace,
+                "managed_group": group_1,
+                "role": GroupGroupMembership.MEMBER,
+                "note": "a note",
+                "action": "",
+            },
+            {
+                "workspace": upload_workspace,
+                "managed_group": group_2,
+                "role": None,
+                "note": "a note",
+                "action": "",
+            },
+        ]
+        table = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable(data)
+        self.assertIsInstance(table, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable)
+        self.assertEqual(len(table.rows), 2)
 
 
 class UploadWorkspaceAuthDomainAuditTest(TestCase):
