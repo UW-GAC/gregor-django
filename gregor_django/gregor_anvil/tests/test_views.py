@@ -2693,6 +2693,12 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # self.assertContains(response, str(self.upload_workspace))
+        self.assertIn("all upload workspaces", response.content.decode().lower())
+
 
 class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the UploadWorkspaceSharingAuditByWorkspace view."""
@@ -3059,6 +3065,17 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertContains(response, str(self.upload_workspace))
+        # self.assertNotIn("all upload workspaces", response.content.decode().lower())
+
 
 class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the UploadWorkspaceSharingAuditByUploadCycle view."""
@@ -3392,6 +3409,12 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertContains(response, str(self.upload_cycle))
+        self.assertNotIn("all upload workspaces", response.content.decode().lower())
 
 
 class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
@@ -4847,6 +4870,12 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # self.assertContains(response, str(self.upload_workspace))
+        self.assertIn("all upload workspaces", response.content.decode().lower())
+
 
 class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the UploadWorkspaceAuthDomainAuditByWorkspace view."""
@@ -5225,6 +5254,17 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.upload_workspace.workspace.billing_project.name,
+                self.upload_workspace.workspace.name,
+            )
+        )
+        self.assertContains(response, str(self.upload_workspace))
+        self.assertNotIn("all upload workspaces", response.content.decode().lower())
+
 
 class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the UploadWorkspaceSharingAuditByUploadCycle view."""
@@ -5565,6 +5605,12 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertContains(response, str(self.upload_cycle))
+        self.assertNotIn("all upload workspaces", response.content.decode().lower())
 
 
 class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
