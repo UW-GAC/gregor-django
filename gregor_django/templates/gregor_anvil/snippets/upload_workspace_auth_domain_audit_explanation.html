@@ -12,12 +12,26 @@
                 This audit checks that auth domain membership is appropriate for the current point in the upload cycle.
                 Membership is expected to be as follows.
                 <ul>
+                    <li>Before the upload cycle begins:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_DCC_WRITERS</li>
+                      <li>GREGOR_DCC_MEMBERS</li>
+                    </ul>
                     <li>Before the combined workspace is completed:</li>
                     <ul>
                       <li>GREGOR_DCC_ADMINS (as admin)</li>
                       <li>GREGOR_DCC_WRITERS</li>
                       <li>GREGOR_DCC_MEMBERS</li>
                       <li>The upload group for the Research Center associated with this upload workspace</li>
+                      <li>The member group for the Research Center associated with this upload workspace</li>
+                      <li>The non-member group for the Research Center associated with this upload workspace</li>
+                    </ul>
+                    <li>After QC has been completed:</li>
+                    <ul>
+                      <li>GREGOR_DCC_ADMINS (as admin)</li>
+                      <li>GREGOR_DCC_WRITERS</li>
+                      <li>GREGOR_DCC_MEMBERS</li>
                       <li>The member group for the Research Center associated with this upload workspace</li>
                       <li>The non-member group for the Research Center associated with this upload workspace</li>
                     </ul>

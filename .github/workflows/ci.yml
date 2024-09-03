@@ -54,10 +54,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -78,8 +78,8 @@ jobs:
       - name: Recompile pip files if requested
         if: matrix.pip-recompile
         run: |
-          pip-compile requirements/requirements.in
-          pip-compile requirements/test-requirements.in
+          pip-compile -v requirements/requirements.in
+          pip-compile -v requirements/test-requirements.in
           # Print out changes.
           git diff
 
@@ -93,16 +93,17 @@ jobs:
       - name: Run tests
         run:  |
           pytest --cov=gregor_django -n auto
-          mv .coverage .coverage-${{ strategy.job-index }}
+          mv .coverage coverage-${{ strategy.job-index }}
 
       - name: List files for debugging purposes
         run: ls -lhta
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-data-${{ strategy.job-index }}
-          path: .coverage-${{ strategy.job-index }}
+          path: coverage-${{ strategy.job-index }}
+          if-no-files-found: error
 
   coverage:
     needs:
@@ -110,10 +111,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: '3.10'
 
@@ -123,13 +124,14 @@ jobs:
           pip install --upgrade coverage "django<4" django-coverage-plugin
 
       - name: Download coverage data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.1.8
         with:
           path: ./artifacts/
 
       - name: Merge coverage files
         run: |
-          python -m coverage combine ./artifacts/coverage-data*/.coverage-*
+          ls -la ./artifacts/coverage-data*
+          python -m coverage combine ./artifacts/coverage-data*/coverage-*
           python -m coverage xml
           ls -la .coverage*
 
@@ -138,6 +140,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
