@@ -93,7 +93,7 @@ jobs:
       - name: Run tests
         run:  |
           pytest --cov=gregor_django -n auto
-          mv .coverage .coverage-${{ strategy.job-index }}
+          mv .coverage coverage-${{ strategy.job-index }}
 
       - name: List files for debugging purposes
         run: ls -lhta
@@ -102,7 +102,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ strategy.job-index }}
-          path: .coverage-${{ strategy.job-index }}
+          path: coverage-${{ strategy.job-index }}
+          if-no-files-found: error
 
   coverage:
     needs:
@@ -129,7 +130,7 @@ jobs:
 
       - name: Merge coverage files
         run: |
-          python -m coverage combine ./artifacts/coverage-data*/.coverage-*
+          python -m coverage combine ./artifacts/coverage-data*/coverage-*
           python -m coverage xml
           ls -la .coverage*
 

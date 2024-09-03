@@ -20,28 +20,18 @@ class UploadWorkspaceSharingAuditResult(GREGoRAuditResult):
     action: str = None
     current_sharing_instance: WorkspaceGroupSharing = None
 
-    def get_action_url(self):
-        """The URL that handles the action needed."""
-        # return reverse(
-        #     "gregor_anvil:audit:upload_workspaces:sharing:resolve",
-        #     args=[
-        #         self.dbgap_application.dbgap_project_id,
-        #         self.workspace.workspace.billing_project.name,
-        #         self.workspace.workspace.name,
-        #     ],
-        # )
-        return ""
-
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
+        can_compute = None
+        if self.current_sharing_instance and self.current_sharing_instance.access != WorkspaceGroupSharing.READER:
+            can_compute = self.current_sharing_instance.can_compute
         row = {
             "workspace": self.workspace,
             "managed_group": self.managed_group,
             "access": self.current_sharing_instance.access if self.current_sharing_instance else None,
-            "can_compute": self.current_sharing_instance.can_compute if self.current_sharing_instance else None,
+            "can_compute": can_compute,
             "note": self.note,
             "action": self.action,
-            "action_url": self.get_action_url(),
         }
         return row
 
@@ -49,8 +39,6 @@ class UploadWorkspaceSharingAuditResult(GREGoRAuditResult):
 @dataclass
 class VerifiedShared(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing has been verified."""
-
-    is_shared: bool = True
 
     def __str__(self):
         return f"Verified sharing: {self.note}"
@@ -60,8 +48,6 @@ class VerifiedShared(UploadWorkspaceSharingAuditResult):
 class VerifiedNotShared(UploadWorkspaceSharingAuditResult):
     """Audit results class for when no Sharing has been verified."""
 
-    is_shared: bool = False
-
     def __str__(self):
         return f"Verified not shared: {self.note}"
 
@@ -70,7 +56,6 @@ class VerifiedNotShared(UploadWorkspaceSharingAuditResult):
 class ShareAsReader(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as a reader."""
 
-    is_shared: bool = False
     action: str = "Share as reader"
 
     def __str__(self):
@@ -81,7 +66,6 @@ class ShareAsReader(UploadWorkspaceSharingAuditResult):
 class ShareAsWriter(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as a writer."""
 
-    is_shared: bool = False
     action: str = "Share as writer"
 
     def __str__(self):
@@ -92,7 +76,6 @@ class ShareAsWriter(UploadWorkspaceSharingAuditResult):
 class ShareAsOwner(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted as an owner."""
 
-    is_shared: bool = False
     action: str = "Share as owner"
 
     def __str__(self):
@@ -103,7 +86,6 @@ class ShareAsOwner(UploadWorkspaceSharingAuditResult):
 class ShareWithCompute(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be granted with compute access."""
 
-    is_shared: bool = False
     action: str = "Share with compute"
 
     def __str__(self):
@@ -114,7 +96,6 @@ class ShareWithCompute(UploadWorkspaceSharingAuditResult):
 class StopSharing(UploadWorkspaceSharingAuditResult):
     """Audit results class for when Sharing should be removed for a known reason."""
 
-    is_shared: bool = True
     action: str = "Stop sharing"
 
     def __str__(self):
@@ -133,11 +114,9 @@ class UploadWorkspaceSharingAuditTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     managed_group = tables.Column(linkify=True)
-    # is_shared = tables.Column()
     access = tables.Column(verbose_name="Current access")
-    can_compute = BooleanIconColumn(show_false_icon=True, null=True)
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="green", false_color="black")
     note = tables.Column()
-    # action = tables.Column()
     action = tables.TemplateColumn(
         template_name="gregor_anvil/snippets/upload_workspace_sharing_audit_action_button.html"
     )
