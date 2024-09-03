@@ -34,11 +34,14 @@ class UploadWorkspaceSharingAuditResult(GREGoRAuditResult):
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
+        can_compute = None
+        if self.current_sharing_instance and self.current_sharing_instance.access != WorkspaceGroupSharing.READER:
+            can_compute = self.current_sharing_instance.can_compute
         row = {
             "workspace": self.workspace,
             "managed_group": self.managed_group,
             "access": self.current_sharing_instance.access if self.current_sharing_instance else None,
-            "can_compute": self.current_sharing_instance.can_compute if self.current_sharing_instance else None,
+            "can_compute": can_compute,
             "note": self.note,
             "action": self.action,
             "action_url": self.get_action_url(),

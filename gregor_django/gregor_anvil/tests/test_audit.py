@@ -162,6 +162,87 @@ class GREGoRAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("value"), "c")
 
 
+class UploadWorkspaceSharingAuditResultTest(TestCase):
+    """General tests of the UploadWorkspaceSharingAuditResult dataclasses."""
+
+    def test_shared_as_owner(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER, can_compute=True
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["access"], sharing.OWNER)
+        self.assertEqual(table_dictionary["can_compute"], True)
+
+    def test_shared_as_writer_with_compute(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=True
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["access"], sharing.WRITER)
+        self.assertEqual(table_dictionary["can_compute"], True)
+
+    def test_shared_as_writer_without_compute(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=False
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["access"], sharing.WRITER)
+        self.assertEqual(table_dictionary["can_compute"], False)
+
+    def test_shared_as_reader(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["access"], sharing.READER)
+        self.assertIsNone(table_dictionary["can_compute"])
+
+    def test_not_shared(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertIsNone(table_dictionary["access"])
+        self.assertIsNone(table_dictionary["can_compute"])
+
+
 class UploadWorkspaceSharingAuditTableTest(TestCase):
     """General tests of the UploadWorkspaceSharingAuditTable class."""
 
@@ -3919,6 +4000,56 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS)
+
+
+class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
+    """General tests of the UploadWorkspaceAuthDomainAuditResult dataclasses."""
+
+    def test_member_as_admin(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["role"], membership.ADMIN)
+
+    def test_member_as_member(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["role"], membership.MEMBER)
+
+    def test_not_member(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+            workspace=upload_workspace,
+            managed_group=group,
+            current_membership_instance=None,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertIsNone(table_dictionary["role"])
 
 
 class UploadWorkspaceAuthDomainAuditTableTest(TestCase):
