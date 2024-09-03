@@ -135,7 +135,7 @@ class UploadWorkspaceSharingAuditTable(tables.Table):
     managed_group = tables.Column(linkify=True)
     # is_shared = tables.Column()
     access = tables.Column(verbose_name="Current access")
-    can_compute = BooleanIconColumn(show_false_icon=True, null=True)
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="green", false_color="black")
     note = tables.Column()
     # action = tables.Column()
     action = tables.TemplateColumn(
