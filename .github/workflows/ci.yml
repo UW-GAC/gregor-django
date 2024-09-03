@@ -103,6 +103,7 @@ jobs:
         with:
           name: coverage-data-${{ strategy.job-index }}
           path: .coverage-${{ strategy.job-index }}
+          if-no-files-found: error
 
   coverage:
     needs:
