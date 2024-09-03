@@ -4013,7 +4013,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
             child_group=group,
             role=GroupGroupMembership.ADMIN,
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=membership,
@@ -4030,7 +4030,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
             child_group=group,
             role=GroupGroupMembership.MEMBER,
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=membership,
@@ -4042,7 +4042,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
     def test_not_member(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
         group = ManagedGroupFactory.create()
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=None,
