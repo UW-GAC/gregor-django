@@ -31,7 +31,7 @@ crispy-bootstrap5==2024.2
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==42.0.4
+cryptography==43.0.1
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
