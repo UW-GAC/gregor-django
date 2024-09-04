@@ -2,6 +2,7 @@ from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
+    AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.exceptions import AnVILGroupNotFound
 from anvil_consortium_manager.models import (
@@ -124,7 +125,7 @@ class UploadCycleUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageM
     success_message = "Successfully updated Upload Cycle."
 
 
-class UploadCycleDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
+class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about an `UploadCycle`."""
 
     model = models.UploadCycle

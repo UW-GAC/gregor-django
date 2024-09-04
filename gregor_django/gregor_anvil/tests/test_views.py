@@ -1006,7 +1006,7 @@ class UploadCycleDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1147,45 +1147,53 @@ class UploadCycleDetailTest(TestCase):
         self.assertIn(workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
 
-    def test_link_to_audit(self):
-        """Response includes a link to the audit page."""
+    def test_links_view_user(self):
+        user = self.user
         obj = self.model_factory.create()
-        self.client.force_login(self.user)
+        self.client.force_login(user)
         response = self.client.get(self.get_url(obj.cycle))
+        self.assertNotContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
+        self.assertNotContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertNotContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
+
+    def test_links_staff_view_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        obj = self.model_factory.create()
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertNotContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
         self.assertContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
         )
+        self.assertContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
 
-    def test_link_to_update_view_staff_edit(self):
-        """Response includes a link to the update view for staff edit users."""
-        obj = self.model_factory.create()
-        self.user.user_permissions.add(
+    def test_links_staff_edit_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
             Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
-        self.client.force_login(self.user)
+        obj = self.model_factory.create()
+        self.client.force_login(user)
         response = self.client.get(self.get_url(obj.cycle))
         self.assertContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
-
-    def test_link_to_update_view_staff_view(self):
-        """Response includes a link to the update view for staff edit users."""
-        obj = self.model_factory.create()
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(obj.cycle))
-        self.assertNotContains(response, reverse("gregor_anvil:upload_cycles:update", args=[obj.cycle]))
-
-    def test_contains_sharing_audit_button(self):
-        obj = self.model_factory.create()
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(obj.cycle))
-        url = reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
-        self.assertContains(response, url)
-
-    def test_contains_auth_domain_audit_button(self):
-        obj = self.model_factory.create()
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(obj.cycle))
-        url = reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
-        self.assertContains(response, url)
+        self.assertContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertContains(
+            response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
 
     def test_includes_date_ready_for_compute(self):
         obj = self.model_factory.create(is_past=True, date_ready_for_compute="2022-01-01")

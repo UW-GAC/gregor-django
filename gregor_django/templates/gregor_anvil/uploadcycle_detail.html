@@ -68,6 +68,7 @@
     </a>
   </p>
   {% endif %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
   <p>
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
     Audit consortium sharing
@@ -76,4 +77,5 @@
     Audit auth domain membership
   </a>
   </p>
+{% endif %}
 {% endblock action_buttons %}
