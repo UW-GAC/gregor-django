@@ -1363,10 +1363,7 @@ class UploadWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
-        )
-        self.user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.UploadWorkspaceFactory.create()
 
@@ -1380,9 +1377,65 @@ class UploadWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
-    def test_contains_sharing_audit_button(self):
+    def test_includes_date_qc_completed(self):
+        self.object.date_qc_completed = "2022-01-01"
+        self.object.save()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jan. 1, 2022")
+
+    def test_links_view_user(self):
+        user = self.user
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertNotContains(
+            response, reverse("gregor_anvil:research_centers:detail", args=[self.object.research_center.pk])
+        )
+        self.assertNotContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        # Audit links.
+        url = reverse(
+            "gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+            ],
+        )
+        self.assertNotContains(response, url)
+        url = reverse(
+            "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+            ],
+        )
+        self.assertNotContains(response, url)
+
+    def test_links_staff_view_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:research_centers:detail", args=[self.object.research_center.pk])
+        )
+        self.assertContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        # Audit links.
+        url = reverse(
+            "gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+            ],
+        )
+        self.assertContains(response, url)
         url = reverse(
             "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
             args=[
@@ -1392,9 +1445,23 @@ class UploadWorkspaceDetailTest(TestCase):
         )
         self.assertContains(response, url)
 
-    def test_contains_auth_domain_audit_button(self):
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+    def test_links_staff_edit_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(
+            response, reverse("gregor_anvil:research_centers:detail", args=[self.object.research_center.pk])
+        )
+        self.assertContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        # Audit links.
         url = reverse(
             "gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_workspace",
             args=[
@@ -1403,14 +1470,14 @@ class UploadWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
-
-    def test_includes_date_qc_completed(self):
-        self.object.date_qc_completed = "2022-01-01"
-        self.object.save()
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Jan. 1, 2022")
+        url = reverse(
+            "gregor_anvil:audit:upload_workspaces:sharing:by_upload_workspace",
+            args=[
+                self.object.workspace.billing_project.name,
+                self.object.workspace.name,
+            ],
+        )
+        self.assertContains(response, url)
 
 
 class UploadWorkspaceListTest(TestCase):
