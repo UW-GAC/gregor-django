@@ -161,7 +161,7 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
         ]
 
 
-class UploadCycleList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
+class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `UploadCycle` objects."""
 
     model = models.UploadCycle
