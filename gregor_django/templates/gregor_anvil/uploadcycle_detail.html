@@ -9,7 +9,7 @@
     This is {% if object.is_current %}the current{% elif object.is_past %}a past{% else %}a future{% endif %} upload cycle.
   </div>
 
-  {% if object.note %}
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view and object.note %}
   <div class="alert alert-secondary my-3" role="alert">
     <b>Note</b>: {{ object.note }}
   </div>

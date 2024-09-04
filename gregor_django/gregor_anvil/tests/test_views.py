@@ -1223,6 +1223,35 @@ class UploadCycleDetailTest(TestCase):
         self.assertContains(response, "alert alert-danger")
         self.assertContains(response, "This is a future upload cycle.")
 
+    def test_note_view_user(self):
+        obj = self.model_factory.create(note="a test note")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertNotContains(response, "a test note")
+
+    def test_note_staff_view_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        obj = self.model_factory.create(note="a test note")
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertContains(response, "a test note")
+
+    def test_note_staff_edit_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        obj = self.model_factory.create(note="a test note")
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.cycle))
+        self.assertContains(response, "a test note")
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
