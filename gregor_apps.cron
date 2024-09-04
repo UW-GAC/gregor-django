@@ -10,3 +10,6 @@ MAILTO="gregorweb@uw.edu"
 
 # Nightly user data audit
 0 3 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py sync-drupal-data --update --email gregorweb@uw.edu >> cron.log
+
+# Nightly upload workspace audit
+0 3 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_upload_workspace_audit --email gregorweb@uw.edu >> cron.log
