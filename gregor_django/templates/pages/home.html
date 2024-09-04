@@ -1,1 +1,55 @@
 {% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-3">
+    <header>
+      <div class="p-3 mx-auto text-center">
+        <h1 class="display-4 fw-normal text-body-emphasis">GREGoR AnVIL app</h1>
+        <p class="fs-5 text-body-secondary">
+          Data for the GREGoR consortium is stored in workspaces on the <a href="https://anvil.terra.bio/">AnVIL platform</a>.
+          Data are added to the workspaces during "upload cycles" that occur every 3 months.
+          After the upload cycle is complete, the DCC performs QC, creates a combined data workspace, and shares it with the consortium.
+          More information can be found in the <a href="https://gregorconsortium.org/members/research-home/gregor-consortium-data">Consortium Data page</a> on the main GREGoR consortium website.
+          This app facilitates the creation and sharing of workspaces for GREGoR.
+        </p>
+
+      </div>
+    </header>
+
+    <main>
+
+      <div class="row">
+        <div class="col d-flex align-items-stretch">
+          <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+                <h4 class="my-0 fw-normal"><i class="fa-solid fa-calendar pe-2"></i> Upload cycles</h4>
+            </div>
+            <div class="card-body pb-0">
+              <p>View the list of all GREGoR upload cycles to date.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+              <a type="button" class="btn btn-secondary" href="{% url 'gregor_anvil:upload_cycles:list' %}">View upload cycles</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col d-flex align-items-stretch">
+          <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+              <h4 class="my-0 fw-normal"><i class="fa-solid fa-computer pe-2"></i> Workspaces</h4>
+            </div>
+            <div class="card-body pb-0">
+              <p>Browse the current set of GREGoR workspaces on AnVIL.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+              <a type="button" class="btn btn-secondary" href="{% url 'anvil_consortium_manager:workspaces:landing_page' %}">View workspaces</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+</div>
+{% endblock content %}
