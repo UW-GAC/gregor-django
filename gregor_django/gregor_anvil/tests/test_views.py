@@ -1202,6 +1202,27 @@ class UploadCycleDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Jan. 1, 2022")
 
+    def test_alert_for_current_cycle(self):
+        upload_cycle = self.model_factory.create(is_current=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(upload_cycle.cycle))
+        self.assertContains(response, "alert alert-success")
+        self.assertContains(response, "This is the current upload cycle.")
+
+    def test_alert_for_past_cycle(self):
+        upload_cycle = self.model_factory.create(is_past=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(upload_cycle.cycle))
+        self.assertContains(response, "alert alert-danger")
+        self.assertContains(response, "This is a past upload cycle.")
+
+    def test_alert_for_future_cycle(self):
+        upload_cycle = self.model_factory.create(is_future=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(upload_cycle.cycle))
+        self.assertContains(response, "alert alert-danger")
+        self.assertContains(response, "This is a future upload cycle.")
+
 
 class UploadCycleListTest(TestCase):
     """Tests for the UploadCycleList view."""
