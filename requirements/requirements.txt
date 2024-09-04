@@ -35,7 +35,7 @@ cryptography==43.0.1
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.15
+django==4.2.16
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
