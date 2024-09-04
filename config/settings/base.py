@@ -344,6 +344,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "request_scope": True,
                 "django_group_name": "Approved by PI for AnVIL access",
             },
+            {
+                "drupal_machine_name": "authenticated",
+                "request_scope": True,
+                "django_group_name": "Authenticated",
+            },
         ],
     }
 }
