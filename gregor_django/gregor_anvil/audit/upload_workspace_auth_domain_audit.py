@@ -146,7 +146,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     def _audit_workspace_and_group_for_rc_uploaders(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
         }
@@ -189,7 +189,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         membership = self._get_current_membership(upload_workspace, managed_group)
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
         }
@@ -222,7 +222,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     def _audit_workspace_and_group_for_rc_non_members(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
         }
@@ -249,7 +249,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         if not membership:
             self.needs_action.append(
                 audit_results.AddAdmin(
-                    workspace=upload_workspace,
+                    workspace=upload_workspace.workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
                     current_membership_instance=membership,
@@ -258,7 +258,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         elif membership.role == GroupGroupMembership.ADMIN:
             self.verified.append(
                 audit_results.VerifiedAdmin(
-                    workspace=upload_workspace,
+                    workspace=upload_workspace.workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
                     current_membership_instance=membership,
@@ -267,7 +267,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         else:
             self.needs_action.append(
                 audit_results.ChangeToAdmin(
-                    workspace=upload_workspace,
+                    workspace=upload_workspace.workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
                     current_membership_instance=membership,
@@ -282,7 +282,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         else:
             note = self.DCC_BEFORE_COMBINED
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
             "note": note,
@@ -311,7 +311,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         else:
             note = self.GREGOR_ALL_BEFORE_COMBINED
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
             "note": note,
@@ -338,7 +338,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
     def _audit_workspace_and_other_group(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
         result_kwargs = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_membership_instance": membership,
             "note": self.OTHER_GROUP,

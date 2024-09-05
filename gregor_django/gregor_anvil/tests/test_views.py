@@ -2501,7 +2501,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
         self.assertEqual(
@@ -2524,7 +2524,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2556,7 +2556,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2585,7 +2585,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2614,7 +2614,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2654,7 +2654,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -2689,7 +2689,7 @@ class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -2843,7 +2843,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
         self.assertEqual(
@@ -2870,7 +2870,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2907,7 +2907,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2940,7 +2940,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -2973,7 +2973,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -3021,7 +3021,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -3061,7 +3061,7 @@ class UploadWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -3214,7 +3214,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
         self.assertEqual(
@@ -3237,7 +3237,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -3269,7 +3269,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -3298,7 +3298,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -3327,7 +3327,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
@@ -3370,7 +3370,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -3406,7 +3406,7 @@ class UploadWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCa
             upload_workspace_sharing_audit.UploadWorkspaceSharingAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
         self.assertEqual(
@@ -3554,7 +3554,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedShared)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
@@ -3571,7 +3571,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedNotShared)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS
@@ -3588,7 +3588,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsReader)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
@@ -3607,7 +3607,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsWriter)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note,
@@ -3624,7 +3624,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareWithCompute)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.DCC_WRITERS_FUTURE_CYCLE
@@ -3640,7 +3640,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsOwner)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
@@ -4675,7 +4675,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -4703,7 +4703,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), None)
         self.assertEqual(
@@ -4726,7 +4726,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -4749,7 +4749,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -4782,7 +4782,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -4810,7 +4810,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -4838,7 +4838,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -4866,7 +4866,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5025,7 +5025,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -5060,7 +5060,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), None)
         self.assertEqual(
@@ -5087,7 +5087,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -5114,7 +5114,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -5154,7 +5154,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5186,7 +5186,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5218,7 +5218,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -5250,7 +5250,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5405,7 +5405,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -5436,7 +5436,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), None)
         self.assertEqual(
@@ -5459,7 +5459,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -5482,7 +5482,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertIsNone(table.rows[0].get_cell_value("role"))
         self.assertEqual(
@@ -5518,7 +5518,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5546,7 +5546,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5574,7 +5574,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
         self.assertEqual(
@@ -5602,7 +5602,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
             upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
         self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
         self.assertEqual(
@@ -5752,7 +5752,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedMember)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
@@ -5774,7 +5774,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedAdmin)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
@@ -5791,7 +5791,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedNotMember)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP
@@ -5808,7 +5808,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddMember)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
@@ -5825,7 +5825,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddAdmin)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
@@ -5847,7 +5847,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToMember)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED
@@ -5869,7 +5869,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToAdmin)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS
@@ -5890,7 +5890,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.Remove)
-        self.assertEqual(audit_result.workspace, upload_workspace)
+        self.assertEqual(audit_result.workspace, upload_workspace.workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP

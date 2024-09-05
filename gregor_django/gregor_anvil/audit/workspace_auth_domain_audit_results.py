@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 
-from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
+from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup, Workspace
 
-from ..models import UploadWorkspace
 from .base import GREGoRAuditResult
 
 
@@ -10,7 +9,7 @@ from .base import GREGoRAuditResult
 class WorkspaceAuthDomainAuditResult(GREGoRAuditResult):
     """Base class to hold results for auditing upload workspace sharing."""
 
-    workspace: UploadWorkspace
+    workspace: Workspace
     note: str
     managed_group: ManagedGroup
     action: str = None

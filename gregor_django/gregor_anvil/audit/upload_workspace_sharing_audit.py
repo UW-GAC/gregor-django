@@ -158,7 +158,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         combined_workspace = self._get_combined_workspace(upload_cycle)
 
         audit_result_args = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_sharing_instance": current_sharing,
         }
@@ -237,7 +237,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         combined_workspace = self._get_combined_workspace(upload_cycle)
 
         audit_result_args = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_sharing_instance": current_sharing,
         }
@@ -357,7 +357,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         current_sharing = self._get_current_sharing(upload_workspace, managed_group)
 
         audit_result_args = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_sharing_instance": current_sharing,
         }
@@ -389,7 +389,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         current_sharing = self._get_current_sharing(upload_workspace, managed_group)
 
         audit_result_args = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_sharing_instance": current_sharing,
         }
@@ -419,7 +419,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         current_sharing = self._get_current_sharing(upload_workspace, managed_group)
 
         audit_result_args = {
-            "workspace": upload_workspace,
+            "workspace": upload_workspace.workspace,
             "managed_group": managed_group,
             "current_sharing_instance": current_sharing,
         }
