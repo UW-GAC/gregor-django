@@ -41,24 +41,6 @@
   Within the table for a workspace type, click on the name of a workspace within a table to see more information about that workspace.
 </p>
 
-<div class="accordion mb-2" id="accordionUpload">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="true" aria-controls="collapseUpload">
-        <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
-        Upload workspaces
-        <span class="badge mx-2 {% if tables.0.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.0.rows|length }}</span>
-      </button>
-    </h2>
-    <div id="collapseUpload" class="accordion-collapse collapse" data-bs-parent="#accordionUpload">
-      <div class="accordion-body">
-        {% render_table tables.0 %}
-      </div>
-    </div>
-  </div>
-</div>
-
-
 <div class="accordion mb-2" id="accordionCombined">
   <div class="accordion-item">
     <h2 class="accordion-header">
@@ -71,6 +53,24 @@
     <div id="collapseCombined" class="accordion-collapse collapse" data-bs-parent="#accordionCombined">
       <div class="accordion-body">
         {% render_table tables.1 %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="accordion mb-2" id="accordionUpload">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="true" aria-controls="collapseUpload">
+        <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
+        Upload workspaces
+        <span class="badge mx-2 {% if tables.0.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.0.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseUpload" class="accordion-collapse collapse" data-bs-parent="#accordionUpload">
+      <div class="accordion-body">
+        {% render_table tables.0 %}
       </div>
     </div>
   </div>
