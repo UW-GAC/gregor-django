@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from ...audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
+from ...audit import upload_workspace_audit
 
 
 class Command(BaseCommand):
@@ -19,13 +19,13 @@ class Command(BaseCommand):
 
     def run_sharing_audit(self, *args, **options):
         self.stdout.write("Running UploadWorkspace sharing audit... ", ending="")
-        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
         audit.run_audit()
         self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:sharing:all"), **options)
 
     def run_auth_domain_audit(self, *args, **options):
         self.stdout.write("Running UploadWorkspace auth domain audit... ", ending="")
-        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
         self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:all"), **options)
 

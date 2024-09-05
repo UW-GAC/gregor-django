@@ -26,8 +26,7 @@ from gregor_django.users.tables import UserTable
 
 from . import forms, models, tables
 from .audit import (
-    upload_workspace_auth_domain_audit,
-    upload_workspace_sharing_audit,
+    upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
 )
@@ -201,7 +200,7 @@ class UploadWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, Templ
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
@@ -237,7 +236,7 @@ class UploadWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequ
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+        audit = upload_workspace_audit.UploadWorkspaceSharingAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
@@ -271,7 +270,7 @@ class UploadWorkspaceSharingAuditByUploadCycle(AnVILConsortiumManagerStaffViewRe
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit(
+        audit = upload_workspace_audit.UploadWorkspaceSharingAudit(
             queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
         )
         audit.run_audit()
@@ -317,7 +316,7 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
         return obj
 
     def get_audit_result(self):
-        audit = upload_workspace_sharing_audit.UploadWorkspaceSharingAudit()
+        audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
         audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
         # Set to completed, because we are just running this one specific check.
@@ -404,7 +403,7 @@ class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, Te
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
@@ -440,7 +439,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditR
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(
+        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
@@ -474,7 +473,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycle(AnVILConsortiumManagerStaffVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit(
+        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit(
             queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
         )
         audit.run_audit()
@@ -520,7 +519,7 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
         return obj
 
     def get_audit_result(self):
-        audit = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit()
+        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
         audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
         # Set to completed, because we are just running this one specific check.
