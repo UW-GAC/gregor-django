@@ -76,7 +76,7 @@
   </div>
 </div>
 
-
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
 <div class="accordion mb-3" id="accordionDccProcessing">
   <div class="accordion-item">
     <h2 class="accordion-header">
@@ -147,6 +147,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 {% endblock after_panel %}
 
