@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 import django_tables2 as tables
 from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
@@ -7,106 +5,8 @@ from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
 from ..tables import BooleanIconColumn
-from .base import GREGoRAudit, GREGoRAuditResult
-
-
-@dataclass
-class UploadWorkspaceSharingAuditResult(GREGoRAuditResult):
-    """Base class to hold results for auditing upload workspace sharing."""
-
-    workspace: UploadWorkspace
-    note: str
-    managed_group: ManagedGroup
-    action: str = None
-    current_sharing_instance: WorkspaceGroupSharing = None
-
-    def get_table_dictionary(self):
-        """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
-        can_compute = None
-        if self.current_sharing_instance and self.current_sharing_instance.access != WorkspaceGroupSharing.READER:
-            can_compute = self.current_sharing_instance.can_compute
-        row = {
-            "workspace": self.workspace,
-            "managed_group": self.managed_group,
-            "access": self.current_sharing_instance.access if self.current_sharing_instance else None,
-            "can_compute": can_compute,
-            "note": self.note,
-            "action": self.action,
-        }
-        return row
-
-
-@dataclass
-class VerifiedShared(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing has been verified."""
-
-    def __str__(self):
-        return f"Verified sharing: {self.note}"
-
-
-@dataclass
-class VerifiedNotShared(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when no Sharing has been verified."""
-
-    def __str__(self):
-        return f"Verified not shared: {self.note}"
-
-
-@dataclass
-class ShareAsReader(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing should be granted as a reader."""
-
-    action: str = "Share as reader"
-
-    def __str__(self):
-        return f"Share as reader: {self.note}"
-
-
-@dataclass
-class ShareAsWriter(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing should be granted as a writer."""
-
-    action: str = "Share as writer"
-
-    def __str__(self):
-        return f"Share as writer: {self.note}"
-
-
-@dataclass
-class ShareAsOwner(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing should be granted as an owner."""
-
-    action: str = "Share as owner"
-
-    def __str__(self):
-        return f"Share as owner: {self.note}"
-
-
-@dataclass
-class ShareWithCompute(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing should be granted with compute access."""
-
-    action: str = "Share with compute"
-
-    def __str__(self):
-        return f"Share with compute: {self.note}"
-
-
-@dataclass
-class StopSharing(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when Sharing should be removed for a known reason."""
-
-    action: str = "Stop sharing"
-
-    def __str__(self):
-        return f"Stop sharing: {self.note}"
-
-
-@dataclass
-class Error(UploadWorkspaceSharingAuditResult):
-    """Audit results class for when an error has been detected (e.g., shared and never should have been)."""
-
-    pass
+from . import workspace_sharing_audit_results
+from .base import GREGoRAudit
 
 
 class UploadWorkspaceSharingAuditTable(tables.Table):
@@ -266,59 +166,61 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         if upload_cycle.is_future:
             note = self.RC_UPLOADERS_FUTURE_CYCLE
             if not current_sharing:
-                self.verified.append(VerifiedNotShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedNotShared(note=note, **audit_result_args))
             elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             else:
-                self.needs_action.append(StopSharing(note=note, **audit_result_args))
+                self.needs_action.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
         elif upload_cycle.is_current and not upload_cycle.date_ready_for_compute:
             note = self.RC_UPLOADERS_CURRENT_CYCLE_BEFORE_COMPUTE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareAsWriter(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.ShareAsWriter(note=note, **audit_result_args))
             elif (
                 current_sharing
                 and current_sharing.access == WorkspaceGroupSharing.WRITER
                 and not current_sharing.can_compute
             ):
-                self.verified.append(VerifiedShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedShared(note=note, **audit_result_args))
             else:
-                self.needs_action.append(ShareAsWriter(note=note, **audit_result_args))
+                self.needs_action.append(workspace_sharing_audit_results.ShareAsWriter(note=note, **audit_result_args))
         elif upload_cycle.is_current and upload_cycle.date_ready_for_compute:
             note = self.RC_UPLOADERS_CURRENT_CYCLE_AFTER_COMPUTE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareWithCompute(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.ShareWithCompute(note=note, **audit_result_args))
             elif (
                 current_sharing
                 and current_sharing.access == WorkspaceGroupSharing.WRITER
                 and current_sharing.can_compute
             ):
-                self.verified.append(VerifiedShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedShared(note=note, **audit_result_args))
             else:
-                self.needs_action.append(ShareWithCompute(note=note, **audit_result_args))
+                self.needs_action.append(
+                    workspace_sharing_audit_results.ShareWithCompute(note=note, **audit_result_args)
+                )
         elif upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.RC_UPLOADERS_PAST_CYCLE_BEFORE_QC_COMPLETE
             if not current_sharing:
-                self.verified.append(VerifiedNotShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedNotShared(note=note, **audit_result_args))
             elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             else:
-                self.needs_action.append(StopSharing(note=note, **audit_result_args))
+                self.needs_action.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
         elif upload_cycle.is_past and upload_workspace.date_qc_completed and not combined_workspace:
             note = self.RC_UPLOADERS_PAST_CYCLE_AFTER_QC_COMPLETE
             if not current_sharing:
-                self.verified.append(VerifiedNotShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedNotShared(note=note, **audit_result_args))
             elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             else:
-                self.needs_action.append(StopSharing(note=note, **audit_result_args))
+                self.needs_action.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
         elif upload_cycle.is_past and combined_workspace:
             note = self.RC_UPLOADERS_PAST_CYCLE_COMBINED_WORKSPACE_READY
             if not current_sharing:
-                self.verified.append(VerifiedNotShared(note=note, **audit_result_args))
+                self.verified.append(workspace_sharing_audit_results.VerifiedNotShared(note=note, **audit_result_args))
             elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             else:
-                self.needs_action.append(StopSharing(note=note, **audit_result_args))
+                self.needs_action.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
         else:
             raise ValueError("No case matched for RC uploader group.")
 
@@ -343,21 +245,21 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         if upload_cycle.is_future:
             note = self.DCC_WRITERS_FUTURE_CYCLE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareWithCompute(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.ShareWithCompute(note=note, **audit_result_args))
             elif (
                 current_sharing
                 and current_sharing.access == WorkspaceGroupSharing.WRITER
                 and current_sharing.can_compute
             ):
                 self.verified.append(
-                    VerifiedShared(
+                    workspace_sharing_audit_results.VerifiedShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    ShareWithCompute(
+                    workspace_sharing_audit_results.ShareWithCompute(
                         note=note,
                         **audit_result_args,
                     )
@@ -365,21 +267,21 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         elif upload_cycle.is_current:
             note = self.DCC_WRITERS_CURRENT_CYCLE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareWithCompute(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.ShareWithCompute(note=note, **audit_result_args))
             elif (
                 current_sharing
                 and current_sharing.access == WorkspaceGroupSharing.WRITER
                 and current_sharing.can_compute
             ):
                 self.verified.append(
-                    VerifiedShared(
+                    workspace_sharing_audit_results.VerifiedShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    ShareWithCompute(
+                    workspace_sharing_audit_results.ShareWithCompute(
                         note=note,
                         **audit_result_args,
                     )
@@ -387,21 +289,21 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         elif upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.DCC_WRITERS_PAST_CYCLE_BEFORE_QC_COMPLETE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(ShareWithCompute(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.ShareWithCompute(note=note, **audit_result_args))
             elif (
                 current_sharing
                 and current_sharing.access == WorkspaceGroupSharing.WRITER
                 and current_sharing.can_compute
             ):
                 self.verified.append(
-                    VerifiedShared(
+                    workspace_sharing_audit_results.VerifiedShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    ShareWithCompute(
+                    workspace_sharing_audit_results.ShareWithCompute(
                         note=note,
                         **audit_result_args,
                     )
@@ -409,17 +311,17 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         elif upload_cycle.is_past and upload_workspace.date_qc_completed and not combined_workspace:
             note = self.DCC_WRITERS_PAST_CYCLE_AFTER_QC_COMPLETE
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             elif not current_sharing:
                 self.verified.append(
-                    VerifiedNotShared(
+                    workspace_sharing_audit_results.VerifiedNotShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    StopSharing(
+                    workspace_sharing_audit_results.StopSharing(
                         note=note,
                         **audit_result_args,
                     )
@@ -427,17 +329,17 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         elif upload_cycle.is_past and combined_workspace:
             note = self.DCC_WRITERS_PAST_CYCLE_COMBINED_WORKSPACE_READY
             if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-                self.errors.append(StopSharing(note=note, **audit_result_args))
+                self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             elif not current_sharing:
                 self.verified.append(
-                    VerifiedNotShared(
+                    workspace_sharing_audit_results.VerifiedNotShared(
                         note=note,
                         **audit_result_args,
                     )
                 )
             else:
                 self.needs_action.append(
-                    StopSharing(
+                    workspace_sharing_audit_results.StopSharing(
                         note=note,
                         **audit_result_args,
                     )
@@ -462,17 +364,17 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
 
         note = self.AUTH_DOMAIN_AS_READER
         if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
-            self.errors.append(ShareAsReader(note=note, **audit_result_args))
+            self.errors.append(workspace_sharing_audit_results.ShareAsReader(note=note, **audit_result_args))
         elif current_sharing and current_sharing.access == WorkspaceGroupSharing.READER:
             self.verified.append(
-                VerifiedShared(
+                workspace_sharing_audit_results.VerifiedShared(
                     note=note,
                     **audit_result_args,
                 )
             )
         else:
             self.needs_action.append(
-                ShareAsReader(
+                workspace_sharing_audit_results.ShareAsReader(
                     note=note,
                     **audit_result_args,
                 )
@@ -495,14 +397,14 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         note = self.DCC_ADMIN_AS_OWNER
         if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
             self.verified.append(
-                VerifiedShared(
+                workspace_sharing_audit_results.VerifiedShared(
                     note=note,
                     **audit_result_args,
                 )
             )
         else:
             self.needs_action.append(
-                ShareAsOwner(
+                workspace_sharing_audit_results.ShareAsOwner(
                     note=note,
                     **audit_result_args,
                 )
@@ -524,14 +426,14 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
 
         if not current_sharing:
             self.verified.append(
-                VerifiedNotShared(
+                workspace_sharing_audit_results.VerifiedNotShared(
                     note=self.OTHER_GROUP_NO_ACCESS,
                     **audit_result_args,
                 )
             )
         else:
             self.errors.append(
-                StopSharing(
+                workspace_sharing_audit_results.StopSharing(
                     note=self.OTHER_GROUP_NO_ACCESS,
                     **audit_result_args,
                 )

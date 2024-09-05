@@ -14,7 +14,12 @@ from django.test import TestCase, override_settings
 from faker import Faker
 
 from .. import models
-from ..audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
+from ..audit import (
+    upload_workspace_auth_domain_audit,
+    upload_workspace_sharing_audit,
+    workspace_auth_domain_audit_results,
+    workspace_sharing_audit_results,
+)
 from ..audit.base import GREGoRAudit, GREGoRAuditResult
 from ..tests import factories
 
@@ -171,7 +176,7 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER, can_compute=True
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_sharing_instance=sharing,
@@ -187,7 +192,7 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=True
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_sharing_instance=sharing,
@@ -203,7 +208,7 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=False
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_sharing_instance=sharing,
@@ -219,7 +224,7 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
         )
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_sharing_instance=sharing,
@@ -232,7 +237,7 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
     def test_not_shared(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
         group = ManagedGroupFactory.create()
-        instance = upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult(
+        instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_sharing_instance=None,
@@ -331,7 +336,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, upload_workspace.workspace.authorization_domains.first())
         self.assertEqual(record.current_sharing_instance, None)
@@ -348,7 +353,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -364,7 +369,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -380,7 +385,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)  # auth domain is shared
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -396,7 +401,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -413,7 +418,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -449,7 +454,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)  # auth domain is not shared
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -476,13 +481,13 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace_1)
         self.assertEqual(record.managed_group, upload_workspace_1.workspace.authorization_domains.first())
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, upload_workspace_2)
         self.assertEqual(record.managed_group, upload_workspace_2.workspace.authorization_domains.first())
         self.assertIsNone(record.current_sharing_instance)
@@ -505,7 +510,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, upload_workspace_1)
         self.assertEqual(record.managed_group, upload_workspace_1.workspace.authorization_domains.first())
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -519,7 +524,7 @@ class UploadWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, upload_workspace_2)
         self.assertEqual(record.managed_group, upload_workspace_2.workspace.authorization_domains.first())
         self.assertIsNone(record.current_sharing_instance)
@@ -568,7 +573,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -583,7 +588,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -604,7 +609,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -622,7 +627,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -640,7 +645,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -659,7 +664,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -674,7 +679,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -695,7 +700,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -713,7 +718,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -731,7 +736,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -750,7 +755,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -763,7 +768,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -782,7 +787,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -798,7 +803,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -814,7 +819,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -831,7 +836,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -844,7 +849,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -863,7 +868,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -879,7 +884,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -895,7 +900,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -913,7 +918,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1032,7 +1037,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1045,7 +1050,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1064,7 +1069,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1080,7 +1085,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1096,7 +1101,7 @@ class UploadWorkspaceSharingAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1138,7 +1143,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1154,7 +1159,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsWriter)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1176,7 +1181,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsWriter)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1195,7 +1200,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsWriter)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1214,7 +1219,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsWriter)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1234,7 +1239,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1249,7 +1254,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1270,7 +1275,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1288,7 +1293,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1306,7 +1311,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1325,7 +1330,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1338,7 +1343,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1357,7 +1362,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1373,7 +1378,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1389,7 +1394,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1406,7 +1411,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1419,7 +1424,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1438,7 +1443,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1454,7 +1459,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1470,7 +1475,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1488,7 +1493,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1607,7 +1612,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1620,7 +1625,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1639,7 +1644,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1655,7 +1660,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1671,7 +1676,7 @@ class UploadWorkspaceSharingAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1715,7 +1720,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1731,7 +1736,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1753,7 +1758,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1772,7 +1777,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1791,7 +1796,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1811,7 +1816,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1826,7 +1831,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1847,7 +1852,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1865,7 +1870,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1883,7 +1888,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1902,7 +1907,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1915,7 +1920,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -1934,7 +1939,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1950,7 +1955,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1966,7 +1971,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1983,7 +1988,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -1996,7 +2001,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2015,7 +2020,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2031,7 +2036,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2047,7 +2052,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2065,7 +2070,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2184,7 +2189,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2197,7 +2202,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2216,7 +2221,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2232,7 +2237,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2248,7 +2253,7 @@ class UploadWorkspaceSharingAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2289,7 +2294,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2305,7 +2310,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2327,7 +2332,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2346,7 +2351,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2365,7 +2370,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2385,7 +2390,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2401,7 +2406,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2423,7 +2428,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2442,7 +2447,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2461,7 +2466,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2481,7 +2486,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2494,7 +2499,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2513,7 +2518,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2529,7 +2534,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2545,7 +2550,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2562,7 +2567,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2575,7 +2580,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2594,7 +2599,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2610,7 +2615,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2626,7 +2631,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2644,7 +2649,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2763,7 +2768,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2776,7 +2781,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2795,7 +2800,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2811,7 +2816,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2827,7 +2832,7 @@ class UploadWorkspaceSharingAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2869,7 +2874,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2885,7 +2890,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -2907,7 +2912,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2926,7 +2931,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2945,7 +2950,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2965,7 +2970,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -2981,7 +2986,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3003,7 +3008,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3022,7 +3027,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3041,7 +3046,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3061,7 +3066,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3074,7 +3079,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3093,7 +3098,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3109,7 +3114,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3125,7 +3130,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3142,7 +3147,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3155,7 +3160,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3174,7 +3179,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3190,7 +3195,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3206,7 +3211,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3224,7 +3229,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3343,7 +3348,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3356,7 +3361,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3375,7 +3380,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3391,7 +3396,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3407,7 +3412,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3457,7 +3462,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3473,7 +3478,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3495,7 +3500,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3514,7 +3519,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3533,7 +3538,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3553,7 +3558,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3569,7 +3574,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3591,7 +3596,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3610,7 +3615,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3629,7 +3634,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3649,7 +3654,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3662,7 +3667,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3681,7 +3686,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3697,7 +3702,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3713,7 +3718,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.auth_domain)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3730,7 +3735,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3743,7 +3748,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3762,7 +3767,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3778,7 +3783,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3794,7 +3799,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3812,7 +3817,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3931,7 +3936,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3944,7 +3949,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, None)
@@ -3963,7 +3968,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3979,7 +3984,7 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
@@ -3995,15 +4000,15 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_sharing_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS)
 
 
-class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
-    """General tests of the UploadWorkspaceAuthDomainAuditResult dataclasses."""
+class WorkspaceAuthDomainAuditResultTest(TestCase):
+    """General tests of the WorkspaceAuthDomainAuditResult dataclasses."""
 
     def test_member_as_admin(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
@@ -4013,7 +4018,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
             child_group=group,
             role=GroupGroupMembership.ADMIN,
         )
-        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=membership,
@@ -4030,7 +4035,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
             child_group=group,
             role=GroupGroupMembership.MEMBER,
         )
-        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=membership,
@@ -4042,7 +4047,7 @@ class UploadWorkspaceAuthDomainAuditResultTest(TestCase):
     def test_not_member(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
         group = ManagedGroupFactory.create()
-        instance = upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult(
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
             workspace=upload_workspace,
             managed_group=group,
             current_membership_instance=None,
@@ -4166,7 +4171,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4181,7 +4186,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4196,7 +4201,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4212,7 +4217,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4228,7 +4233,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4246,7 +4251,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4265,7 +4270,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4306,7 +4311,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4324,7 +4329,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, upload_workspace)
         self.assertEqual(record.managed_group, group)
 
@@ -4353,13 +4358,13 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, upload_workspace_1)
         self.assertEqual(record.managed_group, admin_group)
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(record.note, upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, upload_workspace_2)
         self.assertEqual(record.managed_group, admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4384,7 +4389,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, upload_workspace_1)
         self.assertEqual(record.managed_group, admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4398,7 +4403,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, upload_workspace_2)
         self.assertEqual(record.managed_group, admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4446,7 +4451,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4464,7 +4469,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4482,7 +4487,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4495,7 +4500,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4513,7 +4518,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4531,7 +4536,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4544,7 +4549,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4562,7 +4567,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4580,7 +4585,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4593,7 +4598,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4611,7 +4616,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4629,7 +4634,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4644,7 +4649,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -4657,7 +4662,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4677,7 +4682,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4697,7 +4702,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4712,7 +4717,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4732,7 +4737,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4752,7 +4757,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4767,7 +4772,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4787,7 +4792,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4807,7 +4812,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4822,7 +4827,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4840,7 +4845,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4858,7 +4863,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -4961,7 +4966,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -4981,7 +4986,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5001,7 +5006,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5016,7 +5021,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5036,7 +5041,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5056,7 +5061,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5071,7 +5076,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5091,7 +5096,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5111,7 +5116,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5126,7 +5131,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5144,7 +5149,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5162,7 +5167,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5177,7 +5182,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -5190,7 +5195,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5210,7 +5215,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5230,7 +5235,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5245,7 +5250,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5265,7 +5270,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5285,7 +5290,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5300,7 +5305,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5320,7 +5325,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5340,7 +5345,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5355,7 +5360,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5373,7 +5378,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5391,7 +5396,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5496,7 +5501,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5516,7 +5521,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5536,7 +5541,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5551,7 +5556,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5571,7 +5576,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5591,7 +5596,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5606,7 +5611,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5626,7 +5631,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5646,7 +5651,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5661,7 +5666,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5679,7 +5684,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5697,7 +5702,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5712,7 +5717,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -5725,7 +5730,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5745,7 +5750,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5765,7 +5770,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5780,7 +5785,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5800,7 +5805,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5820,7 +5825,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5835,7 +5840,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5855,7 +5860,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5875,7 +5880,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5890,7 +5895,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -5908,7 +5913,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -5926,7 +5931,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6033,7 +6038,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6053,7 +6058,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6073,7 +6078,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6088,7 +6093,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6108,7 +6113,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6128,7 +6133,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6143,7 +6148,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6163,7 +6168,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6183,7 +6188,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6198,7 +6203,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6216,7 +6221,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6234,7 +6239,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6249,7 +6254,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -6262,7 +6267,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6282,7 +6287,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6302,7 +6307,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6317,7 +6322,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6337,7 +6342,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6357,7 +6362,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6372,7 +6377,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6392,7 +6397,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6412,7 +6417,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6427,7 +6432,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6445,7 +6450,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6463,7 +6468,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6571,7 +6576,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6591,7 +6596,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6611,7 +6616,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6626,7 +6631,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6646,7 +6651,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6666,7 +6671,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6681,7 +6686,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6701,7 +6706,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6721,7 +6726,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6736,7 +6741,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6754,7 +6759,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6772,7 +6777,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6787,7 +6792,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -6800,7 +6805,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6820,7 +6825,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6840,7 +6845,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6855,7 +6860,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6875,7 +6880,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6895,7 +6900,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6910,7 +6915,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6930,7 +6935,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6950,7 +6955,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -6965,7 +6970,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -6983,7 +6988,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7001,7 +7006,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7112,7 +7117,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7132,7 +7137,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7152,7 +7157,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_uploader_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7167,7 +7172,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7187,7 +7192,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7207,7 +7212,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7222,7 +7227,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7242,7 +7247,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7262,7 +7267,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.rc_non_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7277,7 +7282,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7295,7 +7300,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7313,7 +7318,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7328,7 +7333,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, group)
         self.assertIsNone(record.current_membership_instance)
@@ -7341,7 +7346,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7361,7 +7366,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7381,7 +7386,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_writer_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7396,7 +7401,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7416,7 +7421,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7436,7 +7441,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.dcc_member_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7451,7 +7456,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7471,7 +7476,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7491,7 +7496,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.gregor_all_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7506,7 +7511,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertIsNone(record.current_membership_instance)
@@ -7524,7 +7529,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7542,7 +7547,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
-        self.assertIsInstance(record, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(record.workspace, self.upload_workspace)
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_membership_instance, membership)

@@ -25,7 +25,12 @@ from gregor_django.users.tables import UserTable
 from gregor_django.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
-from ..audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
+from ..audit import (
+    upload_workspace_auth_domain_audit,
+    upload_workspace_sharing_audit,
+    workspace_auth_domain_audit_results,
+    workspace_sharing_audit_results,
+)
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -3530,7 +3535,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
-            upload_workspace_sharing_audit.UploadWorkspaceSharingAuditResult,
+            workspace_sharing_audit_results.WorkspaceSharingAuditResult,
         )
 
     def test_get_verified_shared(self):
@@ -3548,7 +3553,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.VerifiedShared)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedShared)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -3565,7 +3570,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.VerifiedNotShared)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -3582,7 +3587,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -3601,7 +3606,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsWriter)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -3618,7 +3623,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareWithCompute)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -3634,7 +3639,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsOwner)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -4233,7 +4238,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still as expected.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsReader)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsReader)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -4264,7 +4269,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still as expected.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsWriter)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsWriter)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -4294,7 +4299,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still as expected.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareWithCompute)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareWithCompute)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -4324,7 +4329,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still as expected.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.ShareAsOwner)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsOwner)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -4363,7 +4368,7 @@ class UploadWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still as expected.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_sharing_audit.StopSharing)
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.StopSharing)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -5728,7 +5733,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
-            upload_workspace_auth_domain_audit.UploadWorkspaceAuthDomainAuditResult,
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult,
         )
 
     def test_get_verified_member(self):
@@ -5746,7 +5751,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedMember)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedMember)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5768,7 +5773,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedAdmin)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedAdmin)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5785,7 +5790,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.VerifiedNotMember)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedNotMember)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5802,7 +5807,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.AddMember)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddMember)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5819,7 +5824,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.AddAdmin)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddAdmin)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5841,7 +5846,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.ChangeToMember)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToMember)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5863,7 +5868,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.ChangeToAdmin)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
@@ -5884,7 +5889,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, upload_workspace_auth_domain_audit.Remove)
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.Remove)
         self.assertEqual(audit_result.workspace, upload_workspace)
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(

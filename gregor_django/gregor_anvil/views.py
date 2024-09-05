@@ -25,7 +25,12 @@ from django_tables2 import MultiTableMixin, SingleTableView
 from gregor_django.users.tables import UserTable
 
 from . import forms, models, tables
-from .audit import upload_workspace_auth_domain_audit, upload_workspace_sharing_audit
+from .audit import (
+    upload_workspace_auth_domain_audit,
+    upload_workspace_sharing_audit,
+    workspace_auth_domain_audit_results,
+    workspace_sharing_audit_results,
+)
 
 User = get_user_model()
 
@@ -353,26 +358,26 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
                     group=self.managed_group,
                 )
             with transaction.atomic():
-                if isinstance(self.audit_result, upload_workspace_sharing_audit.VerifiedShared):
+                if isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedShared):
                     # No changes needed.
                     pass
-                elif isinstance(self.audit_result, upload_workspace_sharing_audit.VerifiedNotShared):
+                elif isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedNotShared):
                     # No changes needed.
                     pass
-                elif isinstance(self.audit_result, upload_workspace_sharing_audit.StopSharing):
+                elif isinstance(self.audit_result, workspace_sharing_audit_results.StopSharing):
                     sharing.anvil_delete()
                     sharing.delete()
                 else:
-                    if isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsReader):
+                    if isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsReader):
                         sharing.access = WorkspaceGroupSharing.READER
                         sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsWriter):
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsWriter):
                         sharing.access = WorkspaceGroupSharing.WRITER
                         sharing.can_compute = False
-                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareWithCompute):
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareWithCompute):
                         sharing.access = WorkspaceGroupSharing.WRITER
                         sharing.can_compute = True
-                    elif isinstance(self.audit_result, upload_workspace_sharing_audit.ShareAsOwner):
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsOwner):
                         sharing.access = WorkspaceGroupSharing.OWNER
                         sharing.can_compute = True
                     sharing.full_clean()
@@ -557,26 +562,26 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
                         child_group=self.managed_group,
                     )
                 # Now process the result.
-                if isinstance(self.audit_result, upload_workspace_auth_domain_audit.VerifiedMember):
+                if isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedMember):
                     pass
-                elif isinstance(self.audit_result, upload_workspace_auth_domain_audit.VerifiedAdmin):
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedAdmin):
                     pass
-                elif isinstance(self.audit_result, upload_workspace_auth_domain_audit.VerifiedNotMember):
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedNotMember):
                     pass
-                elif isinstance(self.audit_result, upload_workspace_auth_domain_audit.Remove):
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.Remove):
                     membership.anvil_delete()
                     membership.delete()
                 else:
-                    if isinstance(self.audit_result, upload_workspace_auth_domain_audit.ChangeToMember):
+                    if isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToMember):
                         membership.anvil_delete()
                         membership.role = GroupGroupMembership.MEMBER
-                    elif isinstance(self.audit_result, upload_workspace_auth_domain_audit.ChangeToAdmin):
+                    elif isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToAdmin):
                         membership.anvil_delete()
                         membership.role = GroupGroupMembership.ADMIN
                     else:
-                        if isinstance(self.audit_result, upload_workspace_auth_domain_audit.AddMember):
+                        if isinstance(self.audit_result, workspace_auth_domain_audit_results.AddMember):
                             membership.role = GroupGroupMembership.MEMBER
-                        elif isinstance(self.audit_result, upload_workspace_auth_domain_audit.AddAdmin):
+                        elif isinstance(self.audit_result, workspace_auth_domain_audit_results.AddAdmin):
                             membership.role = GroupGroupMembership.ADMIN
                     membership.full_clean()
                     membership.save()

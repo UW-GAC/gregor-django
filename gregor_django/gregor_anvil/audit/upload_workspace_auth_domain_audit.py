@@ -1,110 +1,11 @@
-from dataclasses import dataclass
-
 import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, UploadWorkspace
-from .base import GREGoRAudit, GREGoRAuditResult
-
-
-@dataclass
-class UploadWorkspaceAuthDomainAuditResult(GREGoRAuditResult):
-    """Base class to hold results for auditing upload workspace sharing."""
-
-    workspace: UploadWorkspace
-    note: str
-    managed_group: ManagedGroup
-    action: str = None
-    current_membership_instance: GroupGroupMembership = None
-
-    def get_table_dictionary(self):
-        """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
-        row = {
-            "workspace": self.workspace,
-            "managed_group": self.managed_group,
-            "role": self.current_membership_instance.role if self.current_membership_instance else None,
-            "note": self.note,
-            "action": self.action,
-        }
-        return row
-
-
-@dataclass
-class VerifiedMember(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when member membership has been verified."""
-
-    def __str__(self):
-        return f"Verified member: {self.note}"
-
-
-@dataclass
-class VerifiedAdmin(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when membership with an admin role has been verified."""
-
-    is_shared: bool = False
-
-    def __str__(self):
-        return f"Verified admin: {self.note}"
-
-
-@dataclass
-class VerifiedNotMember(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when member membership has been verified."""
-
-    def __str__(self):
-        return f"Verified member: {self.note}"
-
-
-@dataclass
-class AddMember(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when a member role should be added."""
-
-    action: str = "Add member"
-
-    def __str__(self):
-        return f"Add member: {self.note}"
-
-
-@dataclass
-class AddAdmin(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when an admin role should be added."""
-
-    action: str = "Add admin"
-
-    def __str__(self):
-        return f"Add admin: {self.note}"
-
-
-@dataclass
-class ChangeToMember(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when an admin role should be changed to a member role."""
-
-    action: str = "Change to member"
-
-    def __str__(self):
-        return f"Change to member: {self.note}"
-
-
-@dataclass
-class ChangeToAdmin(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when a member role should be changed to an admin role."""
-
-    action: str = "Change to admin"
-
-    def __str__(self):
-        return f"Change to admin: {self.note}"
-
-
-@dataclass
-class Remove(UploadWorkspaceAuthDomainAuditResult):
-    """Audit results class for when group membership should be removed."""
-
-    action: str = "Remove"
-
-    def __str__(self):
-        return f"Share as owner: {self.note}"
+from . import workspace_auth_domain_audit_results as audit_results
+from .base import GREGoRAudit
 
 
 class UploadWorkspaceAuthDomainAuditTable(tables.Table):
@@ -254,35 +155,35 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(note=note, **result_kwargs))
+                self.errors.append(audit_results.Remove(note=note, **result_kwargs))
             elif membership:
-                self.needs_action.append(Remove(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.Remove(note=note, **result_kwargs))
             else:
-                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedNotMember(note=note, **result_kwargs))
         elif upload_workspace.upload_cycle.is_current:
             note = self.RC_UPLOADERS_BEFORE_QC
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
-                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(note=note, **result_kwargs))
             else:
-                self.needs_action.append(AddMember(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.AddMember(note=note, **result_kwargs))
         elif upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.RC_UPLOADERS_BEFORE_QC
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
-                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(note=note, **result_kwargs))
             else:
-                self.needs_action.append(AddMember(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.AddMember(note=note, **result_kwargs))
         else:
             note = self.RC_UPLOADERS_AFTER_QC
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(note=note, **result_kwargs))
+                self.errors.append(audit_results.Remove(note=note, **result_kwargs))
             elif membership:
-                self.needs_action.append(Remove(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.Remove(note=note, **result_kwargs))
             else:
-                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedNotMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_rc_members(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
@@ -296,27 +197,27 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(note=note, **result_kwargs))
+                self.errors.append(audit_results.Remove(note=note, **result_kwargs))
             elif membership:
-                self.needs_action.append(Remove(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.Remove(note=note, **result_kwargs))
             else:
-                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedNotMember(note=note, **result_kwargs))
         elif not combined_workspace:
             note = self.RC_MEMBERS_BEFORE_COMBINED
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
-                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(note=note, **result_kwargs))
             else:
-                self.needs_action.append(AddMember(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.AddMember(note=note, **result_kwargs))
         else:
             note = self.RC_MEMBERS_AFTER_COMBINED
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(note=note, **result_kwargs))
+                self.errors.append(audit_results.Remove(note=note, **result_kwargs))
             elif membership:
-                self.needs_action.append(Remove(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.Remove(note=note, **result_kwargs))
             else:
-                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedNotMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_rc_non_members(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
@@ -329,25 +230,25 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(note=note, **result_kwargs))
+                self.errors.append(audit_results.Remove(note=note, **result_kwargs))
             elif membership:
-                self.needs_action.append(Remove(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.Remove(note=note, **result_kwargs))
             else:
-                self.verified.append(VerifiedNotMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedNotMember(note=note, **result_kwargs))
         else:
             note = self.RC_NON_MEMBERS_AFTER_START
             if membership and membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(ChangeToMember(note=note, **result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
-                self.verified.append(VerifiedMember(note=note, **result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(note=note, **result_kwargs))
             else:
-                self.needs_action.append(AddMember(note=note, **result_kwargs))
+                self.needs_action.append(audit_results.AddMember(note=note, **result_kwargs))
 
     def _audit_workspace_and_group_for_dcc_admin(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
         if not membership:
             self.needs_action.append(
-                AddAdmin(
+                audit_results.AddAdmin(
                     workspace=upload_workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
@@ -356,7 +257,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             )
         elif membership.role == GroupGroupMembership.ADMIN:
             self.verified.append(
-                VerifiedAdmin(
+                audit_results.VerifiedAdmin(
                     workspace=upload_workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
@@ -365,7 +266,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             )
         else:
             self.needs_action.append(
-                ChangeToAdmin(
+                audit_results.ChangeToAdmin(
                     workspace=upload_workspace,
                     managed_group=managed_group,
                     note=self.DCC_ADMINS,
@@ -388,19 +289,19 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         }
 
         if not combined_workspace and not membership:
-            self.needs_action.append(AddMember(**result_kwargs))
+            self.needs_action.append(audit_results.AddMember(**result_kwargs))
         elif not combined_workspace and membership:
             if membership.role == GroupGroupMembership.MEMBER:
-                self.verified.append(VerifiedMember(**result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(**result_kwargs))
             else:
-                self.errors.append(ChangeToMember(**result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(**result_kwargs))
         elif combined_workspace and not membership:
-            self.verified.append(VerifiedNotMember(**result_kwargs))
+            self.verified.append(audit_results.VerifiedNotMember(**result_kwargs))
         elif combined_workspace and membership:
             if membership.role == GroupGroupMembership.ADMIN:
-                self.errors.append(Remove(**result_kwargs))
+                self.errors.append(audit_results.Remove(**result_kwargs))
             else:
-                self.needs_action.append(Remove(**result_kwargs))
+                self.needs_action.append(audit_results.Remove(**result_kwargs))
 
     def _audit_workspace_and_group_for_gregor_all(self, upload_workspace, managed_group):
         combined_workspace = self._get_combined_workspace(upload_workspace.upload_cycle)
@@ -417,16 +318,16 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         }
 
         if not combined_workspace and not membership:
-            self.verified.append(VerifiedNotMember(**result_kwargs))
+            self.verified.append(audit_results.VerifiedNotMember(**result_kwargs))
         elif not combined_workspace and membership:
-            self.errors.append(Remove(**result_kwargs))
+            self.errors.append(audit_results.Remove(**result_kwargs))
         elif combined_workspace and not membership:
-            self.needs_action.append(AddMember(**result_kwargs))
+            self.needs_action.append(audit_results.AddMember(**result_kwargs))
         elif combined_workspace and membership:
             if membership.role == GroupGroupMembership.MEMBER:
-                self.verified.append(VerifiedMember(**result_kwargs))
+                self.verified.append(audit_results.VerifiedMember(**result_kwargs))
             else:
-                self.errors.append(ChangeToMember(**result_kwargs))
+                self.errors.append(audit_results.ChangeToMember(**result_kwargs))
 
     def _audit_workspace_and_anvil_group(self, upload_workspace, managed_group):
         """Ignore the AnVIL groups in this audit.
@@ -444,6 +345,6 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         }
 
         if not membership:
-            self.verified.append(VerifiedNotMember(**result_kwargs))
+            self.verified.append(audit_results.VerifiedNotMember(**result_kwargs))
         elif membership:
-            self.errors.append(Remove(**result_kwargs))
+            self.errors.append(audit_results.Remove(**result_kwargs))
