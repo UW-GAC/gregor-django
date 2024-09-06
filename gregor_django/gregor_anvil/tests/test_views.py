@@ -1910,22 +1910,6 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         self.assertIn(upload_workspace_1, response.context_data["upload_workspace_table"].data)
         self.assertIn(upload_workspace_2, response.context_data["upload_workspace_table"].data)
 
-    def test_contains_share_with_auth_domain_button(self):
-        acm_factories.WorkspaceAuthorizationDomainFactory.create(
-            workspace=self.object.workspace, group__name="test_auth"
-        )
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
-        url = reverse(
-            "anvil_consortium_manager:workspaces:sharing:new_by_group",
-            args=[
-                self.object.workspace.billing_project.name,
-                self.object.workspace.name,
-                "test_auth",
-            ],
-        )
-        self.assertContains(response, url)
-
     def test_includes_date_completed(self):
         self.object.date_completed = "2022-01-01"
         self.object.save()

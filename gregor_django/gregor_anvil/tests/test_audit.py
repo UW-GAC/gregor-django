@@ -7,7 +7,6 @@ from anvil_consortium_manager.models import GroupGroupMembership, WorkspaceGroup
 from anvil_consortium_manager.tests.factories import (
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
-    WorkspaceAuthorizationDomainFactory,
     WorkspaceGroupSharingFactory,
 )
 from django.conf import settings
@@ -7407,7 +7406,6 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
     def test_one_workspace_dcc_admin_group(self):
         group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7422,7 +7420,6 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
     def test_one_workspace_dcc_admin_group_different_setting(self):
         group = ManagedGroupFactory.create(name="foo")
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7436,7 +7433,6 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
     def test_one_workspace_gregor_all_group(self):
         group = ManagedGroupFactory.create(name="GREGOR_ALL")
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7449,8 +7445,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
 
     def test_one_workspace_anvil_admins_group(self):
         ManagedGroupFactory.create(name="anvil-admins")
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
+        factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7459,8 +7454,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
 
     def test_one_workspace_anvil_devs_group(self):
         ManagedGroupFactory.create(name="anvil_devs")
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
+        factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7470,7 +7464,6 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
     def test_one_workspace_other_group_member(self):
         group = ManagedGroupFactory.create()
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
         GroupGroupMembershipFactory.create(
             parent_group=combined_workspace.workspace.authorization_domains.first(), child_group=group
         )
@@ -7486,8 +7479,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
 
     def test_one_workspace_other_group_not_member(self):
         ManagedGroupFactory.create()
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
+        factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
@@ -7498,14 +7490,12 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
         """Audit works with two UploadWorkspaces."""
         group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace_1.workspace)
         membership = GroupGroupMembershipFactory.create(
             parent_group=combined_workspace_1.workspace.authorization_domains.first(),
             child_group=group,
             role=GroupGroupMembership.ADMIN,
         )
         combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace_2.workspace)
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 1)
@@ -7526,14 +7516,12 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
         """Audit only runs on the specified queryset."""
         group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace_1.workspace)
         membership = GroupGroupMembershipFactory.create(
             parent_group=combined_workspace_1.workspace.authorization_domains.first(),
             child_group=group,
             role=GroupGroupMembership.ADMIN,
         )
         combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace_2.workspace)
         # First application
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit(
             queryset=models.CombinedConsortiumDataWorkspace.objects.filter(pk=combined_workspace_1.pk)
@@ -7580,12 +7568,11 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
-        self.auth_domain = ManagedGroupFactory.create()
         self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
             upload_cycle__is_past=True,
             date_completed=None,
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=self.combined_workspace.workspace, group=self.auth_domain)
+        self.auth_domain = self.combined_workspace.workspace.authorization_domains.first()
         self.other_group = ManagedGroupFactory.create()
         self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
         self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
@@ -7846,12 +7833,11 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
-        self.auth_domain = ManagedGroupFactory.create()
         self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
             upload_cycle__is_past=True,
             date_completed=fake.date_this_year(before_today=True, after_today=False),
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=self.combined_workspace.workspace, group=self.auth_domain)
+        self.auth_domain = self.combined_workspace.workspace.authorization_domains.first()
         self.other_group = ManagedGroupFactory.create()
         self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
         self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
@@ -8124,7 +8110,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
@@ -8133,7 +8119,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
@@ -8147,7 +8133,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
@@ -8160,7 +8146,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
@@ -8173,7 +8159,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
@@ -8186,7 +8172,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
@@ -8195,13 +8181,12 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
     def test_one_workspace_auth_domain(self):
         combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=combined_workspace.workspace)
         group = combined_workspace.workspace.authorization_domains.first()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
@@ -8219,7 +8204,7 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         WorkspaceGroupSharingFactory.create(workspace=combined_workspace.workspace, group=group)
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 1)
         record = audit.errors[0]
@@ -8232,46 +8217,38 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.verified), 1)  # The auth domain
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
     def test_two_workspaces(self):
         """Audit works with two UploadWorkspaces."""
-        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        sharing = WorkspaceGroupSharingFactory.create(
-            workspace=combined_workspace_1.workspace,
-            group=group,
-            access=WorkspaceGroupSharing.OWNER,
+        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=fake.date_this_year(before_today=True, after_today=False)
         )
-        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, combined_workspace_1.workspace)
-        self.assertEqual(record.managed_group, group)
-        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.managed_group, combined_workspace_1.workspace.authorization_domains.first())
+        self.assertIsNone(record.current_sharing_instance)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, combined_workspace_2.workspace)
-        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.managed_group, combined_workspace_2.workspace.authorization_domains.first())
         self.assertIsNone(record.current_sharing_instance)
 
     def test_queryset(self):
         """Audit only runs on the specified queryset."""
-        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
         combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
-        sharing = WorkspaceGroupSharingFactory.create(
-            workspace=combined_workspace_1.workspace,
-            group=group,
-            access=WorkspaceGroupSharing.OWNER,
+        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=fake.date_this_year(before_today=True, after_today=False)
         )
-        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
         # First application
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit(
             queryset=models.CombinedConsortiumDataWorkspace.objects.filter(pk=combined_workspace_1.pk)
@@ -8281,10 +8258,10 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         record = audit.verified[0]
-        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
         self.assertEqual(record.workspace, combined_workspace_1.workspace)
-        self.assertEqual(record.managed_group, group)
-        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(record.managed_group, combined_workspace_1.workspace.authorization_domains.first())
+        self.assertIsNone(record.current_sharing_instance)
         # Second application
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit(
             queryset=models.CombinedConsortiumDataWorkspace.objects.filter(pk=combined_workspace_2.pk)
@@ -8294,9 +8271,9 @@ class CombinedConsortiumWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
         self.assertEqual(record.workspace, combined_workspace_2.workspace)
-        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.managed_group, combined_workspace_2.workspace.authorization_domains.first())
         self.assertIsNone(record.current_sharing_instance)
 
     def test_queryset_wrong_class(self):
@@ -8315,12 +8292,11 @@ class CombinedConsortiumWorkspaceSharingAuditBeforeCompleteTest(TestCase):
         self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
-        self.auth_domain = ManagedGroupFactory.create()
         self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
             upload_cycle__is_past=True,
             date_completed=None,
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=self.combined_workspace.workspace, group=self.auth_domain)
+        self.auth_domain = self.combined_workspace.workspace.authorization_domains.first()
         self.other_group = ManagedGroupFactory.create()
         self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
         self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
@@ -8922,12 +8898,11 @@ class CombinedConsortiumWorkspaceSharingAuditAfterCompleteTest(TestCase):
         self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
         self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
         self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
-        self.auth_domain = ManagedGroupFactory.create()
         self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
             upload_cycle__is_past=True,
             date_completed=fake.date_this_year(before_today=True, after_today=False),
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=self.combined_workspace.workspace, group=self.auth_domain)
+        self.auth_domain = self.combined_workspace.workspace.authorization_domains.first()
         self.other_group = ManagedGroupFactory.create()
         self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
         self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
