@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.6.3
+ruff==0.6.5
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -165,7 +165,7 @@ sphinx==8.0.2
     # via
     #   -r requirements/dev-requirements.in
     #   sphinx-autobuild
-sphinx-autobuild==2024.9.3
+sphinx-autobuild==2024.9.17
     # via -r requirements/dev-requirements.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx
