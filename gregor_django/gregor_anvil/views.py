@@ -26,6 +26,7 @@ from gregor_django.users.tables import UserTable
 
 from . import forms, models, tables
 from .audit import (
+    combined_workspace_audit,
     upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
@@ -596,3 +597,58 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
             return HttpResponse(self.htmx_success)
         else:
             return super().form_valid(form)
+
+
+class CombinedConsortiumDataWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit CombinedConsortiumDataWorkspace sharing for all CombinedConsortiumDataWorkspacs."""
+
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_sharing_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
+
+
+class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+    """View to audit CombinedConsortiumDataWorkspace sharing for a specific CombinedConsortiumDataWorkspace."""
+
+    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
+    model = models.CombinedConsortiumDataWorkspace
+
+    def get_object(self, queryset=None):
+        """Look up the workspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.CombinedConsortiumDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit(
+            queryset=self.model.objects.filter(pk=self.object.pk)
+        )
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context

@@ -26,6 +26,7 @@ from gregor_django.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
 from ..audit import (
+    combined_workspace_audit,
     upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
@@ -6909,3 +6910,605 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
+
+
+class CombinedConsortiumDataWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the CombinedConsortiumDataWorkspaceSharingAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:combined_workspaces:sharing:all",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.CombinedConsortiumDataWorkspaceSharingAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_audit_results_no_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=timezone.now() - timedelta(days=1)
+        )
+        group = workspace.workspace.authorization_domains.first()
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_AFTER_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_BEFORE_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=timezone.now() - timedelta(days=1)
+        )
+        group = workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_AFTER_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_writer_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit result.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_MEMBERS_AFTER_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # self.assertContains(response, str(self.workspace))
+        self.assertIn("all combined workspaces", response.content.decode().lower())
+
+
+class CombinedConsortiumDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the CombinedConsortiumDataWorkspaceSharingAuditByWorkspace view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:combined_workspaces:sharing:by_workspace",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.CombinedConsortiumDataWorkspaceSharingAuditByWorkspace.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url("foo", "bar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_invalid_billing_project_name(self):
+        """Raises a 404 error with an invalid object billing project."""
+        request = self.factory.get(self.get_url("foo", self.workspace.workspace.name))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug="foo",
+                workspace_slug=self.workspace.workspace.name,
+            )
+
+    def test_invalid_workspace_name(self):
+        """Raises a 404 error with an invalid workspace name."""
+        request = self.factory.get(self.get_url(self.workspace.workspace.billing_project.name, "foo"))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug=self.workspace.workspace.billing_project.name,
+                workspace_slug="foo",
+            )
+
+    def test_context_audit_results(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(self.workspace, audit_results.queryset)
+
+    def test_context_audit_results_does_not_include_other_workspaces(self):
+        """The audit_results does not include other workspaces."""
+        other_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        audit_results = response.context_data["audit_results"]
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertNotIn(other_workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        self.workspace.date_completed = timezone.now() - timedelta(days=1)
+        self.workspace.save()
+        group = self.workspace.workspace.authorization_domains.first()
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_AFTER_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        group = self.workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_BEFORE_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        self.workspace.date_completed = timezone.now() - timedelta(days=1)
+        self.workspace.save()
+        group = self.workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.AUTH_DOMAIN_AFTER_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_writer_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.workspace.date_completed = timezone.localdate() - timedelta(days=1)
+        self.workspace.save()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit result.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=self.workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.DCC_MEMBERS_AFTER_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        # self.assertContains(response, str(self.workspace))
+        self.assertIn(str(self.workspace), response.content.decode().lower())

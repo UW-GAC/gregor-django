@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace
+from ..tables import BooleanIconColumn
 from . import workspace_auth_domain_audit_results, workspace_sharing_audit_results
 from .base import GREGoRAudit
 
@@ -178,8 +179,14 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
 class CombinedConsortiumDataWorkspaceSharingAuditTable(tables.Table):
     """A table to display the audit results of the sharing of a combined consortium data workspace."""
 
-    workspace = tables.Column(verbose_name="Workspace")
-    managed_group = tables.Column(verbose_name="Group")
+    workspace = tables.Column(linkify=True)
+    managed_group = tables.Column(linkify=True)
+    access = tables.Column(verbose_name="Current access")
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="green", false_color="black")
+    note = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="gregor_anvil/snippets/upload_workspace_sharing_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
@@ -229,7 +236,6 @@ class CombinedConsortiumDataWorkspaceSharingAudit(GREGoRAudit):
         group_names_to_include = [
             "GREGOR_DCC_MEMBERS",  # DCC members
             "GREGOR_DCC_WRITERS",  # DCC writers
-            "GREGOR_ALL",  # All GREGOR users
             settings.ANVIL_DCC_ADMINS_GROUP_NAME,  # DCC admins
             "anvil-admins",  # AnVIL admins
             "anvil_devs",  # AnVIL devs

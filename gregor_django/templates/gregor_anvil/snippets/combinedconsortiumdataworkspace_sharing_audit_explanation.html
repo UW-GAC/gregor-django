@@ -1,0 +1,47 @@
+<div class="accordion" id="accordionExplanation">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            Audit explanation
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExplanation">
+          <div class="accordion-body">
+
+            <p>
+                This audit checks that workspace sharing is appropriate for the current point in the upload cycle.
+                Sharing with the following groups are checked:
+                <ul>
+                    <li>The authorization domain of the workspace</li>
+                    <li>GREGOR_DCC_ADMINS</li>
+                    <li>GREGOR_DCC_WRITERS</li>
+                    <li>GREGOR_DCC_MEMBERS</li>
+                    <li>Any additional groups that the workspace is shared with</li>
+                </ul>
+                Note that groups associated with AnVIL (e.g., anvil-admins, anvil-devs) are ignored by the audit.
+            </p>
+            <p>The audit result categories are explained below.
+              <ul>
+
+                <li><b>Verified</b> includes the following:</li>
+                  <ul>
+                    <li>The workspace is shared with a group with appropriate permissions.</li>
+                    <li>The workspace is <b>not</b> shared with a group that it should not be shared with.</li>
+                  </ul>
+
+                <li><b>Needs action</b> includes the following:</li>
+                <ul>
+                  <li>The access level for a specific group needs to be changed.</li>
+              </ul>
+
+                <li><b>Errors</b></li>
+                <ul>
+                  <li>The workspace has been shared with an unexpected group.</li>
+                </ul>
+              </ul>
+            </p>
+            <p>Any errors should be reported!</p>
+        </div>
+      </div>
+  </div>
+</div>
