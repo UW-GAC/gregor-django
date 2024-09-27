@@ -185,3 +185,11 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         self.update_user_research_centers(user, extra_data)
         self.update_user_partner_groups(user, extra_data)
         self.update_user_groups(user, extra_data)
+
+    def authentication_error(self, request, provider_id, error, exception, extra_context):
+        """
+        Invoked when there is an error in auth cycle.
+        Log so we know what is going on.
+        """
+        logger.error(f"[SocialAccountAdapter:authentication_error] Error {error} Exception: {exception}")
+        super().authentication_error(request, provider_id, error, exception, extra_context)
