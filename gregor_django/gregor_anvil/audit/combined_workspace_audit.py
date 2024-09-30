@@ -185,7 +185,7 @@ class CombinedConsortiumDataWorkspaceSharingAuditTable(tables.Table):
     can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="green", false_color="black")
     note = tables.Column()
     action = tables.TemplateColumn(
-        template_name="gregor_anvil/snippets/upload_workspace_sharing_audit_action_button.html"
+        template_name="gregor_anvil/snippets/combinedconsortiumdataworkspace_sharing_audit_action_button.html"
     )
 
     class Meta:
