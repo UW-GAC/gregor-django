@@ -766,3 +766,21 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
             return HttpResponse(self.htmx_success)
         else:
             return super().form_valid(form)
+
+
+class CombinedConsortiumDataWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit auth domain membership for all CombinedConsortiumDataWorkspaces."""
+
+    pass
+
+
+class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditRequired, DetailView):
+    """View to audit auth domain membership for a specific CombinedConsortiumDataWorkspace."""
+
+    pass
+
+
+class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    """View to resolve CombinedConsortiumDataWorkspace auth domain audit results."""
+
+    pass
