@@ -619,7 +619,7 @@ class CombinedConsortiumDataWorkspaceSharingAudit(AnVILConsortiumManagerStaffVie
 class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit CombinedConsortiumDataWorkspace sharing for a specific CombinedConsortiumDataWorkspace."""
 
-    template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_sharing_audit.html"
     model = models.CombinedConsortiumDataWorkspace
 
     def get_object(self, queryset=None):
