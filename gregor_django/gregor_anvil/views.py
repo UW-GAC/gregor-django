@@ -652,3 +652,117 @@ class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(AnVILConsortiumMana
         context["needs_action_table"] = audit.get_needs_action_table()
         context["audit_results"] = audit
         return context
+
+
+class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    """View to resolve CombinedConsortiumDataWorkspace audit results."""
+
+    form_class = Form
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_sharing_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_combined_workspace(self):
+        """Look up the CombinedConsortiumDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.CombinedConsortiumDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_managed_group(self, queryset=None):
+        """Look up the ManagedGroup by name."""
+        try:
+            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
+        except ManagedGroup.DoesNotExist:
+            raise Http404("No ManagedGroups found matching the query")
+        return obj
+
+    def get_audit_result(self):
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
+        # No way to set the group queryset, since it is dynamically determined by the workspace.
+        audit.audit_workspace_and_group(self.combined_workspace, self.managed_group)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.combined_workspace = self.get_combined_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.combined_workspace = self.get_combined_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["combined_workspace"] = self.combined_workspace
+        context["managed_group"] = self.managed_group
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.combined_workspace.get_absolute_url()
+
+    def form_valid(self, form):
+        # Handle the result.
+        try:
+            # Set up the sharing instance.
+            if self.audit_result.current_sharing_instance:
+                sharing = self.audit_result.current_sharing_instance
+            else:
+                sharing = WorkspaceGroupSharing(
+                    workspace=self.combined_workspace.workspace,
+                    group=self.managed_group,
+                )
+            with transaction.atomic():
+                if isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedShared):
+                    # No changes needed.
+                    pass
+                elif isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedNotShared):
+                    # No changes needed.
+                    pass
+                elif isinstance(self.audit_result, workspace_sharing_audit_results.StopSharing):
+                    sharing.anvil_delete()
+                    sharing.delete()
+                else:
+                    if isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsReader):
+                        sharing.access = WorkspaceGroupSharing.READER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsWriter):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = False
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareWithCompute):
+                        sharing.access = WorkspaceGroupSharing.WRITER
+                        sharing.can_compute = True
+                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsOwner):
+                        sharing.access = WorkspaceGroupSharing.OWNER
+                        sharing.can_compute = True
+                    sharing.full_clean()
+                    sharing.save()
+                    sharing.anvil_create_or_update()
+        except (AnVILAPIError, AnVILGroupNotFound) as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)

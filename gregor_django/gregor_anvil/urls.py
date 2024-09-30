@@ -101,11 +101,11 @@ upload_workspace_audit_patterns = (
 combined_workspace_sharing_audit_patterns = (
     [
         path("all/", views.CombinedConsortiumDataWorkspaceSharingAudit.as_view(), name="all"),
-        # path(
-        #     "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
-        #     views.UploadWorkspaceSharingAuditResolve.as_view(),
-        #     name="resolve",
-        # ),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.CombinedConsortiumDataWorkspaceSharingAuditResolve.as_view(),
+            name="resolve",
+        ),
         path(
             "<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.CombinedConsortiumDataWorkspaceSharingAuditByWorkspace.as_view(),
