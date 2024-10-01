@@ -771,7 +771,18 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
 class CombinedConsortiumDataWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to audit auth domain membership for all CombinedConsortiumDataWorkspaces."""
 
-    pass
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_auth_domain_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
 
 
 class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditRequired, DetailView):

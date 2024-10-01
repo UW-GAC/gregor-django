@@ -117,7 +117,7 @@ combined_workspace_sharing_audit_patterns = (
 
 combined_workspace_auth_domain_audit_patterns = (
     [
-        # path("all/", views.UploadWorkspaceAuthDomainAudit.as_view(), name="all"),
+        path("all/", views.CombinedConsortiumDataWorkspaceAuthDomainAudit.as_view(), name="all"),
         # path(
         #     "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
         #     views.UploadWorkspaceAuthDomainAuditResolve.as_view(),
@@ -125,8 +125,8 @@ combined_workspace_auth_domain_audit_patterns = (
         # ),
         # path(
         #     "<slug:billing_project_slug>/<slug:workspace_slug>/",
-        #     views.UploadWorkspaceAuthDomainAuditByWorkspace.as_view(),
-        #     name="by_upload_workspace",
+        #     views.CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
+        #     name="by_workspace",
         # ),
     ],
     "auth_domains",

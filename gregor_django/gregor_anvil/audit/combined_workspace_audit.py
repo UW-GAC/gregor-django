@@ -14,6 +14,12 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTable(tables.Table):
 
     workspace = tables.Column(verbose_name="Workspace")
     managed_group = tables.Column(verbose_name="Group")
+    role = tables.Column(verbose_name="Current role")
+    note = tables.Column()
+    action = tables.TemplateColumn(
+        # Temporarily use this button template, until we have the resolve view working for this workspace type.
+        template_name="gregor_anvil/snippets/upload_workspace_auth_domain_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
