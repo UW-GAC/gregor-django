@@ -123,11 +123,11 @@ combined_workspace_auth_domain_audit_patterns = (
         #     views.UploadWorkspaceAuthDomainAuditResolve.as_view(),
         #     name="resolve",
         # ),
-        # path(
-        #     "<slug:billing_project_slug>/<slug:workspace_slug>/",
-        #     views.CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
-        #     name="by_workspace",
-        # ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
     ],
     "auth_domains",
 )

@@ -785,10 +785,42 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaff
         return context
 
 
-class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditRequired, DetailView):
+class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to audit auth domain membership for a specific CombinedConsortiumDataWorkspace."""
 
-    pass
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_auth_domain_audit.html"
+    model = models.CombinedConsortiumDataWorkspace
+
+    def get_object(self, queryset=None):
+        """Look up the CombinedConsortiumDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.CombinedConsortiumDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit(
+            queryset=self.model.objects.filter(pk=self.object.pk)
+        )
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit_results"] = audit
+        return context
 
 
 class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
