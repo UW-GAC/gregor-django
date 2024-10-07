@@ -7609,7 +7609,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.combined_workspace.workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)
@@ -7874,7 +7874,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         self.assertEqual(len(audit.needs_action), 1)
         self.assertEqual(len(audit.errors), 0)
         record = audit.needs_action[0]
-        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
         self.assertEqual(record.workspace, self.combined_workspace.workspace)
         self.assertEqual(record.managed_group, self.dcc_admin_group)
         self.assertEqual(record.current_membership_instance, membership)

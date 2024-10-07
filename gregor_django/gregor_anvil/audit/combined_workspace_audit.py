@@ -96,6 +96,8 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
 
         if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
             self.verified.append(workspace_auth_domain_audit_results.VerifiedAdmin(**audit_result_args))
+        elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+            self.needs_action.append(workspace_auth_domain_audit_results.ChangeToAdmin(**audit_result_args))
         else:
             self.needs_action.append(workspace_auth_domain_audit_results.AddAdmin(**audit_result_args))
 
