@@ -4578,13 +4578,6 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
-    def test_invalid_upload_cycle(self):
-        """Raises a 404 error with an invalid upload cycle."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(request)
-
     def test_context_audit_results_no_upload_workspaces(self):
         """The audit_results exists in the context."""
         self.client.force_login(self.user)
