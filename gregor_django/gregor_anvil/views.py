@@ -824,6 +824,114 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumM
 
 
 class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
-    """View to resolve CombinedConsortiumDataWorkspace auth domain audit results."""
+    """View to resolve UploadWorkspace auth domain audit results."""
 
-    pass
+    form_class = Form
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_auth_domain_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_workspace(self):
+        """Look up the CombinedConsortiumDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.CombinedConsortiumDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_managed_group(self, queryset=None):
+        """Look up the ManagedGroup by name."""
+        try:
+            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
+        except ManagedGroup.DoesNotExist:
+            raise Http404("No ManagedGroups found matching the query")
+        return obj
+
+    def get_audit_result(self):
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
+        # No way to set the group queryset, since it is dynamically determined by the workspace.
+        audit.audit_workspace_and_group(self.workspace, self.managed_group)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.workspace = self.get_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.workspace = self.get_workspace()
+        self.managed_group = self.get_managed_group()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["workspace"] = self.workspace
+        context["managed_group"] = self.managed_group
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.workspace.get_absolute_url()
+
+    def form_valid(self, form):
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                # Set up the membership instance.
+                if self.audit_result.current_membership_instance:
+                    membership = self.audit_result.current_membership_instance
+                else:
+                    membership = GroupGroupMembership(
+                        parent_group=self.workspace.workspace.authorization_domains.first(),
+                        child_group=self.managed_group,
+                    )
+                # Now process the result.
+                if isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedMember):
+                    pass
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedAdmin):
+                    pass
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedNotMember):
+                    pass
+                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.Remove):
+                    membership.anvil_delete()
+                    membership.delete()
+                else:
+                    if isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToMember):
+                        membership.anvil_delete()
+                        membership.role = GroupGroupMembership.MEMBER
+                    elif isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToAdmin):
+                        membership.anvil_delete()
+                        membership.role = GroupGroupMembership.ADMIN
+                    else:
+                        if isinstance(self.audit_result, workspace_auth_domain_audit_results.AddMember):
+                            membership.role = GroupGroupMembership.MEMBER
+                        elif isinstance(self.audit_result, workspace_auth_domain_audit_results.AddAdmin):
+                            membership.role = GroupGroupMembership.ADMIN
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+        except (AnVILAPIError, AnVILGroupNotFound) as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
