@@ -24,7 +24,7 @@ from django_tables2 import MultiTableMixin, SingleTableView
 
 from gregor_django.users.tables import UserTable
 
-from . import forms, models, tables
+from . import forms, models, tables, viewmixins
 from .audit import (
     combined_workspace_audit,
     upload_workspace_audit,
@@ -193,24 +193,20 @@ class WorkspaceReport(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class UploadWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class UploadWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView):
     """View to audit UploadWorkspace sharing for all UploadWorkspaces."""
 
     template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class UploadWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class UploadWorkspaceSharingAuditByWorkspace(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
     template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
@@ -234,21 +230,17 @@ class UploadWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequ
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = upload_workspace_audit.UploadWorkspaceSharingAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class UploadWorkspaceSharingAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class UploadWorkspaceSharingAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
     template_name = "gregor_anvil/upload_workspace_sharing_audit.html"
@@ -268,18 +260,13 @@ class UploadWorkspaceSharingAuditByUploadCycle(AnVILConsortiumManagerStaffViewRe
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def run_audit(self, **kwargs):
         # Run the audit.
         audit = upload_workspace_audit.UploadWorkspaceSharingAudit(
             queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
 class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
@@ -396,24 +383,20 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
             return super().form_valid(form)
 
 
-class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView):
     """View to audit UploadWorkspace auth domain membership for all UploadWorkspaces."""
 
     template_name = "gregor_anvil/upload_workspace_auth_domain_audit.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self):
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class UploadWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditRequired, DetailView):
+class UploadWorkspaceAuthDomainAuditByWorkspace(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
     template_name = "gregor_anvil/upload_workspace_auth_domain_audit.html"
@@ -437,21 +420,17 @@ class UploadWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffEditR
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self):
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class UploadWorkspaceAuthDomainAuditByUploadCycle(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class UploadWorkspaceAuthDomainAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit UploadWorkspace sharing for a specific UploadWorkspace."""
 
     template_name = "gregor_anvil/upload_workspace_auth_domain_audit.html"
@@ -471,18 +450,12 @@ class UploadWorkspaceAuthDomainAuditByUploadCycle(AnVILConsortiumManagerStaffVie
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit(
             queryset=models.UploadWorkspace.objects.filter(upload_cycle=self.object)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
 class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
@@ -599,24 +572,22 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
             return super().form_valid(form)
 
 
-class CombinedConsortiumDataWorkspaceSharingAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class CombinedConsortiumDataWorkspaceSharingAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
     """View to audit CombinedConsortiumDataWorkspace sharing for all CombinedConsortiumDataWorkspacs."""
 
     template_name = "gregor_anvil/combinedconsortiumdataworkspace_sharing_audit.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit CombinedConsortiumDataWorkspace sharing for a specific CombinedConsortiumDataWorkspace."""
 
     template_name = "gregor_anvil/combinedconsortiumdataworkspace_sharing_audit.html"
@@ -640,18 +611,12 @@ class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(AnVILConsortiumMana
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
 class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
@@ -768,24 +733,22 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
             return super().form_valid(form)
 
 
-class CombinedConsortiumDataWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class CombinedConsortiumDataWorkspaceAuthDomainAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
     """View to audit auth domain membership for all CombinedConsortiumDataWorkspaces."""
 
     template_name = "gregor_anvil/combinedconsortiumdataworkspace_auth_domain_audit.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Run the audit.
+    def run_audit(self, **kwargs):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
-class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
     """View to audit auth domain membership for a specific CombinedConsortiumDataWorkspace."""
 
     template_name = "gregor_anvil/combinedconsortiumdataworkspace_auth_domain_audit.html"
@@ -809,18 +772,13 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(AnVILConsortiumM
             )
         return obj
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def run_audit(self, **kwargs):
         # Run the audit.
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit(
             queryset=self.model.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit_results"] = audit
-        return context
+        return audit
 
 
 class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
