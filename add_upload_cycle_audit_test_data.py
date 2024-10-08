@@ -28,7 +28,7 @@ rc = factories.ResearchCenterFactory.create(
 )
 
 
-# Create a future upload cycle.
+## Future upload cycle.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=1,
     is_future=True,
@@ -39,7 +39,7 @@ workspace = factories.UploadWorkspaceFactory.create(
     workspace__name="TEST_U01_RC1",
 )
 
-# Create a current upload cycle before compute.
+## Current upload cycle before compute.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=2,
     is_current=True,
@@ -111,7 +111,7 @@ GroupGroupMembershipFactory.create(
 )
 
 
-# Create a current upload cycle after compute.
+## Current upload cycle after compute.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=3,
     is_current=True,
@@ -256,7 +256,7 @@ GroupGroupMembershipFactory.create(
     role=GroupGroupMembership.ADMIN,
 )
 
-# Create a past upload cycle after QC is completed.
+## Past upload cycle after QC is completed.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=5,
     is_past=True,
@@ -321,7 +321,7 @@ GroupGroupMembershipFactory.create(
     role=GroupGroupMembership.ADMIN,
 )
 
-# Create a past upload cycle with a combined workspace.
+## Past upload cycle with a combined workspace.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=6,
     is_past=True,
@@ -331,11 +331,6 @@ workspace = factories.UploadWorkspaceFactory.create(
     research_center=rc,
     workspace__name="TEST_U06_RC1",
     date_qc_completed=timezone.now(),
-)
-factories.CombinedConsortiumDataWorkspaceFactory.create(
-    upload_cycle=upload_cycle,
-    date_completed=timezone.now(),
-    workspace__name="TEST_U06_COMBINED",
 )
 # Create records as appropriate for the previous point in the cycle - past cycle before QC complete.
 # Auth domain.
@@ -382,4 +377,10 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
+)
+# Create the combined workspace and its records.
+factories.CombinedConsortiumDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    date_completed=timezone.now(),
+    workspace__name="TEST_U06_COMBINED",
 )
