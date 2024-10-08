@@ -190,7 +190,7 @@ class CombinedConsortiumDataWorkspaceSharingAuditTable(tables.Table):
     workspace = tables.Column(linkify=True)
     managed_group = tables.Column(linkify=True)
     access = tables.Column(verbose_name="Current access")
-    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="green", false_color="black")
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="black", false_color="black")
     note = tables.Column()
     action = tables.TemplateColumn(
         template_name="gregor_anvil/snippets/combinedconsortiumdataworkspace_sharing_audit_action_button.html"
