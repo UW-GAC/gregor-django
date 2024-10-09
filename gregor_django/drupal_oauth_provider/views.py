@@ -12,13 +12,13 @@ from allauth.socialaccount.providers.oauth2.views import (
     OAuth2LoginView,
 )
 
-from .provider import CustomProvider
+# from .provider import CustomProvider
 
 logger = logging.getLogger(__name__)
 
 
 class CustomAdapter(OAuth2Adapter):
-    provider_id = CustomProvider.id
+    provider_id = "drupal_oauth_provider"
 
     provider_settings = app_settings.PROVIDERS.get(provider_id, {})
 

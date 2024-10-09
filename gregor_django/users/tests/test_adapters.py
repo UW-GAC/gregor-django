@@ -1,15 +1,20 @@
+# myapp/tests.py
+
 import pytest
 from allauth.account import app_settings as account_settings
-from allauth.socialaccount.helpers import complete_social_login
-from allauth.socialaccount.models import SocialAccount, SocialLogin
-from allauth.utils import get_user_model
+from allauth.account import signals
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialLogin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
+from gregor_django.drupal_oauth_provider.provider import CustomProvider
 from gregor_django.gregor_anvil.tests.factories import (
     PartnerGroupFactory,
     ResearchCenterFactory,
@@ -18,48 +23,77 @@ from gregor_django.users.adapters import AccountAdapter, SocialAccountAdapter
 
 from .factories import GroupFactory, UserFactory
 
+User = get_user_model()
 
-@pytest.mark.django_db
-class TestsUserSocialLoginAdapter(object):
-    @override_settings(
-        SOCIALACCOUNT_AUTO_SIGNUP=True,
-        ACCOUNT_SIGNUP_FORM_CLASS=None,
-        ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
-    )
-    def test_drupal_social_login_adapter(self):
-        factory = RequestFactory()
-        request = factory.get("/accounts/login/callback/")
-        request.user = AnonymousUser()
-        SessionMiddleware(lambda request: None).process_request(request)
-        MessageMiddleware(lambda request: None).process_request(request)
 
-        User = get_user_model()
-        user = User()
-        old_name = "Old Name"
-        old_username = "test"
-        old_email = "test@example.com"
-        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
-        setattr(user, "name", "Old Name")
-        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
-
-        account = SocialAccount(
-            provider="drupal_oauth_provider",
-            uid="123",
-            extra_data=dict(
-                first_name="Old",
-                last_name="Name",
-                email=old_email,
-                preferred_username=old_username,
-            ),
+class SocialAccountAdapterTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        # Setup a mock social app
+        current_site = Site.objects.get_current()
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name="DOA",
+            client_id="test-client-id",
+            secret="test-client-secret",
         )
-        sociallogin = SocialLogin(user=user, account=account)
-        complete_social_login(request, sociallogin)
+        self.social_app.sites.add(current_site)
 
-        user = User.objects.get(**{account_settings.USER_MODEL_USERNAME_FIELD: "test"})
-        assert SocialAccount.objects.filter(user=user, uid=account.uid).exists() is True
-        assert user.name == old_name
-        assert user.username == old_username
-        assert user.email == old_email
+    def extract_state_from_url(self, url):
+        from urllib.parse import parse_qs, urlparse
+
+        parsed_url = urlparse(url)
+        query_params = parse_qs(parsed_url.query)
+        return query_params.get("state", [None])[0]
+
+    def test_social_login_success(self):
+        # Mock user
+        request = self.factory.get("/")
+        middleware = SessionMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.session.save()
+        middleware = AuthenticationMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.user = AnonymousUser()
+        user = User.objects.create(username="testuser", email="testuser@example.com")
+
+        # # Mock social login
+        # Create a mock SocialAccount and link it to the user
+        new_first_name = "Bob"
+        new_last_name = "Rob"
+        social_account = SocialAccount.objects.create(
+            user=user,
+            provider="drupal_oauth_provider",
+            uid="12345",
+            extra_data={
+                "preferred_username": "testuser",
+                "first_name": new_first_name,
+                "last_name": new_last_name,
+                "email": "testuser@example.com",
+            },
+        )
+
+        # Create a mock SocialLogin object and associate the user and social account
+        sociallogin = SocialLogin(user=user, account=social_account)
+
+        # Simulate social login
+        from allauth.account.adapter import get_adapter
+
+        # adapter = SocialAccountAdapter()
+        adapter = get_adapter(request)
+
+        adapter.login(request, user)
+
+        signals.user_logged_in.send(
+            sender=user.__class__,
+            request=request,
+            user=user,
+            sociallogin=sociallogin,
+        )
+        # Check if the login completed successfully
+        self.assertEqual(sociallogin.user, user)
+        self.assertEqual(request.user, user)
+        self.assertEqual(user.name, f"{new_first_name} {new_last_name}")
 
     def test_update_user_info(self):
         adapter = SocialAccountAdapter()
@@ -102,6 +136,21 @@ class TestsUserSocialLoginAdapter(object):
         user.save()
 
         adapter.update_user_research_centers(user, dict(research_center_or_site=[rc1.full_name]))
+        assert user.research_centers.filter(pk=rc1.pk).exists()
+        assert user.research_centers.all().count() == 1
+
+    def test_update_user_research_centers_short_name_add(self):
+        adapter = SocialAccountAdapter()
+        rc1 = ResearchCenterFactory(short_name="rc1")
+
+        User = get_user_model()
+        user = User()
+        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
+        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
+
+        user.save()
+
+        adapter.update_user_research_centers(user, dict(research_center_or_site=[rc1.short_name]))
         assert user.research_centers.filter(pk=rc1.pk).exists()
         assert user.research_centers.all().count() == 1
 

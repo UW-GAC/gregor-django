@@ -24,6 +24,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
     def update_user_info(self, user, extra_data: Dict):
+        import sys
+
+        print(f"USER3: {user} {user.username} id: {user.id}", file=sys.stderr)
+        logger.info(f"User {user} username {user.username}")
         drupal_username = extra_data.get("preferred_username")
         drupal_email = extra_data.get("email")
         first_name = extra_data.get("first_name")
@@ -32,21 +36,21 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user} " f"name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_info] user {user} " f"name updated from {user.name} to {full_name}"
             )
             user.name = full_name
             user_changed = True
         if user.username != drupal_username:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user} "
+                f"[SocialAccountAdatpter:update_user_info] user {user} "
                 f"username updated from {user.username} to {drupal_username}"
             )
             user.username = drupal_username
             user_changed = True
         if user.email != drupal_email:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user}"
-                f" email updated from {user.email} to {drupal_email}"
+                f"[SocialAccountAdatpter:update_user_info] user {user.username}"
+                # f" email updated from {user.email} to {drupal_email}"
             )
             user.email = drupal_email
             user_changed = True
@@ -186,10 +190,13 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         self.update_user_partner_groups(user, extra_data)
         self.update_user_groups(user, extra_data)
 
-    def authentication_error(self, request, provider_id, error, exception, extra_context):
+    def on_authentication_error(self, request, provider_id, error, exception, extra_context):
         """
         Invoked when there is an error in auth cycle.
         Log so we know what is going on.
         """
-        logger.error(f"[SocialAccountAdapter:authentication_error] Error {error} Exception: {exception}")
-        super().authentication_error(request, provider_id, error, exception, extra_context)
+        logger.error(
+            f"[SocialAccountAdapter:on_authentication_error] Provider: {provider_id} "
+            f"Error {error} Exception: {exception} extra {extra_context}"
+        )
+        super().on_authentication_error(request, provider_id, error, exception, extra_context)
