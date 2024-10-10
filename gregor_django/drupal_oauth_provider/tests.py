@@ -153,11 +153,8 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             # Find the access token POST request, and assert that it contains
             # the correct code_verifier if and only if PKCE is enabled
             request_calls = requests.Session.request.call_args_list
-            import sys
 
-            print(f"REQUEST CALLS {request_calls}", file=sys.stderr)
             for args, kwargs in request_calls:
-                print(f"RC: {args} kwargs: {kwargs}", file=sys.stderr)
                 data = kwargs.get("data", {})
                 if (
                     args

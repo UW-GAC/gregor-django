@@ -12,8 +12,6 @@ from allauth.socialaccount.providers.oauth2.views import (
     OAuth2LoginView,
 )
 
-# from .provider import CustomProvider
-
 logger = logging.getLogger(__name__)
 
 

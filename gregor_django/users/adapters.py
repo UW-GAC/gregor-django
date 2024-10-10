@@ -24,10 +24,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
     def update_user_info(self, user, extra_data: Dict):
-        import sys
-
-        print(f"USER3: {user} {user.username} id: {user.id}", file=sys.stderr)
-        logger.info(f"User {user} username {user.username}")
         drupal_username = extra_data.get("preferred_username")
         drupal_email = extra_data.get("email")
         first_name = extra_data.get("first_name")
@@ -49,8 +45,8 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             user_changed = True
         if user.email != drupal_email:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_info] user {user.username}"
-                # f" email updated from {user.email} to {drupal_email}"
+                f"[SocialAccountAdatpter:update_user_info] user {user}"
+                f" email updated from {user.email} to {drupal_email}"
             )
             user.email = drupal_email
             user_changed = True
