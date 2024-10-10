@@ -39,13 +39,6 @@ class SocialAccountAdapterTest(TestCase):
         )
         self.social_app.sites.add(current_site)
 
-    def extract_state_from_url(self, url):
-        from urllib.parse import parse_qs, urlparse
-
-        parsed_url = urlparse(url)
-        query_params = parse_qs(parsed_url.query)
-        return query_params.get("state", [None])[0]
-
     def test_social_login_success(self):
         # Mock user
         request = self.factory.get("/")

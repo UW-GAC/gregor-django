@@ -13,6 +13,7 @@ from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory
 from django.test.utils import override_settings
@@ -212,7 +213,7 @@ class TestProviderConfig(TestCase):
     def setUp(self):
         # workaround to create a session. see:
         # https://code.djangoproject.com/ticket/11475
-
+        current_site = Site.objects.get_current()
         app = SocialApp.objects.create(
             provider=CustomProvider.id,
             name=CustomProvider.id,
@@ -221,6 +222,13 @@ class TestProviderConfig(TestCase):
             secret="dummy",
         )
         self.app = app
+        self.app.sites.add(current_site)
+
+    def test_custom_provider_no_app(self):
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        provider = CustomProvider(request)
+        assert provider.app is not None
 
     def test_custom_provider_scope_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
