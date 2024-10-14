@@ -1,17 +1,24 @@
 """Tests for the `py` module."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 import django_tables2 as tables
+import responses
 from anvil_consortium_manager.models import GroupGroupMembership, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
+    WorkspaceAuthorizationDomainFactory,
+    WorkspaceFactory,
     WorkspaceGroupSharingFactory,
 )
+from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from faker import Faker
+from freezegun import freeze_time
 
 from .. import models
 from ..audit import (
@@ -167,17 +174,17 @@ class GREGoRAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("value"), "c")
 
 
-class UploadWorkspaceSharingAuditResultTest(TestCase):
+class WorkspaceSharingAuditResultTest(AnVILAPIMockTestMixin, TestCase):
     """General tests of the UploadWorkspaceSharingAuditResult dataclasses."""
 
     def test_shared_as_owner(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        workspace = WorkspaceFactory.create()
         group = ManagedGroupFactory.create()
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.OWNER, can_compute=True
+            workspace=workspace, group=group, access=WorkspaceGroupSharing.OWNER, can_compute=True
         )
         instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
-            workspace=upload_workspace.workspace,
+            workspace=workspace,
             managed_group=group,
             current_sharing_instance=sharing,
             note="foo",
@@ -187,13 +194,13 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         self.assertEqual(table_dictionary["can_compute"], True)
 
     def test_shared_as_writer_with_compute(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        workspace = WorkspaceFactory.create()
         group = ManagedGroupFactory.create()
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=True
+            workspace=workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=True
         )
         instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
-            workspace=upload_workspace.workspace,
+            workspace=workspace,
             managed_group=group,
             current_sharing_instance=sharing,
             note="foo",
@@ -203,13 +210,13 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         self.assertEqual(table_dictionary["can_compute"], True)
 
     def test_shared_as_writer_without_compute(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        workspace = WorkspaceFactory.create()
         group = ManagedGroupFactory.create()
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=False
+            workspace=workspace, group=group, access=WorkspaceGroupSharing.WRITER, can_compute=False
         )
         instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
-            workspace=upload_workspace.workspace,
+            workspace=workspace,
             managed_group=group,
             current_sharing_instance=sharing,
             note="foo",
@@ -219,13 +226,13 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         self.assertEqual(table_dictionary["can_compute"], False)
 
     def test_shared_as_reader(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        workspace = WorkspaceFactory.create()
         group = ManagedGroupFactory.create()
         sharing = WorkspaceGroupSharingFactory.create(
-            workspace=upload_workspace.workspace, group=group, access=WorkspaceGroupSharing.READER
+            workspace=workspace, group=group, access=WorkspaceGroupSharing.READER
         )
         instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
-            workspace=upload_workspace.workspace,
+            workspace=workspace,
             managed_group=group,
             current_sharing_instance=sharing,
             note="foo",
@@ -235,10 +242,10 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         self.assertIsNone(table_dictionary["can_compute"])
 
     def test_not_shared(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        workspace = WorkspaceFactory.create()
         group = ManagedGroupFactory.create()
         instance = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
-            workspace=upload_workspace.workspace,
+            workspace=workspace,
             managed_group=group,
             current_sharing_instance=None,
             note="foo",
@@ -246,6 +253,681 @@ class UploadWorkspaceSharingAuditResultTest(TestCase):
         table_dictionary = instance.get_table_dictionary()
         self.assertIsNone(table_dictionary["access"])
         self.assertIsNone(table_dictionary["can_compute"])
+
+    def test_handle_verified_shared(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.READER,
+            )
+        instance = workspace_sharing_audit_results.VerifiedShared(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.READER)
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+
+    def test_handle_verified_not_shared(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_sharing_audit_results.VerifiedNotShared(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_handle_share_as_reader_new(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_sharing_audit_results.ShareAsReader(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_handle_share_as_reader_update(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.WRITER,
+                can_compute=True,
+            )
+        instance = workspace_sharing_audit_results.ShareAsReader(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+
+    def test_handle_share_as_writer_new(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_sharing_audit_results.ShareAsWriter(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.WRITER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_handle_share_as_writer_update(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.OWNER,
+                can_compute=True,
+            )
+        instance = workspace_sharing_audit_results.ShareAsWriter(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.WRITER)
+        self.assertFalse(sharing.can_compute)
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+
+    def test_handle_share_with_compute_new(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_sharing_audit_results.ShareWithCompute(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_handle_share_with_compute_update(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.READER,
+                can_compute=False,
+            )
+        instance = workspace_sharing_audit_results.ShareWithCompute(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+
+    def test_handle_share_as_owner_new(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_sharing_audit_results.ShareAsOwner(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_handle_share_as_owner_update(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.READER,
+                can_compute=False,
+            )
+        instance = workspace_sharing_audit_results.ShareAsOwner(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+
+    def test_handle_stop_sharing(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            sharing = WorkspaceGroupSharingFactory.create(
+                workspace=workspace,
+                group=group,
+                access=WorkspaceGroupSharing.READER,
+                can_compute=False,
+            )
+        instance = workspace_sharing_audit_results.StopSharing(
+            workspace=workspace,
+            managed_group=group,
+            current_sharing_instance=sharing,
+            note="foo",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "NO ACCESS",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
+
+
+class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
+    """General tests of the WorkspaceAuthDomainAuditResult dataclasses."""
+
+    def test_handle_verified_member(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.authorization_domains.first(),
+                child_group=group,
+                role=GroupGroupMembership.MEMBER,
+            )
+        instance = workspace_auth_domain_audit_results.VerifiedMember(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_handle_verified_admin(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.authorization_domains.first(), child_group=group, role=GroupGroupMembership.ADMIN
+            )
+        instance = workspace_auth_domain_audit_results.VerifiedAdmin(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_handle_verified_not_member(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_auth_domain_audit_results.VerifiedMember(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=None,
+            note="foo",
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_handle_add_member(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_auth_domain_audit_results.AddMember(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/member/{group.email}",
+            status=204,
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_handle_add_admin(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        instance = workspace_auth_domain_audit_results.AddAdmin(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=None,
+            note="foo",
+        )
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/admin/{group.email}",
+            status=204,
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+
+    def test_handle_change_to_member(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.authorization_domains.first(),
+                child_group=group,
+                role=GroupGroupMembership.ADMIN,
+            )
+        instance = workspace_auth_domain_audit_results.ChangeToMember(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertGreater(membership.modified, date_created)
+
+    def test_handle_change_to_admin(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(days=1)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.authorization_domains.first(),
+                child_group=group,
+                role=GroupGroupMembership.MEMBER,
+            )
+        instance = workspace_auth_domain_audit_results.ChangeToAdmin(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
+        self.assertEqual(membership.child_group, group)
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertGreater(membership.modified, date_created)
+
+    def test_handle_remove(self):
+        workspace = WorkspaceFactory.create(name="test-ws")
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__name="auth-test-ws")
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        instance = workspace_auth_domain_audit_results.Remove(
+            workspace=workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth-test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.assertFalse(instance.handled)
+        instance.handle()
+        self.assertTrue(instance.handled)
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_member_as_admin(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+            workspace=upload_workspace.workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["role"], membership.ADMIN)
+
+    def test_member_as_member(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=upload_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+            workspace=upload_workspace.workspace,
+            managed_group=group,
+            current_membership_instance=membership,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertEqual(table_dictionary["role"], membership.MEMBER)
+
+    def test_not_member(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = ManagedGroupFactory.create()
+        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+            workspace=upload_workspace.workspace,
+            managed_group=group,
+            current_membership_instance=None,
+            note="foo",
+        )
+        table_dictionary = instance.get_table_dictionary()
+        self.assertIsNone(table_dictionary["role"])
 
 
 class UploadWorkspaceSharingAuditTableTest(TestCase):
@@ -3965,56 +4647,6 @@ class UploadWorkspaceSharingAuditPastCycleAfterCombinedWorkspaceSharedTest(TestC
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, upload_workspace_audit.UploadWorkspaceSharingAudit.OTHER_GROUP_NO_ACCESS)
-
-
-class WorkspaceAuthDomainAuditResultTest(TestCase):
-    """General tests of the WorkspaceAuthDomainAuditResult dataclasses."""
-
-    def test_member_as_admin(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
-        group = ManagedGroupFactory.create()
-        membership = GroupGroupMembershipFactory.create(
-            parent_group=upload_workspace.workspace.authorization_domains.first(),
-            child_group=group,
-            role=GroupGroupMembership.ADMIN,
-        )
-        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-            workspace=upload_workspace.workspace,
-            managed_group=group,
-            current_membership_instance=membership,
-            note="foo",
-        )
-        table_dictionary = instance.get_table_dictionary()
-        self.assertEqual(table_dictionary["role"], membership.ADMIN)
-
-    def test_member_as_member(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
-        group = ManagedGroupFactory.create()
-        membership = GroupGroupMembershipFactory.create(
-            parent_group=upload_workspace.workspace.authorization_domains.first(),
-            child_group=group,
-            role=GroupGroupMembership.MEMBER,
-        )
-        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-            workspace=upload_workspace.workspace,
-            managed_group=group,
-            current_membership_instance=membership,
-            note="foo",
-        )
-        table_dictionary = instance.get_table_dictionary()
-        self.assertEqual(table_dictionary["role"], membership.MEMBER)
-
-    def test_not_member(self):
-        upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
-        group = ManagedGroupFactory.create()
-        instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-            workspace=upload_workspace.workspace,
-            managed_group=group,
-            current_membership_instance=None,
-            note="foo",
-        )
-        table_dictionary = instance.get_table_dictionary()
-        self.assertIsNone(table_dictionary["role"])
 
 
 class UploadWorkspaceAuthDomainAuditTableTest(TestCase):

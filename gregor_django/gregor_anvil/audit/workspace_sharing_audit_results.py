@@ -18,6 +18,7 @@ class WorkspaceSharingAuditResult(GREGoRAuditResult):
     managed_group: ManagedGroup
     action: str = None
     current_sharing_instance: WorkspaceGroupSharing = None
+    handled: bool = False
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataSharingSnapshotAuditTable`."""
@@ -34,6 +35,13 @@ class WorkspaceSharingAuditResult(GREGoRAuditResult):
         }
         return row
 
+    def _handle(self):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    def handle(self):
+        self._handle()
+        self.handled = True
+
 
 @dataclass
 class VerifiedShared(WorkspaceSharingAuditResult):
@@ -42,6 +50,9 @@ class VerifiedShared(WorkspaceSharingAuditResult):
     def __str__(self):
         return f"Verified sharing: {self.note}"
 
+    def _handle(self):
+        pass
+
 
 @dataclass
 class VerifiedNotShared(WorkspaceSharingAuditResult):
@@ -49,6 +60,9 @@ class VerifiedNotShared(WorkspaceSharingAuditResult):
 
     def __str__(self):
         return f"Verified not shared: {self.note}"
+
+    def _handle(self):
+        pass
 
 
 @dataclass
@@ -60,6 +74,21 @@ class ShareAsReader(WorkspaceSharingAuditResult):
     def __str__(self):
         return f"Share as reader: {self.note}"
 
+    def _handle(self):
+        # Create or update the sharing record.
+        if self.current_sharing_instance:
+            sharing = self.current_sharing_instance
+        else:
+            sharing = WorkspaceGroupSharing(
+                workspace=self.workspace,
+                group=self.managed_group,
+            )
+        sharing.access = WorkspaceGroupSharing.READER
+        sharing.can_compute = False
+        sharing.full_clean()
+        sharing.save()
+        sharing.anvil_create_or_update()
+
 
 @dataclass
 class ShareAsWriter(WorkspaceSharingAuditResult):
@@ -69,6 +98,21 @@ class ShareAsWriter(WorkspaceSharingAuditResult):
 
     def __str__(self):
         return f"Share as writer: {self.note}"
+
+    def _handle(self):
+        # Create or update the sharing record.
+        if self.current_sharing_instance:
+            sharing = self.current_sharing_instance
+        else:
+            sharing = WorkspaceGroupSharing(
+                workspace=self.workspace,
+                group=self.managed_group,
+            )
+        sharing.access = WorkspaceGroupSharing.WRITER
+        sharing.can_compute = False
+        sharing.full_clean()
+        sharing.save()
+        sharing.anvil_create_or_update()
 
 
 @dataclass
@@ -80,6 +124,21 @@ class ShareAsOwner(WorkspaceSharingAuditResult):
     def __str__(self):
         return f"Share as owner: {self.note}"
 
+    def _handle(self):
+        # Create or update the sharing record.
+        if self.current_sharing_instance:
+            sharing = self.current_sharing_instance
+        else:
+            sharing = WorkspaceGroupSharing(
+                workspace=self.workspace,
+                group=self.managed_group,
+            )
+        sharing.access = WorkspaceGroupSharing.OWNER
+        sharing.can_compute = True
+        sharing.full_clean()
+        sharing.save()
+        sharing.anvil_create_or_update()
+
 
 @dataclass
 class ShareWithCompute(WorkspaceSharingAuditResult):
@@ -90,6 +149,21 @@ class ShareWithCompute(WorkspaceSharingAuditResult):
     def __str__(self):
         return f"Share with compute: {self.note}"
 
+    def _handle(self):
+        # Create or update the sharing record.
+        if self.current_sharing_instance:
+            sharing = self.current_sharing_instance
+        else:
+            sharing = WorkspaceGroupSharing(
+                workspace=self.workspace,
+                group=self.managed_group,
+            )
+        sharing.access = WorkspaceGroupSharing.WRITER
+        sharing.can_compute = True
+        sharing.full_clean()
+        sharing.save()
+        sharing.anvil_create_or_update()
+
 
 @dataclass
 class StopSharing(WorkspaceSharingAuditResult):
@@ -99,6 +173,11 @@ class StopSharing(WorkspaceSharingAuditResult):
 
     def __str__(self):
         return f"Stop sharing: {self.note}"
+
+    def _handle(self):
+        # Remove the sharing record.
+        self.current_sharing_instance.anvil_delete()
+        self.current_sharing_instance.delete()
 
 
 @dataclass

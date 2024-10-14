@@ -6,10 +6,8 @@ from anvil_consortium_manager.auth import (
 from anvil_consortium_manager.exceptions import AnVILGroupNotFound
 from anvil_consortium_manager.models import (
     Account,
-    GroupGroupMembership,
     ManagedGroup,
     Workspace,
-    WorkspaceGroupSharing,
 )
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -28,8 +26,6 @@ from . import forms, models, tables, viewmixins
 from .audit import (
     combined_workspace_audit,
     upload_workspace_audit,
-    workspace_auth_domain_audit_results,
-    workspace_sharing_audit_results,
 )
 
 User = get_user_model()
@@ -336,40 +332,8 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
     def form_valid(self, form):
         # Handle the result.
         try:
-            # Set up the sharing instance.
-            if self.audit_result.current_sharing_instance:
-                sharing = self.audit_result.current_sharing_instance
-            else:
-                sharing = WorkspaceGroupSharing(
-                    workspace=self.upload_workspace.workspace,
-                    group=self.managed_group,
-                )
             with transaction.atomic():
-                if isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedShared):
-                    # No changes needed.
-                    pass
-                elif isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedNotShared):
-                    # No changes needed.
-                    pass
-                elif isinstance(self.audit_result, workspace_sharing_audit_results.StopSharing):
-                    sharing.anvil_delete()
-                    sharing.delete()
-                else:
-                    if isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsReader):
-                        sharing.access = WorkspaceGroupSharing.READER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsWriter):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareWithCompute):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = True
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsOwner):
-                        sharing.access = WorkspaceGroupSharing.OWNER
-                        sharing.can_compute = True
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
+                self.audit_result.handle()
         except (AnVILAPIError, AnVILGroupNotFound) as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
@@ -526,39 +490,7 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
         # Handle the result.
         try:
             with transaction.atomic():
-                # Set up the membership instance.
-                if self.audit_result.current_membership_instance:
-                    membership = self.audit_result.current_membership_instance
-                else:
-                    membership = GroupGroupMembership(
-                        parent_group=self.upload_workspace.workspace.authorization_domains.first(),
-                        child_group=self.managed_group,
-                    )
-                # Now process the result.
-                if isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedMember):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedAdmin):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedNotMember):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.Remove):
-                    membership.anvil_delete()
-                    membership.delete()
-                else:
-                    if isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToMember):
-                        membership.anvil_delete()
-                        membership.role = GroupGroupMembership.MEMBER
-                    elif isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToAdmin):
-                        membership.anvil_delete()
-                        membership.role = GroupGroupMembership.ADMIN
-                    else:
-                        if isinstance(self.audit_result, workspace_auth_domain_audit_results.AddMember):
-                            membership.role = GroupGroupMembership.MEMBER
-                        elif isinstance(self.audit_result, workspace_auth_domain_audit_results.AddAdmin):
-                            membership.role = GroupGroupMembership.ADMIN
-                    membership.full_clean()
-                    membership.save()
-                    membership.anvil_create()
+                self.audit_result.handle()
         except (AnVILAPIError, AnVILGroupNotFound) as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
@@ -686,40 +618,8 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
     def form_valid(self, form):
         # Handle the result.
         try:
-            # Set up the sharing instance.
-            if self.audit_result.current_sharing_instance:
-                sharing = self.audit_result.current_sharing_instance
-            else:
-                sharing = WorkspaceGroupSharing(
-                    workspace=self.combined_workspace.workspace,
-                    group=self.managed_group,
-                )
             with transaction.atomic():
-                if isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedShared):
-                    # No changes needed.
-                    pass
-                elif isinstance(self.audit_result, workspace_sharing_audit_results.VerifiedNotShared):
-                    # No changes needed.
-                    pass
-                elif isinstance(self.audit_result, workspace_sharing_audit_results.StopSharing):
-                    sharing.anvil_delete()
-                    sharing.delete()
-                else:
-                    if isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsReader):
-                        sharing.access = WorkspaceGroupSharing.READER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsWriter):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = False
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareWithCompute):
-                        sharing.access = WorkspaceGroupSharing.WRITER
-                        sharing.can_compute = True
-                    elif isinstance(self.audit_result, workspace_sharing_audit_results.ShareAsOwner):
-                        sharing.access = WorkspaceGroupSharing.OWNER
-                        sharing.can_compute = True
-                    sharing.full_clean()
-                    sharing.save()
-                    sharing.anvil_create_or_update()
+                self.audit_result.handle()
         except (AnVILAPIError, AnVILGroupNotFound) as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
@@ -849,39 +749,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManag
         # Handle the result.
         try:
             with transaction.atomic():
-                # Set up the membership instance.
-                if self.audit_result.current_membership_instance:
-                    membership = self.audit_result.current_membership_instance
-                else:
-                    membership = GroupGroupMembership(
-                        parent_group=self.workspace.workspace.authorization_domains.first(),
-                        child_group=self.managed_group,
-                    )
-                # Now process the result.
-                if isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedMember):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedAdmin):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.VerifiedNotMember):
-                    pass
-                elif isinstance(self.audit_result, workspace_auth_domain_audit_results.Remove):
-                    membership.anvil_delete()
-                    membership.delete()
-                else:
-                    if isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToMember):
-                        membership.anvil_delete()
-                        membership.role = GroupGroupMembership.MEMBER
-                    elif isinstance(self.audit_result, workspace_auth_domain_audit_results.ChangeToAdmin):
-                        membership.anvil_delete()
-                        membership.role = GroupGroupMembership.ADMIN
-                    else:
-                        if isinstance(self.audit_result, workspace_auth_domain_audit_results.AddMember):
-                            membership.role = GroupGroupMembership.MEMBER
-                        elif isinstance(self.audit_result, workspace_auth_domain_audit_results.AddAdmin):
-                            membership.role = GroupGroupMembership.ADMIN
-                    membership.full_clean()
-                    membership.save()
-                    membership.anvil_create()
+                self.audit_result.handle()
         except (AnVILAPIError, AnVILGroupNotFound) as e:
             if self.request.htmx:
                 return HttpResponse(self.htmx_error)
