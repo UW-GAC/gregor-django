@@ -1,21 +1,16 @@
-from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
 )
-from anvil_consortium_manager.exceptions import AnVILGroupNotFound
 from anvil_consortium_manager.models import (
     Account,
-    ManagedGroup,
     Workspace,
 )
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db import transaction
 from django.db.models import Count, Q
 from django.forms import Form
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, FormView, TemplateView, UpdateView
 from django_tables2 import MultiTableMixin, SingleTableView
@@ -265,7 +260,9 @@ class UploadWorkspaceSharingAuditByUploadCycle(
         return audit
 
 
-class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class UploadWorkspaceSharingAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
     """View to resolve UploadWorkspace audit results."""
 
     form_class = Form
@@ -273,7 +270,7 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
-    def get_upload_workspace(self):
+    def get_workspace_data_object(self):
         """Look up the UploadWorkspace by billing project and name."""
         # Filter the queryset based on kwargs.
         billing_project_slug = self.kwargs.get("billing_project_slug", None)
@@ -291,60 +288,13 @@ class UploadWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired
             )
         return obj
 
-    def get_managed_group(self, queryset=None):
-        """Look up the ManagedGroup by name."""
-        try:
-            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
-        except ManagedGroup.DoesNotExist:
-            raise Http404("No ManagedGroups found matching the query")
-        return obj
-
     def get_audit_result(self):
         audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
-        audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
-
-    def get(self, request, *args, **kwargs):
-        self.upload_workspace = self.get_upload_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.upload_workspace = self.get_upload_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().post(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["upload_workspace"] = self.upload_workspace
-        context["managed_group"] = self.managed_group
-        context["audit_result"] = self.audit_result
-        return context
-
-    def get_success_url(self):
-        return self.upload_workspace.get_absolute_url()
-
-    def form_valid(self, form):
-        # Handle the result.
-        try:
-            with transaction.atomic():
-                self.audit_result.handle()
-        except (AnVILAPIError, AnVILGroupNotFound) as e:
-            if self.request.htmx:
-                return HttpResponse(self.htmx_error)
-            else:
-                messages.error(self.request, "AnVIL API Error: " + str(e))
-                return super().form_invalid(form)
-        # Otherwise, the audit resolution succeeded.
-        if self.request.htmx:
-            return HttpResponse(self.htmx_success)
-        else:
-            return super().form_valid(form)
 
 
 class UploadWorkspaceAuthDomainAudit(AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView):
@@ -422,7 +372,9 @@ class UploadWorkspaceAuthDomainAuditByUploadCycle(
         return audit
 
 
-class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class UploadWorkspaceAuthDomainAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
     """View to resolve UploadWorkspace auth domain audit results."""
 
     form_class = Form
@@ -430,7 +382,7 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
-    def get_upload_workspace(self):
+    def get_workspace_data_object(self):
         """Look up the UploadWorkspace by billing project and name."""
         # Filter the queryset based on kwargs.
         billing_project_slug = self.kwargs.get("billing_project_slug", None)
@@ -448,60 +400,13 @@ class UploadWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequi
             )
         return obj
 
-    def get_managed_group(self, queryset=None):
-        """Look up the ManagedGroup by name."""
-        try:
-            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
-        except ManagedGroup.DoesNotExist:
-            raise Http404("No ManagedGroups found matching the query")
-        return obj
-
     def get_audit_result(self):
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
-        audit.audit_workspace_and_group(self.upload_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
-
-    def get(self, request, *args, **kwargs):
-        self.upload_workspace = self.get_upload_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.upload_workspace = self.get_upload_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().post(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["upload_workspace"] = self.upload_workspace
-        context["managed_group"] = self.managed_group
-        context["audit_result"] = self.audit_result
-        return context
-
-    def get_success_url(self):
-        return self.upload_workspace.get_absolute_url()
-
-    def form_valid(self, form):
-        # Handle the result.
-        try:
-            with transaction.atomic():
-                self.audit_result.handle()
-        except (AnVILAPIError, AnVILGroupNotFound) as e:
-            if self.request.htmx:
-                return HttpResponse(self.htmx_error)
-            else:
-                messages.error(self.request, "AnVIL API Error: " + str(e))
-                return super().form_invalid(form)
-        # Otherwise, the audit resolution succeeded.
-        if self.request.htmx:
-            return HttpResponse(self.htmx_success)
-        else:
-            return super().form_valid(form)
 
 
 class CombinedConsortiumDataWorkspaceSharingAudit(
@@ -551,7 +456,9 @@ class CombinedConsortiumDataWorkspaceSharingAuditByWorkspace(
         return audit
 
 
-class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class CombinedConsortiumDataWorkspaceSharingAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
     """View to resolve CombinedConsortiumDataWorkspace audit results."""
 
     form_class = Form
@@ -559,7 +466,7 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
-    def get_combined_workspace(self):
+    def get_workspace_data_object(self):
         """Look up the CombinedConsortiumDataWorkspace by billing project and name."""
         # Filter the queryset based on kwargs.
         billing_project_slug = self.kwargs.get("billing_project_slug", None)
@@ -577,60 +484,13 @@ class CombinedConsortiumDataWorkspaceSharingAuditResolve(AnVILConsortiumManagerS
             )
         return obj
 
-    def get_managed_group(self, queryset=None):
-        """Look up the ManagedGroup by name."""
-        try:
-            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
-        except ManagedGroup.DoesNotExist:
-            raise Http404("No ManagedGroups found matching the query")
-        return obj
-
     def get_audit_result(self):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
-        audit.audit_workspace_and_group(self.combined_workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
-
-    def get(self, request, *args, **kwargs):
-        self.combined_workspace = self.get_combined_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.combined_workspace = self.get_combined_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().post(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["combined_workspace"] = self.combined_workspace
-        context["managed_group"] = self.managed_group
-        context["audit_result"] = self.audit_result
-        return context
-
-    def get_success_url(self):
-        return self.combined_workspace.get_absolute_url()
-
-    def form_valid(self, form):
-        # Handle the result.
-        try:
-            with transaction.atomic():
-                self.audit_result.handle()
-        except (AnVILAPIError, AnVILGroupNotFound) as e:
-            if self.request.htmx:
-                return HttpResponse(self.htmx_error)
-            else:
-                messages.error(self.request, "AnVIL API Error: " + str(e))
-                return super().form_invalid(form)
-        # Otherwise, the audit resolution succeeded.
-        if self.request.htmx:
-            return HttpResponse(self.htmx_success)
-        else:
-            return super().form_valid(form)
 
 
 class CombinedConsortiumDataWorkspaceAuthDomainAudit(
@@ -681,7 +541,9 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace(
         return audit
 
 
-class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
     """View to resolve UploadWorkspace auth domain audit results."""
 
     form_class = Form
@@ -689,7 +551,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManag
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
-    def get_workspace(self):
+    def get_workspace_data_object(self):
         """Look up the CombinedConsortiumDataWorkspace by billing project and name."""
         # Filter the queryset based on kwargs.
         billing_project_slug = self.kwargs.get("billing_project_slug", None)
@@ -707,57 +569,10 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(AnVILConsortiumManag
             )
         return obj
 
-    def get_managed_group(self, queryset=None):
-        """Look up the ManagedGroup by name."""
-        try:
-            obj = ManagedGroup.objects.get(name=self.kwargs.get("managed_group_slug", None))
-        except ManagedGroup.DoesNotExist:
-            raise Http404("No ManagedGroups found matching the query")
-        return obj
-
     def get_audit_result(self):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
-        audit.audit_workspace_and_group(self.workspace, self.managed_group)
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
-
-    def get(self, request, *args, **kwargs):
-        self.workspace = self.get_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.workspace = self.get_workspace()
-        self.managed_group = self.get_managed_group()
-        self.audit_result = self.get_audit_result()
-        return super().post(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["workspace"] = self.workspace
-        context["managed_group"] = self.managed_group
-        context["audit_result"] = self.audit_result
-        return context
-
-    def get_success_url(self):
-        return self.workspace.get_absolute_url()
-
-    def form_valid(self, form):
-        # Handle the result.
-        try:
-            with transaction.atomic():
-                self.audit_result.handle()
-        except (AnVILAPIError, AnVILGroupNotFound) as e:
-            if self.request.htmx:
-                return HttpResponse(self.htmx_error)
-            else:
-                messages.error(self.request, "AnVIL API Error: " + str(e))
-                return super().form_invalid(form)
-        # Otherwise, the audit resolution succeeded.
-        if self.request.htmx:
-            return HttpResponse(self.htmx_success)
-        else:
-            return super().form_valid(form)
