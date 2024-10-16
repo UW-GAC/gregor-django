@@ -10,15 +10,15 @@
 
 
 {% block action_buttons %}
-
 {% if show_edit_links %}
-  {% if object.authorization_domains.first %}
   <p>
-  <a href="{% url 'anvil_consortium_manager:workspaces:sharing:new_by_group' billing_project_slug=object.billing_project.name workspace_slug=object.name group_slug=object.authorization_domains.first.name %}" class="btn btn-primary" role="button">Share with auth domain</a>
-</p>
-  {% else %}
-  <p>no auth domain</p>
-  {% endif %}
+  <a href="{% url 'gregor_anvil:audit:combined_workspaces:sharing:by_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit consortium sharing
+  </a>
+  <a href="{% url 'gregor_anvil:audit:combined_workspaces:auth_domains:by_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit auth domain membership
+  </a>
+  </p>
 {% endif %}
 
 {{ block.super }}

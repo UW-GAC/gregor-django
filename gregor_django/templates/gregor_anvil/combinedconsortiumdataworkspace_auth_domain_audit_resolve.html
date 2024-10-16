@@ -1,0 +1,44 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}Resolve combined workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Resolve combined workspace auth domain audit</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>Combined workspace: <a href="{{ audit_result.workspace.get_absolute_url }}">{{ audit_result.workspace }}</a></li>
+    <li>Managed group: <a href="{{ audit_result.managed_group.get_absolute_url }}">{{ audit_result.managed_group }}</a></li>
+  </ul>
+
+  {% include "gregor_anvil/snippets/combinedconsortiumdataworkspace_auth_domain_audit_explanation.html" %}
+
+</div>
+
+<h2>Audit results</h2>
+
+
+<div class="card container-fluid mt-3 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Result</h5>
+    <p class="card-text">{{ audit_result }}</p>
+    {% if audit_result.action %}
+    <form method="post">
+
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <button type="submit" class="btn btn-primary">{{ audit_result.action }}</button>
+    </form>
+    {% else %}
+    <button type="submit" class="btn btn-primary disabled">No action needed</button>
+    {% endif %}
+  </div>
+</div>
+
+
+{% endblock content %}

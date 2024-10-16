@@ -1,0 +1,25 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Combined workspace auth domain audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Combined consortium data workspace auth domain audit: {% if object %} {{ object }} {% else %} all Combined Workspaces{% endif %} </h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+    <p>
+        When auditing combined workspace auth domain membership,
+        all records in the "Needs action" table should be handled by clicking on the action button.
+        Any records in the "Errors" table should be reported.
+    </p>
+    {% include "gregor_anvil/snippets/combinedconsortiumdataworkspace_auth_domain_audit_explanation.html" %}
+
+</div>
+
+<h2>Audit results</h2>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

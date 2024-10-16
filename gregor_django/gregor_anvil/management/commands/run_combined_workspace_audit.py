@@ -4,11 +4,11 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from ...audit import upload_workspace_audit
+from ...audit import combined_workspace_audit
 
 
 class Command(BaseCommand):
-    help = "Run access audits on UploadWorkspace."
+    help = "Run access audits on CombinedConsortiumDataWorkspaces."
 
     def add_arguments(self, parser):
         email_group = parser.add_argument_group(title="Email reports")
@@ -18,16 +18,16 @@ class Command(BaseCommand):
         )
 
     def run_sharing_audit(self, *args, **options):
-        self.stdout.write("Running UploadWorkspace sharing audit... ", ending="")
-        audit = upload_workspace_audit.UploadWorkspaceSharingAudit()
+        self.stdout.write("Running CombinedConsortiumDataWorkspace sharing audit... ", ending="")
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit()
         audit.run_audit()
-        self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:sharing:all"), **options)
+        self._handle_audit_results(audit, reverse("gregor_anvil:audit:combined_workspaces:sharing:all"), **options)
 
     def run_auth_domain_audit(self, *args, **options):
-        self.stdout.write("Running UploadWorkspace auth domain audit... ", ending="")
-        audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
+        self.stdout.write("Running CombinedConsortiumDataWorkspace auth domain audit... ", ending="")
+        audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.run_audit()
-        self._handle_audit_results(audit, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:all"), **options)
+        self._handle_audit_results(audit, reverse("gregor_anvil:audit:combined_workspaces:auth_domains:all"), **options)
 
     def _handle_audit_results(self, audit, url, **options):
         # Report errors and needs access.
@@ -53,7 +53,7 @@ class Command(BaseCommand):
             html_body = render_to_string(
                 "gregor_anvil/email_audit_report.html",
                 context={
-                    "title": "Upload workspace audit",
+                    "title": "Combined workspace audit",
                     "audit_results": audit,
                     "url": url,
                 },
