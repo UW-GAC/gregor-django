@@ -18,7 +18,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTable(tables.Table):
     note = tables.Column()
     action = tables.TemplateColumn(
         # Temporarily use this button template, until we have the resolve view working for this workspace type.
-        template_name="gregor_anvil/snippets/upload_workspace_auth_domain_audit_action_button.html"
+        template_name="gregor_anvil/snippets/combinedconsortiumdataworkspace_auth_domain_audit_action_button.html"
     )
 
     class Meta:
@@ -100,42 +100,6 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
             self.needs_action.append(workspace_auth_domain_audit_results.ChangeToAdmin(**audit_result_args))
         else:
             self.needs_action.append(workspace_auth_domain_audit_results.AddAdmin(**audit_result_args))
-
-    def _audit_workspace_and_dcc_group(self, combined_workspace, managed_group):
-        """Audit the auth domain membership for a specific workspace and the DCC writers/members groups.
-
-        Expectations:
-        - Member before the workspace is completed.
-        - Not a member after the workspace is completed.
-        """
-        current_membership = self._get_current_membership(combined_workspace, managed_group)
-        audit_result_args = {
-            "workspace": combined_workspace.workspace,
-            "managed_group": managed_group,
-            "current_membership_instance": current_membership,
-        }
-
-        if not combined_workspace.date_completed:
-            note = self.DCC_BEFORE_COMPLETE
-            if not current_membership:
-                self.needs_action.append(workspace_auth_domain_audit_results.AddMember(note=note, **audit_result_args))
-            elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
-                self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **audit_result_args))
-            else:
-                self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **audit_result_args))
-        else:
-            note = self.DCC_AFTER_COMPLETE
-            if not current_membership:
-                self.verified.append(
-                    workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **audit_result_args)
-                )
-            elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
-                self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **audit_result_args))
-            else:
-                self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **audit_result_args))
-
-    def _audit_workspace_and_dcc_member_group(self, combined_workspace, managed_group):
-        pass
 
     def _audit_workspace_and_gregor_all_group(self, combined_workspace, managed_group):
         """Audit the auth domain membership for a specific workspace and the GREGOR_ALL group.
