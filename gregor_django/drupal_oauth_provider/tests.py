@@ -102,6 +102,7 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
         User = get_user_model()
         User.objects.create_user("testuser", "testuser@testuser.com", "testpw")
         self.client.login(username="testuser", password="testpw")
+        self.setup_time = datetime.datetime.now(datetime.timezone.utc)
 
     # Provide two mocked responses, first is to the public key request
     # second is used for the profile request for extra data
@@ -175,13 +176,12 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
         return resp
 
     def get_id_token(self):
-        now = datetime.datetime.now(datetime.timezone.utc)
         app = get_adapter().get_app(request=None, provider=self.provider_id)
         allowed_audience = app.client_id
         return sign_id_token(
             {
-                "exp": now + datetime.timedelta(hours=1),
-                "iat": now,
+                "exp": self.setup_time + datetime.timedelta(hours=1),
+                "iat": self.setup_time,
                 "aud": allowed_audience,
                 "scope": ["authenticated", "oauth_client_user"],
                 "sub": 20122,
