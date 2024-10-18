@@ -137,12 +137,24 @@ class CombinedConsortiumDataWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.CombinedConsortiumDataWorkspace
+        skip_postgeneration_save = True
 
     upload_cycle = SubFactory(UploadCycleFactory)
     workspace = SubFactory(
         WorkspaceFactory,
         workspace_type="combined_consortium",
     )
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
+        self.workspace.authorization_domains.add(auth_domain)
 
 
 class ReleaseWorkspaceFactory(DjangoModelFactory):

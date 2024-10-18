@@ -2,13 +2,13 @@
     {% if record.action %}
     <form
         method="post"
-        action="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:resolve' record.workspace.billing_project.name record.workspace.name record.managed_group.name %}">
+        action="{% url 'gregor_anvil:audit:combined_workspaces:auth_domains:resolve' record.workspace.billing_project.name record.workspace.name record.managed_group.name %}">
 
         {% csrf_token %}
         <button
             type="submit"
             class="btn btn-primary btn-sm"
-            hx-post="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:resolve' record.workspace.billing_project.name record.workspace.name record.managed_group.name %}"
+            hx-post="{% url 'gregor_anvil:audit:combined_workspaces:auth_domains:resolve' record.workspace.billing_project.name record.workspace.name record.managed_group.name %}"
             hx-disabled-elt="this"
             hx-target="closest div"
             hx-swap="innerHTML">
