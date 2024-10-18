@@ -31,7 +31,7 @@ crispy-bootstrap5==2024.10
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==43.0.1
+cryptography==43.0.3
     # via -r requirements/requirements.in
 django==4.2.16
     # via
