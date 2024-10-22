@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.12.0
+mypy==1.12.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.6.9
+ruff==0.7.0
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
