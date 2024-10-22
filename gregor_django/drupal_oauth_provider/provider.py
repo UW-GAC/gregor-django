@@ -2,10 +2,13 @@ import logging
 
 from allauth.account.models import EmailAddress
 from allauth.socialaccount import app_settings, providers
+from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+from .views import CustomAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,13 @@ class CustomProvider(OAuth2Provider):
     id = DRUPAL_PROVIDER_ID
     name = OVERRIDE_NAME
     account_class = CustomAccount
+    oauth2_adapter_class = CustomAdapter
+    supports_token_authentication = True
+
+    def __init__(self, request, app=None):
+        if app is None:
+            app = get_adapter().get_app(request, self.id)
+        super().__init__(request, app=app)
 
     def extract_uid(self, data):
         return str(data["sub"])

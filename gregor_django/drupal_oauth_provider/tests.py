@@ -1,11 +1,19 @@
+import base64
 import datetime
+import hashlib
 import json
+from urllib.parse import parse_qs, urlparse
 
 import jwt
+import requests
+from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import get_adapter
+from allauth.socialaccount.models import SocialApp
 from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory
 from django.test.utils import override_settings
@@ -83,9 +91,18 @@ KEY_SERVER_RESP_JSON = json.dumps(
 
 # disable token storing for testing as it conflicts with drupals use
 # of tokens for user info
-@override_settings(SOCIALACCOUNT_STORE_TOKENS=False)
+@override_settings(SOCIALACCOUNT_STORE_TOKENS=True)
 class CustomProviderTests(OAuth2TestsMixin, TestCase):
     provider_id = CustomProvider.id
+
+    def setUp(self):
+        super(CustomProviderTests, self).setUp()
+        # workaround to create a session. see:
+        # https://code.djangoproject.com/ticket/11475
+        User = get_user_model()
+        User.objects.create_user("testuser", "testuser@testuser.com", "testpw")
+        self.client.login(username="testuser", password="testpw")
+        self.setup_time = datetime.datetime.now(datetime.timezone.utc)
 
     # Provide two mocked responses, first is to the public key request
     # second is used for the profile request for extra data
@@ -104,21 +121,83 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             ),
         ]
 
-    # This login response mimics drupals in that it contains a set of scopes
-    # and the uid which has the name sub
-    def get_login_response_json(self, with_refresh_token=True):
-        now = datetime.datetime.now(datetime.timezone.utc)
+    def login(self, resp_mock=None, process="login", with_refresh_token=True):
+        """
+        Unfortunately due to how our provider works we need to alter
+        this test login function as the default one fails.
+        """
+        with self.mocked_response():
+            resp = self.client.post(self.provider.get_login_url(self.request, process=process))
+        p = urlparse(resp["location"])
+        q = parse_qs(p.query)
+        pkce_enabled = app_settings.PROVIDERS.get(self.app.provider, {}).get(
+            "OAUTH_PKCE_ENABLED", self.provider.pkce_enabled_default
+        )
+
+        self.assertEqual("code_challenge" in q, pkce_enabled)
+        self.assertEqual("code_challenge_method" in q, pkce_enabled)
+        if pkce_enabled:
+            code_challenge = q["code_challenge"][0]
+            self.assertEqual(q["code_challenge_method"][0], "S256")
+
+        complete_url = self.provider.get_callback_url()
+        self.assertGreater(q["redirect_uri"][0].find(complete_url), 0)
+        response_json = self.get_login_response_json(with_refresh_token=with_refresh_token)
+
+        resp_mocks = resp_mock if isinstance(resp_mock, list) else ([resp_mock] if resp_mock is not None else [])
+
+        with self.mocked_response(
+            MockedResponse(200, response_json, {"content-type": "application/json"}),
+            *resp_mocks,
+        ):
+            resp = self.client.get(complete_url, self.get_complete_parameters(q))
+
+            # Find the access token POST request, and assert that it contains
+            # the correct code_verifier if and only if PKCE is enabled
+            request_calls = requests.Session.request.call_args_list
+
+            for args, kwargs in request_calls:
+                data = kwargs.get("data", {})
+                if (
+                    args
+                    and args[0] == "POST"
+                    and isinstance(data, dict)
+                    and data.get("redirect_uri", "").endswith(complete_url)
+                ):
+                    self.assertEqual("code_verifier" in data, pkce_enabled)
+
+                    if pkce_enabled:
+                        hashed_code_verifier = hashlib.sha256(data["code_verifier"].encode("ascii"))
+                        expected_code_challenge = (
+                            base64.urlsafe_b64encode(hashed_code_verifier.digest()).rstrip(b"=").decode()
+                        )
+                        self.assertEqual(code_challenge, expected_code_challenge)
+
+        return resp
+
+    def get_id_token(self):
         app = get_adapter().get_app(request=None, provider=self.provider_id)
         allowed_audience = app.client_id
-        id_token = sign_id_token(
+        return sign_id_token(
             {
-                "exp": now + datetime.timedelta(hours=1),
-                "iat": now,
+                "exp": self.setup_time + datetime.timedelta(hours=1),
+                "iat": self.setup_time,
                 "aud": allowed_audience,
                 "scope": ["authenticated", "oauth_client_user"],
                 "sub": 20122,
             }
         )
+
+    def get_access_token(self) -> str:
+        return self.get_id_token()
+
+    def get_expected_to_str(self):
+        return "test@testmaster.net"
+
+    # This login response mimics drupals in that it contains a set of scopes
+    # and the uid which has the name sub
+    def get_login_response_json(self, with_refresh_token=True):
+        id_token = self.get_id_token()
         response_data = {
             "access_token": id_token,
             "expires_in": 3600,
@@ -131,6 +210,26 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
 
 
 class TestProviderConfig(TestCase):
+    def setUp(self):
+        # workaround to create a session. see:
+        # https://code.djangoproject.com/ticket/11475
+        current_site = Site.objects.get_current()
+        app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name=CustomProvider.id,
+            client_id="app123id",
+            key=CustomProvider.id,
+            secret="dummy",
+        )
+        self.app = app
+        self.app.sites.add(current_site)
+
+    def test_custom_provider_no_app(self):
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        provider = CustomProvider(request)
+        assert provider.app is not None
+
     def test_custom_provider_scope_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
         rf = RequestFactory()
@@ -138,7 +237,7 @@ class TestProviderConfig(TestCase):
         custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = None
         with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
             with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request).get_provider_scope_config()
+                CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_detail_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
@@ -153,7 +252,7 @@ class TestProviderConfig(TestCase):
         ]
         with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
             with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request).get_provider_managed_scope_status()
+                CustomProvider(request, app=self.app).get_provider_managed_scope_status()
 
     def test_custom_provider_has_scope(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
@@ -167,4 +266,4 @@ class TestProviderConfig(TestCase):
             }
         ]
         with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            CustomProvider(request).get_provider_managed_scope_status(scopes_granted=["X"])
+            CustomProvider(request, app=self.app).get_provider_managed_scope_status(scopes_granted=["X"])
