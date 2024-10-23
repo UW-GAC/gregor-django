@@ -1,6 +1,7 @@
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
+    AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import (
     Account,
@@ -120,7 +121,7 @@ class UploadCycleUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageM
     success_message = "Successfully updated Upload Cycle."
 
 
-class UploadCycleDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
+class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about an `UploadCycle`."""
 
     model = models.UploadCycle
@@ -156,7 +157,7 @@ class UploadCycleDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin
         ]
 
 
-class UploadCycleList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
+class UploadCycleList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `UploadCycle` objects."""
 
     model = models.UploadCycle

@@ -458,7 +458,9 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
         )
         WorkspaceGroupSharing = self.old_state.apps.get_model("anvil_consortium_manager", "WorkspaceGroupSharing")
         UploadCycle = self.old_state.apps.get_model("gregor_anvil", "UploadCycle")
-        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        CombinedConsortiumDataWorkspace = self.old_state.apps.get_model(
+            "gregor_anvil", "CombinedConsortiumDataWorkspace"
+        )
         # Create an auth domain for the combined workspaces.
         auth_domain_group = ManagedGroup.objects.create(
             name="auth_domain",
@@ -517,7 +519,9 @@ class PopulateConsortiumCombinedDataWorkspaceIsComplete(MigratorTestCase):
         )
 
     def test_date_completed(self):
-        CombinedConsortiumDataWorkspace = self.new_state.apps.get_model("gregor_anvil", "CombinedConsortiumDataWorkspace")
+        CombinedConsortiumDataWorkspace = self.new_state.apps.get_model(
+            "gregor_anvil", "CombinedConsortiumDataWorkspace"
+        )
         workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_shared.pk)
         self.assertEqual(workspace.date_completed, self.date_shared)
         workspace = CombinedConsortiumDataWorkspace.objects.get(pk=self.combined_workspace_not_shared.pk)
