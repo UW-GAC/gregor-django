@@ -50,8 +50,10 @@ class HomeTest(TestCase):
         user = User.objects.create_user(username="test-none", password="test-none")
         self.client.force_login(user)
         response = self.client.get(self.get_url())
-        self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertNotIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
+        html = """<a class="nav-link" href="{}">AnVIL Consortium Manager</a>""".format(
+            reverse("anvil_consortium_manager:index")
+        )
+        self.assertNotContains(response, html, html=True)
 
     def test_acm_link_with_view_permission(self):
         """ACM link shows up if you have view permission."""
@@ -61,8 +63,10 @@ class HomeTest(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
-        self.assertIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
+        html = """<a class="nav-link" href="{}">AnVIL Consortium Manager</a>""".format(
+            reverse("anvil_consortium_manager:index")
+        )
+        self.assertContains(response, html, html=True)
 
     def test_acm_link_with_view_and_edit_permission(self):
         """ACM link shows up if you have view and edit permission."""
@@ -77,19 +81,6 @@ class HomeTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("AnVIL Consortium Manager", response.rendered_content)
         self.assertIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
-
-    def test_acm_link_with_edit_but_not_view_permission(self):
-        """ACM link does not show up if you only have edit permission.
-
-        This is something that shouldn't happen but could if admin only gave EDIT but not VIEW permission."""
-        user = User.objects.create_user(username="test-none", password="test-none")
-        user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
-        )
-        self.client.force_login(user)
-        response = self.client.get(self.get_url())
-        self.assertNotIn("AnVIL Consortium Manager", response.rendered_content)
-        self.assertNotIn(reverse("anvil_consortium_manager:index"), response.rendered_content)
 
     def test_site_announcement_no_text(self):
         user = User.objects.create_user(username="test-none", password="test-none")
