@@ -17,6 +17,7 @@ rc_1_member_group = ManagedGroupFactory(name="DEMO_RC1_MEMBERS")
 rc_1_uploader_group = ManagedGroupFactory(name="DEMO_RC1_UPLOADERS")
 rc_1_nonmember_group = ManagedGroupFactory(name="DEMO_RC1_NONMEMBERS")
 gregor_all_group = ManagedGroupFactory(name="GREGOR_ALL")
+combined_auth_domain = ManagedGroupFactory(name="AUTH_GREGOR_COMBINED")
 
 # Create an RC
 rc = factories.ResearchCenterFactory.create(
@@ -27,8 +28,20 @@ rc = factories.ResearchCenterFactory.create(
     non_member_group=rc_1_nonmember_group,
 )
 
+# Add GREGOR_ALL and DCC_ADMINS to the combined auth domain.
+GroupGroupMembershipFactory.create(
+    parent_group=combined_auth_domain,
+    child_group=gregor_all_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=combined_auth_domain,
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
 
-# Create a future upload cycle.
+
+## Future upload cycle.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=1,
     is_future=True,
@@ -39,7 +52,7 @@ workspace = factories.UploadWorkspaceFactory.create(
     workspace__name="TEST_U01_RC1",
 )
 
-# Create a current upload cycle before compute.
+## Current upload cycle before compute.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=2,
     is_current=True,
@@ -111,7 +124,7 @@ GroupGroupMembershipFactory.create(
 )
 
 
-# Create a current upload cycle after compute.
+## Current upload cycle after compute.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=3,
     is_current=True,
@@ -256,7 +269,7 @@ GroupGroupMembershipFactory.create(
     role=GroupGroupMembership.ADMIN,
 )
 
-# Create a past upload cycle after QC is completed.
+## Past upload cycle after QC is completed; combined workspace is not complete.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=5,
     is_past=True,
@@ -320,8 +333,18 @@ GroupGroupMembershipFactory.create(
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
 )
+# Create the combined workspace and its records.
+combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U05_COMBINED",
+)
+# Delete the auth domain created by the factory and add the shared auth domain.
+combined_workspace.workspace.authorization_domains.clear()
+combined_workspace.workspace.authorization_domains.add(combined_auth_domain)
+# No sharing records yet.
 
-# Create a past upload cycle with a combined workspace.
+
+## Past upload cycle with a combined workspace.
 upload_cycle = factories.UploadCycleFactory.create(
     cycle=6,
     is_past=True,
@@ -331,11 +354,6 @@ workspace = factories.UploadWorkspaceFactory.create(
     research_center=rc,
     workspace__name="TEST_U06_RC1",
     date_qc_completed=timezone.now(),
-)
-factories.CombinedConsortiumDataWorkspaceFactory.create(
-    upload_cycle=upload_cycle,
-    date_completed=timezone.now(),
-    workspace__name="TEST_U06_COMBINED",
 )
 # Create records as appropriate for the previous point in the cycle - past cycle before QC complete.
 # Auth domain.
@@ -382,4 +400,32 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
+)
+# Create the combined workspace and its records.
+combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    date_completed=timezone.now(),
+    workspace__name="TEST_U06_COMBINED",
+)
+# Delete the auth domain created by the factory and add the shared auth domain.
+combined_workspace.workspace.authorization_domains.clear()
+combined_workspace.workspace.authorization_domains.add(combined_auth_domain)
+# Add sharing records from previous step - DCC admins, writers, and members.
+WorkspaceGroupSharingFactory.create(
+    workspace=combined_workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+WorkspaceGroupSharingFactory.create(
+    workspace=combined_workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+WorkspaceGroupSharingFactory.create(
+    workspace=combined_workspace.workspace,
+    group=dcc_member_group,
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
 )

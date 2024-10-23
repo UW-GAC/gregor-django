@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.11.2
+mypy==1.12.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -121,7 +121,7 @@ platformdirs==4.2.0
     # via
     #   pylint
     #   virtualenv
-pre-commit==3.8.0
+pre-commit==4.0.1
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -137,7 +137,7 @@ pylint==3.1.0
     # via
     #   pylint-django
     #   pylint-plugin-utils
-pylint-django==2.5.5
+pylint-django==2.6.1
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.6.3
+ruff==0.7.0
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -161,21 +161,21 @@ sniffio==1.3.1
     # via anyio
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==8.0.2
+sphinx==8.1.3
     # via
     #   -r requirements/dev-requirements.in
     #   sphinx-autobuild
-sphinx-autobuild==2024.9.3
+sphinx-autobuild==2024.10.3
     # via -r requirements/dev-requirements.in
-sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-applehelp==2.0.0
     # via sphinx
-sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
@@ -186,7 +186,7 @@ sqlparse==0.5.1
     #   django-debug-toolbar
 stack-data==0.6.3
     # via ipython
-starlette==0.38.2
+starlette==0.40.0
     # via sphinx-autobuild
 tomli==2.0.1
     # via

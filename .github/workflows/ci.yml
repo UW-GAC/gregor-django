@@ -54,7 +54,7 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.1
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.2.0
@@ -99,7 +99,7 @@ jobs:
         run: ls -lhta
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: coverage-data-${{ strategy.job-index }}
           path: coverage-${{ strategy.job-index }}
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.1
 
       - name: Set up Python
         uses: actions/setup-python@v5.2.0
@@ -140,6 +140,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

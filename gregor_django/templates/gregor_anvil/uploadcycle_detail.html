@@ -162,10 +162,10 @@
 {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
   <p>
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
-    Audit consortium sharing
+    Audit upload workspace sharing
   </a>
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
-    Audit auth domain membership
+    Audit upload workspace auth domains
   </a>
   </p>
 {% endif %}
