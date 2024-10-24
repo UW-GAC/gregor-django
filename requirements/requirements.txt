@@ -12,6 +12,7 @@ asgiref==3.8.1
     # via
     #   -r requirements/requirements.in
     #   django
+    #   django-allauth
     #   django-htmx
 build==1.0.3
     # via pip-tools
@@ -49,7 +50,7 @@ django==4.2.16
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.0.2
+django-allauth==65.1.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.25
     # via -r requirements/requirements.in
