@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.12.1
+mypy==1.13.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.7.0
+ruff==0.7.2
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -233,7 +233,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via sphinx-autobuild
-werkzeug==3.0.4
+werkzeug==3.1.2
     # via -r requirements/dev-requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
