@@ -72,7 +72,7 @@ django-extensions==3.2.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.19.0
+django-htmx==1.21.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
