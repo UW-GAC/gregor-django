@@ -1,12 +1,12 @@
 {% extends "anvil_consortium_manager/base.html" %}
 {% load django_tables2 %}
 
-{% block title %}Upload workspace sharing audit{% endblock %}
+{% block title %}Combined workspace sharing audit{% endblock %}
 
 
 {% block content %}
 
-<h1>Upload workspace sharing audit: {% if object %}{{ object }}{% else %} all Upload Workspaces{% endif %} </h1>
+<h1>Combined workspace sharing audit: {% if object %}{{ object }}{% else %} all Combined Workspaces{% endif %} </h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
     <p>
@@ -14,7 +14,7 @@
         All records in the "Needs action" table should be handled by clicking on the action button.
         Any records in the "Errors" table should be reported.
     </p>
-    {% include "gregor_anvil/snippets/upload_workspace_sharing_audit_explanation.html" %}
+    {% include "gregor_anvil/snippets/combinedconsortiumdataworkspace_sharing_audit_explanation.html" %}
 
 </div>
 

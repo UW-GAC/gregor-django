@@ -98,9 +98,53 @@ upload_workspace_audit_patterns = (
     "upload_workspaces",
 )
 
+combined_workspace_sharing_audit_patterns = (
+    [
+        path("all/", views.CombinedConsortiumDataWorkspaceSharingAudit.as_view(), name="all"),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.CombinedConsortiumDataWorkspaceSharingAuditResolve.as_view(),
+            name="resolve",
+        ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.CombinedConsortiumDataWorkspaceSharingAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
+    ],
+    "sharing",
+)
+
+combined_workspace_auth_domain_audit_patterns = (
+    [
+        path("all/", views.CombinedConsortiumDataWorkspaceAuthDomainAudit.as_view(), name="all"),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.CombinedConsortiumDataWorkspaceAuthDomainAuditResolve.as_view(),
+            name="resolve",
+        ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
+    ],
+    "auth_domains",
+)
+
+combined_workspace_audit_patterns = (
+    [
+        path("sharing/", include(combined_workspace_sharing_audit_patterns)),
+        path("auth_domain/", include(combined_workspace_auth_domain_audit_patterns)),
+    ],
+    "combined_workspaces",
+)
+
+
 audit_patterns = (
     [
         path("upload_workspaces/", include(upload_workspace_audit_patterns)),
+        path("combined_workspaces/", include(combined_workspace_audit_patterns)),
     ],
     "audit",
 )

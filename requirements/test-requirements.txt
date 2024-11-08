@@ -49,16 +49,16 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.5.0
     # via pytest
-pytest==8.3.2
+pytest==8.3.3
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via -r requirements/test-requirements.in
-pytest-django==4.8.0
+pytest-django==4.9.0
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
@@ -87,7 +87,7 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.32.0.20240712
+types-requests==2.32.0.20241016
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via

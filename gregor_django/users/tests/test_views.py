@@ -1,19 +1,26 @@
 import json
 
 import pytest
+from allauth.socialaccount.models import SocialApp
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
-from anvil_consortium_manager.tests.factories import AccountFactory
+from anvil_consortium_manager.tests.factories import AccountFactory, UserEmailEntryFactory
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.sites.models import Site
 from django.http import HttpRequest
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from gregor_django.drupal_oauth_provider.provider import CustomProvider
+from gregor_django.gregor_anvil.tests.factories import (
+    PartnerGroupFactory,
+    ResearchCenterFactory,
+)
 from gregor_django.users.forms import UserChangeForm, UserLookupForm
 from gregor_django.users.tests.factories import UserFactory
 from gregor_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
@@ -92,9 +99,38 @@ class TestUserRedirectView:
 
 
 class TestUserDetailView:
-    def test_authenticated(self, client, user: User, rf: RequestFactory):
+    def test_authenticated(self, client, user: User):
         client.force_login(user)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
+
+    def test_configured_user_with_anvil_account(self, client):
+        account = AccountFactory.create(verified=True)
+        account_user = account.user
+        client.force_login(account_user)
+        pg1 = PartnerGroupFactory(short_name="pg1")
+        rc1 = ResearchCenterFactory(short_name="rc1")
+
+        account.save()
+        account_user.partner_groups.add(pg1)
+        account_user.research_centers.add(rc1)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=account_user.username))
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
+
+    def test_configured_users_no_anvil_account(self, client, user: User):
+        client.force_login(user)
+        pg1 = PartnerGroupFactory(short_name="pg1")
+        rc1 = ResearchCenterFactory(short_name="rc1")
+        UserEmailEntryFactory.create(user=user)
+
+        user.partner_groups.add(pg1)
+        user.research_centers.add(rc1)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -127,6 +163,22 @@ class UserDetailTest(TestCase):
         self.assertEqual(len(response.context_data["unlinked_accounts"]), 1)
         self.assertIn(account, response.context_data["unlinked_accounts"])
         self.assertContains(response, "Previously-linked accounts")
+
+
+class LoginViewTest(TestCase):
+    def setUp(self):
+        current_site = Site.objects.get_current()
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name="DOA",
+            client_id="test-client-id",
+            secret="test-client-secret",
+        )
+        self.social_app.sites.add(current_site)
+
+    def test_basic_login_view_render(self):
+        response = self.client.get(reverse("account_login"))
+        assert response.status_code == 200
 
 
 class UserAutocompleteViewTest(TestCase):
