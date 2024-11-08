@@ -1,10 +1,10 @@
 exclude: 'docs|node_modules|migrations|.git|.tox'
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: true
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -12,7 +12,7 @@ repos:
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.6.2
+    rev: v0.7.0
     hooks:
       # Run the linter.
       - id: ruff
@@ -21,7 +21,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
+    rev: v8.21.1
     hooks:
       - id: gitleaks
 

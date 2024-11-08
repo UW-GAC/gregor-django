@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<h1>Upload workspace auth domain audit: {{ object }} </h1>
+<h1>Upload workspace auth domain audit: {% if object %} {{ object }} {% else %} all Upload Workspaces{% endif %} </h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
     <p>
