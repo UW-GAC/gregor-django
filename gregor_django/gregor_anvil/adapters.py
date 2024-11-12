@@ -118,6 +118,7 @@ class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAda
     workspace_data_form_class = forms.UploadWorkspaceForm
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
+    workspace_list_template_name = "gregor_anvil/uploadworkspace_list.html"
 
     def get_autocomplete_queryset(self, queryset, q, forwarded={}):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
