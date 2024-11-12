@@ -67,6 +67,9 @@ class AccountAdapter(BaseAccountAdapter):
 
     list_table_class = tables.AccountTable
     list_filterset_class = filters.AccountListFilter
+    account_link_verify_redirect = "users:redirect"
+    account_link_email_subject = "Verify your AnVIL account email"
+    account_verify_notification_email = "gregorconsortium@uw.edu"
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
