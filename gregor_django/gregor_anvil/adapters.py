@@ -250,3 +250,4 @@ class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/exchangeworkspace_detail.html"
+    workspace_list_template_name = "gregor_anvil/exchangeworkspace_list.html"
