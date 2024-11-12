@@ -193,6 +193,7 @@ class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, 
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    workspace_list_template_name = "gregor_anvil/combinedconsortiumdataworkspace_list.html"
 
 
 class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
