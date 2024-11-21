@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.templatetags.static import static as static_url_tag
 from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -21,6 +23,11 @@ urlpatterns = [
     path(
         "gregor_anvil/",
         include("gregor_django.gregor_anvil.urls", namespace="gregor_anvil"),
+    ),
+    path(
+        "favicon.ico",
+        RedirectView.as_view(url=static_url_tag("images/favicons/favicon_1.jpg"), permanent=True),
+        name="favicon",
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
