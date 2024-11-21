@@ -298,7 +298,7 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "socialaccount_signup",
     "admin:index",
     "admin:login",
-    "favicon"
+    "favicon",
 ]
 
 # django-dbbackup
