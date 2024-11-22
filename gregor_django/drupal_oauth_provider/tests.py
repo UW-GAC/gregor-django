@@ -116,7 +116,7 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             "name": "testmaster",
             "email": "test@testmaster.net",
             "email_verified": "True",
-            "sub": 20122
+            "sub": "20122"
         }""",
             ),
         ]
@@ -184,7 +184,7 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
                 "iat": self.setup_time,
                 "aud": allowed_audience,
                 "scope": ["authenticated", "oauth_client_user"],
-                "sub": 20122,
+                "sub": "20122",
             }
         )
 
