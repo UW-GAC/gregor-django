@@ -24,7 +24,7 @@ from freezegun import freeze_time
 from gregor_django.users.tables import UserTable
 from gregor_django.users.tests.factories import UserFactory
 
-from .. import forms, models, tables, views
+from .. import adapters, forms, models, tables, views
 from ..audit import (
     combined_workspace_audit,
     upload_workspace_audit,
@@ -1493,12 +1493,23 @@ class UploadWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def test_view_has_correct_table_class(self):
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.UploadWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
         """The view has the correct table class in the context."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], tables.UploadWorkspaceTable)
+        self.assertIs(type(response.context_data["table"]), tables.UploadWorkspaceTable)
 
 
 class UploadWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -1752,12 +1763,23 @@ class ResourceWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def test_view_has_correct_table_class(self):
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.DefaultWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
         """The view has the correct table class in the context."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], tables.DefaultWorkspaceTable)
+        self.assertIs(type(response.context_data["table"]), tables.DefaultWorkspaceStaffTable)
 
 
 class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -1882,12 +1904,23 @@ class TemplateWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def test_view_has_correct_table_class(self):
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.TemplateWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
         """The view has the correct table class in the context."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], tables.TemplateWorkspaceTable)
+        self.assertIs(type(response.context_data["table"]), tables.TemplateWorkspaceTable)
 
 
 class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -1969,6 +2002,42 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_use, "foo bar")
+
+
+class ConsortiumCombinedDataWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = "combined_consortium"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.CombinedConsortiumDataWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.CombinedConsortiumDataWorkspaceTable)
 
 
 class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
@@ -2106,6 +2175,42 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
+
+
+class ReleaseWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = "release"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.ReleaseWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.ReleaseWorkspaceTable)
 
 
 class ReleaseWorkspaceDetailTest(TestCase):
@@ -2335,6 +2440,42 @@ class WorkspaceReportTest(TestCase):
         self.assertEqual(response.context_data["verified_linked_accounts"], 1)
 
 
+class DCCProcessingWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = "dcc_processing"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.DCCProcessingWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.DCCProcessingWorkspaceTable)
+
+
 class DCCProcessingWorkspaceDetailTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceDetail view using the DCCProcessingWorkspace adapter."""
 
@@ -2357,6 +2498,42 @@ class DCCProcessingWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
+
+
+class DCCProcessedDataWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = "dcc_processed_data"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.DCCProcessedDataWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.DCCProcessedDataWorkspaceTable)
 
 
 class DCCProcessedDataWorkspaceDetailTest(TestCase):
@@ -2492,12 +2669,23 @@ class ExchangeWorkspaceListTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:list", args=args)
 
-    def test_view_has_correct_table_class(self):
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.ExchangeWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
         """The view has the correct table class in the context."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.workspace_type))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], tables.ExchangeWorkspaceTable)
+        self.assertIs(type(response.context_data["table"]), tables.ExchangeWorkspaceStaffTable)
 
 
 class ExchangeWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -2647,6 +2835,42 @@ class PartnerUploadWorkspaceDetailTest(TestCase):
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
+
+
+class PartnerUploadWorkspaceListTest(TestCase):
+    """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace_type = adapters.PartnerUploadWorkspaceAdapter().get_type()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:list", args=args)
+
+    def test_view_has_correct_table_class_view_user(self):
+        """The view has the correct table class in the context."""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.PartnerUploadWorkspaceTable)
+
+    def test_view_has_correct_table_class_staff_view_user(self):
+        """The view has the correct table class in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.workspace_type))
+        self.assertIn("table", response.context_data)
+        self.assertIs(type(response.context_data["table"]), tables.PartnerUploadWorkspaceStaffTable)
 
 
 class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):

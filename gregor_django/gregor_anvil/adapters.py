@@ -143,7 +143,7 @@ class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorks
     name = "Partner upload workspace"
     description = "Workspaces that contain data uploaded by a Partner Group "
     list_table_class_view = tables.PartnerUploadWorkspaceTable
-    list_table_class_staff_view = tables.PartnerUploadWorkspaceTable
+    list_table_class_staff_view = tables.PartnerUploadWorkspaceStaffTable
 
     workspace_data_model = models.PartnerUploadWorkspace
     workspace_data_form_class = forms.PartnerUploadWorkspaceForm
@@ -160,7 +160,7 @@ class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
         "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
     )
     list_table_class_view = tables.DefaultWorkspaceTable
-    list_table_class_staff_view = tables.DefaultWorkspaceTable
+    list_table_class_staff_view = tables.DefaultWorkspaceStaffTable
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
@@ -245,7 +245,7 @@ class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     name = "Exchange workspace"
     description = "Workspaces for exchanging data with a Research Center outside of an upload cycle"
     list_table_class_view = tables.ExchangeWorkspaceTable
-    list_table_class_staff_view = tables.ExchangeWorkspaceTable
+    list_table_class_staff_view = tables.ExchangeWorkspaceStaffTable
     workspace_data_model = models.ExchangeWorkspace
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm

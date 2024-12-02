@@ -154,9 +154,24 @@ class WorkspaceConsortiumAccessTable(tables.Table):
 
 
 class DefaultWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
-    """Class to use for default workspace tables in GREGoR."""
+    """Class to use for default workspace tables in GREGoR for view users."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "consortium_access",
+        )
+        order_by = ("name",)
+
+
+class DefaultWorkspaceStaffTable(DefaultWorkspaceTable):
+    """Class to use for default workspace tables in GREGoR for staff users."""
+
     billing_project = tables.Column(linkify=True)
     number_groups = tables.Column(
         verbose_name="Number of groups shared with",
@@ -165,15 +180,13 @@ class DefaultWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
         accessor="workspacegroupsharing_set__count",
     )
 
-    class Meta:
-        model = Workspace
+    class Meta(DefaultWorkspaceTable.Meta):
         fields = (
             "name",
             "billing_project",
             "number_groups",
             "consortium_access",
         )
-        order_by = ("name",)
 
 
 class UploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
@@ -198,7 +211,7 @@ class PartnerUploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
     """A table for Workspaces that includes fields from PartnerUploadWorkspace."""
 
     name = tables.columns.Column(linkify=True)
-    partneruploadworkspace__partner_group = tables.columns.Column(linkify=True)
+    partneruploadworkspace__partner_group = tables.columns.Column()
 
     class Meta:
         model = Workspace
@@ -210,6 +223,12 @@ class PartnerUploadWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
             "partneruploadworkspace__date_completed",
             "consortium_access",
         )
+
+
+class PartnerUploadWorkspaceStaffTable(PartnerUploadWorkspaceTable):
+    """A table for Workspaces that includes fields from PartnerUploadWorkspace."""
+
+    partneruploadworkspace__partner_group = tables.columns.Column(linkify=True)
 
 
 class TemplateWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
@@ -279,6 +298,7 @@ class DCCProcessingWorkspaceTable(tables.Table):
     """A table for Workspaces that includes fields from DCCProcessingWorkspace."""
 
     name = tables.columns.Column(linkify=True)
+    dccprocessingworkspace__upload_cycle = tables.columns.Column(linkify=True)
 
     class Meta:
         model = Workspace
@@ -293,7 +313,7 @@ class DCCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Tabl
     """A table for Workspaces that includes fields from DCCProcessedDataWorkspace."""
 
     name = tables.columns.Column(linkify=True)
-    dccprocesseddataworkspace__consent_group = tables.columns.Column(linkify=True)
+    dccprocesseddataworkspace__upload_cycle = tables.columns.Column(linkify=True)
 
     class Meta:
         model = Workspace
@@ -309,10 +329,17 @@ class ExchangeWorkspaceTable(tables.Table):
     """Class to use for ExchangeWorkspace tables."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
-    billing_project = tables.Column(linkify=True)
-    exchangeworkspace__research_center = tables.Column(linkify=True)
+    billing_project = tables.Column()
+    exchangeworkspace__research_center = tables.Column()
 
     class Meta:
         model = Workspace
         fields = ("name", "billing_project", "exchangeworkspace__research_center")
         order_by = ("name",)
+
+
+class ExchangeWorkspaceStaffTable(ExchangeWorkspaceTable):
+    """Class to use for ExchangeWorkspace tables."""
+
+    billing_project = tables.Column(linkify=True)
+    exchangeworkspace__research_center = tables.Column(linkify=True)
