@@ -118,6 +118,7 @@ class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAda
     workspace_data_form_class = forms.UploadWorkspaceForm
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
+    workspace_list_template_name = "gregor_anvil/uploadworkspace_list.html"
 
     def get_autocomplete_queryset(self, queryset, q, forwarded={}):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
@@ -142,7 +143,7 @@ class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorks
     name = "Partner upload workspace"
     description = "Workspaces that contain data uploaded by a Partner Group "
     list_table_class_view = tables.PartnerUploadWorkspaceTable
-    list_table_class_staff_view = tables.PartnerUploadWorkspaceTable
+    list_table_class_staff_view = tables.PartnerUploadWorkspaceStaffTable
 
     workspace_data_model = models.PartnerUploadWorkspace
     workspace_data_form_class = forms.PartnerUploadWorkspaceForm
@@ -159,7 +160,7 @@ class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
         "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
     )
     list_table_class_view = tables.DefaultWorkspaceTable
-    list_table_class_staff_view = tables.DefaultWorkspaceTable
+    list_table_class_staff_view = tables.DefaultWorkspaceStaffTable
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
@@ -192,6 +193,7 @@ class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, 
     workspace_data_form_class = forms.CombinedConsortiumDataWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    workspace_list_template_name = "gregor_anvil/combinedconsortiumdataworkspace_list.html"
 
 
 class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
@@ -243,8 +245,9 @@ class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     name = "Exchange workspace"
     description = "Workspaces for exchanging data with a Research Center outside of an upload cycle"
     list_table_class_view = tables.ExchangeWorkspaceTable
-    list_table_class_staff_view = tables.ExchangeWorkspaceTable
+    list_table_class_staff_view = tables.ExchangeWorkspaceStaffTable
     workspace_data_model = models.ExchangeWorkspace
     workspace_data_form_class = forms.ExchangeWorkspaceForm
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/exchangeworkspace_detail.html"
+    workspace_list_template_name = "gregor_anvil/exchangeworkspace_list.html"
