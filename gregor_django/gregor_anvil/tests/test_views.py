@@ -1872,7 +1872,7 @@ class TemplateWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.TemplateWorkspaceFactory.create()
 
@@ -2222,7 +2222,7 @@ class ReleaseWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.object = factories.ReleaseWorkspaceFactory.create()
 
@@ -2276,6 +2276,50 @@ class ReleaseWorkspaceDetailTest(TestCase):
         self.assertIn(
             upload_workspace_2.workspace,
             response.context_data["included_workspace_table"].data,
+        )
+
+    def test_links_view_user(self):
+        user = self.user
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+        self.assertNotContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+
+    def test_links_staff_view_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+        self.assertContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+
+    def test_links_staff_edit_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+        self.assertContains(
+            response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
 
 
@@ -2499,6 +2543,41 @@ class DCCProcessingWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
+    def test_links_view_user(self):
+        user = self.user
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+
+    def test_links_staff_view_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+
+    def test_links_staff_edit_user(self):
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
+
 
 class DCCProcessedDataWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
@@ -2563,6 +2642,9 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         user = self.user
         self.client.force_login(user)
         response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
         self.assertNotContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
@@ -2575,6 +2657,9 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.object.get_absolute_url())
         # Links to other resources
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
@@ -2589,6 +2674,9 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(
+            response, reverse("gregor_anvil:upload_cycles:detail", args=[self.object.upload_cycle.cycle])
+        )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
