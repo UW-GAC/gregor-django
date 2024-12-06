@@ -298,6 +298,7 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "socialaccount_signup",
     "admin:index",
     "admin:login",
+    "favicon",
 ]
 
 # django-dbbackup
@@ -345,6 +346,11 @@ SOCIALACCOUNT_PROVIDERS = {
                 "request_scope": True,
                 "django_group_name": "Approved by PI for AnVIL access",
             },
+            {
+                "drupal_machine_name": "authenticated",
+                "request_scope": True,
+                "django_group_name": "Authenticated",
+            },
         ],
     }
 }
@@ -375,24 +381,18 @@ CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
 ANVIL_WORKSPACE_ADAPTERS = [
-    "gregor_django.gregor_anvil.adapters.ResourceWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.PartnerUploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.CombinedConsortiumDataWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.ReleaseWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.UploadWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.ResourceWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.ExchangeWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.PartnerUploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.DCCProcessingWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.DCCProcessedDataWorkspaceAdapter",
-    "gregor_django.gregor_anvil.adapters.ExchangeWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.ReleaseWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "gregor_django.gregor_anvil.adapters.AccountAdapter"
 ANVIL_MANAGED_GROUP_ADAPTER = "gregor_django.gregor_anvil.adapters.ManagedGroupAdapter"
-
-# Specify the URL name that AccountLink and AccountLinkVerify redirect to.
-ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
-# Specify the subject for AnVIL account verification emails.
-ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
-ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "gregorconsortium@uw.edu"
 
 DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
 DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")

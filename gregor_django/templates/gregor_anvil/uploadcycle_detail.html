@@ -4,7 +4,12 @@
 {% block title %}Upload Cycle: {{ object }}{% endblock %}
 
 {% block note %}
-  {% if object.note %}
+
+  <div class="alert alert-{% if object.is_current %}success{% else %}danger{% endif %}" role="alert">
+    This is {% if object.is_current %}the current{% elif object.is_past %}a past{% else %}a future{% endif %} upload cycle.
+  </div>
+
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view and object.note %}
   <div class="alert alert-secondary my-3" role="alert">
     <b>Note</b>: {{ object.note }}
   </div>
@@ -28,35 +33,121 @@
 {% endblock panel %}
 
 {% block after_panel %}
-<h2>Upload workspaces</h2>
-<div class="container">
-  {% render_table tables.0 %}
+
+<p>
+  The expandable tables below show information about workspaces associated with this upload cycle.
+  Workspaces are separated by type into different tables.
+  Click on each box to see a table of workspaces of that type.
+  Within the table for a workspace type, click on the name of a workspace within a table to see more information about that workspace.
+</p>
+
+<div class="accordion mb-3" id="accordionCombined">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCombined" aria-expanded="true" aria-controls="collapseCombined">
+        <span class="fa-solid fa-layer-group mx-2"></span>
+        Combined consortium data workspaces
+        <span class="badge mx-2 {% if tables.1.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.1.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseCombined" class="accordion-collapse collapse show" data-bs-parent="#accordionCombined">
+      <div class="accordion-body">
+        {% render_table tables.1 %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>Combined consortium data workspaces</h2>
-<div class="container">
-  {% render_table tables.1 %}
+
+<div class="accordion mb-3" id="accordionUpload">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="true" aria-controls="collapseUpload">
+        <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
+        Upload workspaces
+        <span class="badge mx-2 {% if tables.0.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.0.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseUpload" class="accordion-collapse collapse show" data-bs-parent="#accordionUpload">
+      <div class="accordion-body">
+        {% render_table tables.0 %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>Release prep workspaces</h2>
-<div class="container">
-  {% render_table tables.2 %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+<div class="accordion mb-3" id="accordionDccProcessing">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDccProcessing" aria-expanded="true" aria-controls="collapseDccProcessing">
+        <span class="fa-solid fa-hourglass-half mx-2"></span>
+        DCC processing workspaces
+        <span class="badge mx-2 {% if tables.3.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.3.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseDccProcessing" class="accordion-collapse collapse show" data-bs-parent="#accordionDccProcessing">
+      <div class="accordion-body">
+        {% render_table tables.3 %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>DCC processing workspaces</h2>
-<div class="container">
-  {% render_table tables.3 %}
+
+<div class="accordion mb-3" id="accordionDccProcessedData">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDccProcessedData" aria-expanded="true" aria-controls="collapseDccProcessedData">
+        <span class="fa-solid fa-hourglass-end mx-2"></span>
+        DCC processed data workspaces
+        <span class="badge mx-2 {% if tables.4.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.4.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseDccProcessedData" class="accordion-collapse collapse show" data-bs-parent="#accordionDccProcessedData">
+      <div class="accordion-body">
+        {% render_table tables.4 %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>DCC processed data workspaces</h2>
-<div class="container">
-  {% render_table tables.4 %}
+
+<div class="accordion mb-3" id="accordionReleasePrep">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReleasePrep" aria-expanded="true" aria-controls="collapseReleasePrep">
+        <span class="fa-solid fa-spinner mx-2"></span>
+        Release prep workspaces
+        <span class="badge mx-2 {% if tables.2.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.2.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseReleasePrep" class="accordion-collapse collapse show" data-bs-parent="#accordionReleasePrep">
+      <div class="accordion-body">
+        {% render_table tables.2 %}
+      </div>
+    </div>
+  </div>
 </div>
 
-<h2>Partner upload workspaces</h2>
-<div class="container">
-  {% render_table tables.5 %}
+
+<div class="accordion mb-3" id="accordionPartner">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePartner" aria-expanded="true" aria-controls="collapsePartner">
+        <span class="fa-solid fa-handshake mx-2"></span>
+        Partner upload workspaces
+        <span class="badge mx-2 {% if tables.5.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.5.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapsePartner" class="accordion-collapse collapse show" data-bs-parent="#accordionPartner">
+      <div class="accordion-body">
+        {% render_table tables.5 %}
+      </div>
+    </div>
+  </div>
 </div>
+{% endif %}
 
 {% endblock after_panel %}
 
@@ -68,6 +159,7 @@
     </a>
   </p>
   {% endif %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
   <p>
   <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
     Audit upload workspace sharing
@@ -76,4 +168,5 @@
     Audit upload workspace auth domains
   </a>
   </p>
+{% endif %}
 {% endblock action_buttons %}
