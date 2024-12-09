@@ -1,0 +1,39 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load static %}
+
+{% load render_table from django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{workspace_type_display_name}}s{% endblock %}
+
+{% block content %}
+
+  <div class="row">
+    <div class="col-sm-12">
+
+      <h2>{{workspace_type_display_name}}s</h2>
+
+      <div>
+        <p>
+          This page lists all available workspaces that contain data tables combined across upload workspaces up to a given upload cycle.
+          Combined consortium data workspaces are accessible to all GREGoR members who are approved for reader access.
+          The most recent combined workspace is a good place to begin working with GREGoR data on AnVIL!
+        </p>
+        <p>
+          Learn more about <a href="https://gregorconsortium.org/members/research-home/gregor-consortium-data#accessing-consortium-data">Accessing Consortium Data</a>.
+        </p>
+
+      </div>
+
+      <div class="container pt-3">
+        {% crispy filter.form %}
+      </div>
+
+      {% render_table table %}
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock content %}

@@ -1,1 +1,54 @@
 {% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-3">
+    <header>
+      <div class="p-3 mx-auto text-center">
+        <h1 class="display-4 fw-normal text-body-emphasis">GREGoR AnVIL app</h1>
+        <p class="fs-5 text-body-secondary">
+          The GREGoR Consortium leverages the <a href="https://anvilproject.org/">NHGRI Analysis Visualization and Informatics Lab (AnVIL)</a> for rapid Consortium data sharing and release to the broader scientific community.
+          Consortium members upload data to workspaces on the AnVIL platform every calendar quarter (“upload cycle”).
+          Uploaded data are combined into a Consortium dataset after each upload cycle, and the dataset is shared with Consortium members.
+          The Data Coordinating Center (DCC) developed and utilizes this app, the AnVIL Consortium Manager,  to manage various workspace types that facilitate the data uploading process, as well as subsequent data processing and synthesis procedures.
+          More information about Consortium data, including how to access and how to get started with working with the data, can be found on the <a href="https://gregorconsortium.org/members/research-home/gregor-consortium-data">GREGoR website</a>.
+        </p>
+      </div>
+    </header>
+
+    <main>
+
+      <div class="row">
+        <div class="col d-flex align-items-stretch">
+          <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+                <h4 class="my-0 fw-normal"><i class="fa-solid fa-calendar pe-2"></i> Upload cycles</h4>
+            </div>
+            <div class="card-body pb-0">
+              <p>View the list of all GREGoR upload cycles to date.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+              <a type="button" class="btn btn-secondary" href="{% url 'gregor_anvil:upload_cycles:list' %}">View upload cycles</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col d-flex align-items-stretch">
+          <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+              <h4 class="my-0 fw-normal"><i class="fa-solid fa-computer pe-2"></i> Workspaces</h4>
+            </div>
+            <div class="card-body pb-0">
+              <p>Browse the current set of GREGoR workspaces on AnVIL.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+              <a type="button" class="btn btn-secondary" href="{% url 'anvil_consortium_manager:workspaces:landing_page' %}">View workspaces</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+</div>
+{% endblock content %}
