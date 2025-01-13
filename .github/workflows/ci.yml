@@ -91,7 +91,7 @@ jobs:
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run Django db config check
-        run: python manage.py check --database default
+        run: python manage.py check --database default --fail-level WARNING --settings=config.settings.test
 
       - name: Run tests
         run:  |
