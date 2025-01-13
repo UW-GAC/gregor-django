@@ -90,6 +90,9 @@ jobs:
       - name: Collect staticfiles
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
+      - name: Run Django db config check
+        run: python manage.py check --database default
+
       - name: Run tests
         run:  |
           pytest --cov=gregor_django -n auto
