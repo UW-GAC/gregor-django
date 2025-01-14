@@ -271,6 +271,12 @@ LOGGING = {
     "root": {"level": "DEBUG", "handlers": ["console"]},
 }
 
+# Django silence system check warnings. https://docs.djangoproject.com/en/5.1/ref/checks/#security
+# This check is regarding constraints placed by django-allauth
+# that mysql does not support. https://github.com/pennersr/django-allauth/issues/3385
+# we would need to move to postgres to support this type of constraint with filter
+SILENCED_SYSTEM_CHECKS = ["models.W036"]
+
 # django-maintenance-mode
 MAINTENANCE_MODE_IGNORE_SUPERUSER = True
 MAINTENANCE_MODE_IGNORE_TESTS = True

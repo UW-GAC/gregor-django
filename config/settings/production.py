@@ -3,7 +3,7 @@ import os
 # default to using dotenv files for all production environements
 os.environ["DJANGO_READ_DOT_ENV_FILE"] = "True"
 from .base import *  # noqa
-from .base import env  # noqa
+from .base import SILENCED_SYSTEM_CHECKS, env  # noqa
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool("DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", def
 # Since we have disabled HSTS above we get a warning when running check --deploy
 # we are manually silencing this as we have verified apache is enforcing
 # https://docs.djangoproject.com/en/dev/ref/checks/#security
-SILENCED_SYSTEM_CHECKS = ["security.W004"]
+SILENCED_SYSTEM_CHECKS += ["security.W004"]
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
