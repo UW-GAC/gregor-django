@@ -23,6 +23,7 @@ from freezegun import freeze_time
 from .. import models
 from ..audit import (
     combined_workspace_audit,
+    dcc_processed_data_workspace_audit,
     upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
@@ -10113,3 +10114,192 @@ class CombinedConsortiumWorkspaceSharingAuditAfterCompleteTest(TestCase):
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.OTHER_GROUP)
+
+
+class DCCProcessedDataWorkspaceSharingAuditTest(TestCase):
+    def test_completed(self):
+        """The completed attribute is set appropriately."""
+        # Instantiate the class.
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_workspaces(self):
+        """The audit works if there are no combined workspaces."""
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_no_groups(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_dcc_admin_group(self):
+        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_one_workspace_dcc_admin_group_different_name(self):
+        group = ManagedGroupFactory.create(name="foo")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_dcc_writer_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_dcc_member_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_anvil_admins(self):
+        ManagedGroupFactory.create(name="anvil-admins")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_anvil_devs(self):
+        ManagedGroupFactory.create(name="anvil_devs")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_auth_domain(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace_data.workspace.authorization_domains.first()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_other_group_shared(self):
+        group = ManagedGroupFactory.create()
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group=group)
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_other_group_not_shared(self):
+        ManagedGroupFactory.create()
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_two_workspaces(self):
+        """Audit works with two workspaces."""
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        results = audit.get_all_results()
+        self.assertEqual(len(results), 2)
+        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset."""
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        # First workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
+        # Second workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+                # wrong model type.
+                queryset=models.UploadWorkspace.objects.all()
+            )
