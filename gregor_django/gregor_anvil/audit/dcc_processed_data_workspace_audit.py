@@ -2,7 +2,7 @@ from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
-from ..models import DCCProcessedDataWorkspace
+from ..models import CombinedConsortiumDataWorkspace, DCCProcessedDataWorkspace
 from . import workspace_sharing_audit_results
 from .base import GREGoRAudit
 
@@ -50,15 +50,15 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
             current_sharing = None
         return current_sharing
 
-    # def _get_combined_workspace(self, upload_cycle):
-    #     """Returns the combined workspace, but only if it is ready for sharing."""
-    #     try:
-    #         combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
-    #             upload_cycle=upload_cycle, date_completed__isnull=False
-    #         )
-    #     except CombinedConsortiumDataWorkspace.DoesNotExist:
-    #         combined_workspace = None
-    #     return combined_workspace
+    def _get_combined_workspace(self, upload_cycle):
+        """Returns the combined workspace, but only if it is ready for sharing."""
+        try:
+            combined_workspace = CombinedConsortiumDataWorkspace.objects.get(
+                upload_cycle=upload_cycle, date_completed__isnull=False
+            )
+        except CombinedConsortiumDataWorkspace.DoesNotExist:
+            combined_workspace = None
+        return combined_workspace
 
     def audit_workspace(self, workspace_data):
         """Audit access for a specific DCCProcessedDataWorkspace."""
@@ -145,18 +145,34 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
         )
 
     def _audit_workspace_and_dcc_admin_group(self, workspace_data, managed_group):
-        """Audit access for a specific UploadWorkspace and the DCC admin group.
+        """Audit access for a specific DCCProcessedDataWorkspace and the DCC admin group.
 
         Sharing expectations:
         - Owner access at all times.
         """
-        self.verified.append(
-            workspace_sharing_audit_results.VerifiedNotShared(
-                note="foo",
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
+        current_sharing = self._get_current_sharing(workspace_data, managed_group)
+
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        note = self.DCC_ADMIN_AS_OWNER
+        if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
+            self.verified.append(
+                workspace_sharing_audit_results.VerifiedShared(
+                    note=note,
+                    **audit_result_args,
+                )
             )
-        )
+        else:
+            self.needs_action.append(
+                workspace_sharing_audit_results.ShareAsOwner(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
 
     def _audit_workspace_and_other_group(self, workspace_data, managed_group):
         """Audit access for a specific UploadWorkspace and other groups.
