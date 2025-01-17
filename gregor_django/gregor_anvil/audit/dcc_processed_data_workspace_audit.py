@@ -112,14 +112,61 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
         - Not direct member before combined workspace is complete.
         - Member after combined workspace is complete.
         """
-        self.verified.append(
-            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-                current_membership_instance=None,
-                note="foo",
-            )
-        )
+        current_membership = self._get_current_membership(workspace_data, managed_group)
+        combined_workspace = self._get_combined_workspace(workspace_data.upload_cycle)
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": current_membership,
+        }
+        if not combined_workspace or combined_workspace.date_completed is None:
+            note = self.GREGOR_ALL_BEFORE_COMBINED_COMPLETE
+            if current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+                self.needs_action.append(
+                    workspace_auth_domain_audit_results.Remove(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            elif current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(
+                    workspace_auth_domain_audit_results.Remove(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.verified.append(
+                    workspace_auth_domain_audit_results.VerifiedNotMember(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        elif combined_workspace and combined_workspace.date_completed:
+            note = self.GREGOR_ALL_AFTER_COMBINED_COMPLETE
+            if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+                self.errors.append(
+                    workspace_auth_domain_audit_results.ChangeToMember(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            elif current_membership:
+                self.verified.append(
+                    workspace_auth_domain_audit_results.VerifiedMember(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    workspace_auth_domain_audit_results.AddMember(
+                        note=note,
+                        **audit_result_args,
+                    )
+                )
+        else:
+            raise ValueError("No case matched.")
 
     def _audit_workspace_and_dcc_group(self, workspace_data, managed_group):
         """Audit the auth domain membership for a specific workspace and the AnVIL admins/devs groups.
