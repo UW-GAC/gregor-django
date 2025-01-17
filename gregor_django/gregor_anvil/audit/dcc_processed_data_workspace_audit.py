@@ -66,7 +66,6 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
         # This includes the members group for the RC, the DCC groups, GREGOR_ALL, and the auth domain.
         group_names_to_include = [
             "GREGOR_DCC_WRITERS",  # DCC writers
-            "GREGOR_DCC_MEMBERS",  # DCC members
             settings.ANVIL_DCC_ADMINS_GROUP_NAME,  # DCC admins
             # "anvil-admins",  # AnVIL admins
             # "anvil_devs",  # AnVIL devs
@@ -92,27 +91,12 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
             self._audit_workspace_and_auth_domain(workspace_data, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
             self._audit_workspace_and_dcc_admin_group(workspace_data, managed_group)
-        elif managed_group.name == "GREGOR_DCC_MEMBERS":
-            self._audit_workspace_and_dcc_member_group(workspace_data, managed_group)
         elif managed_group.name == "GREGOR_DCC_WRITERS":
             self._audit_workspace_and_dcc_writer_group(workspace_data, managed_group)
+        elif managed_group.name in ["anvil-admins", "anvil_devs"]:
+            self._audit_workspace_and_anvil_group(workspace_data, managed_group)
         else:
             self._audit_workspace_and_other_group(workspace_data, managed_group)
-
-    def _audit_workspace_and_dcc_member_group(self, workspace_data, managed_group):
-        """Audit access for a specific UploadWorkspace and the DCC writer group.
-
-        Sharing expectations:
-        - Write+compute access before combined workspace is ready.
-        - No direct access to after combined workspace is ready (read access via auth domain).
-        """
-        self.verified.append(
-            workspace_sharing_audit_results.VerifiedNotShared(
-                note="foo",
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-            )
-        )
 
     def _audit_workspace_and_dcc_writer_group(self, workspace_data, managed_group):
         """Audit access for a specific UploadWorkspace and the DCC writer group.
@@ -121,28 +105,103 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
         - Write+compute access before combined workspace is ready.
         - No direct access to after combined workspace is ready (read access via auth domain).
         """
-        self.verified.append(
-            workspace_sharing_audit_results.VerifiedNotShared(
-                note="foo",
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-            )
-        )
+        current_sharing = self._get_current_sharing(workspace_data, managed_group)
+        combined_workspace = self._get_combined_workspace(workspace_data.upload_cycle)
+        audit_results_arg = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        if not combined_workspace or combined_workspace.date_completed is None:
+            note = self.DCC_WRITERS_BEFORE_COMBINED_COMPLETE
+            if (
+                current_sharing
+                and current_sharing.access == WorkspaceGroupSharing.WRITER
+                and current_sharing.can_compute
+            ):
+                self.verified.append(
+                    workspace_sharing_audit_results.VerifiedShared(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+            elif current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
+                self.errors.append(
+                    workspace_sharing_audit_results.ShareWithCompute(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+            else:
+                self.needs_action.append(
+                    workspace_sharing_audit_results.ShareWithCompute(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+        elif combined_workspace and combined_workspace.date_completed:
+            note = self.DCC_WRITERS_AFTER_COMBINED_COMPLETE
+            if current_sharing and current_sharing.access == WorkspaceGroupSharing.OWNER:
+                self.errors.append(
+                    workspace_sharing_audit_results.StopSharing(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+            elif current_sharing:
+                self.needs_action.append(
+                    workspace_sharing_audit_results.StopSharing(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+            else:
+                self.verified.append(
+                    workspace_sharing_audit_results.VerifiedNotShared(
+                        note=note,
+                        **audit_results_arg,
+                    )
+                )
+        else:
+            raise ValueError("No case matched.")
 
     def _audit_workspace_and_auth_domain(self, workspace_data, managed_group):
         """Audit access for a specific DCCProcessedDataWorkspace and its auth domain.
 
         Sharing expectations:
-        - No access before the combined workspace is ready.
-        - Read access after the combined workspace is ready.
+        - Read access at all times.
         """
-        self.verified.append(
-            workspace_sharing_audit_results.VerifiedNotShared(
-                note="foo",
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
+        current_sharing = self._get_current_sharing(workspace_data, managed_group)
+
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        note = self.AUTH_DOMAIN_AS_READER
+        if current_sharing and current_sharing.access == WorkspaceGroupSharing.READER:
+            self.verified.append(
+                workspace_sharing_audit_results.VerifiedShared(
+                    note=note,
+                    **audit_result_args,
+                )
             )
-        )
+        elif current_sharing:
+            self.errors.append(
+                workspace_sharing_audit_results.ShareAsReader(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
+        else:
+            self.needs_action.append(
+                workspace_sharing_audit_results.ShareAsReader(
+                    note=note,
+                    **audit_result_args,
+                )
+            )
 
     def _audit_workspace_and_dcc_admin_group(self, workspace_data, managed_group):
         """Audit access for a specific DCCProcessedDataWorkspace and the DCC admin group.
@@ -173,6 +232,12 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
                     **audit_result_args,
                 )
             )
+
+    def _audit_workspace_and_anvil_group(self, upload_workspace, managed_group):
+        """Ignore the AnVIL groups in this audit.
+
+        We don't want to make assumptions about what access level AnVIL has."""
+        pass
 
     def _audit_workspace_and_other_group(self, workspace_data, managed_group):
         """Audit access for a specific UploadWorkspace and other groups.

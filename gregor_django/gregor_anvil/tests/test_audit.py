@@ -10182,34 +10182,20 @@ class DCCProcessedDataWorkspaceSharingAuditTest(TestCase):
         self.assertEqual(record.managed_group, group)
         self.assertNotEqual(record.note, audit.OTHER_GROUP)
 
-    def test_one_workspace_dcc_member_group(self):
-        group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
-        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
-        # Delete the auth domain to mimic having no other groups.
-        workspace_data.workspace.authorization_domains.clear()
-        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
-        audit.run_audit()
-        self.assertEqual(len(audit.get_all_results()), 1)
-        record = audit.get_all_results()[0]
-        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
-        self.assertEqual(record.workspace, workspace_data.workspace)
-        self.assertEqual(record.managed_group, group)
-        self.assertNotEqual(record.note, audit.OTHER_GROUP)
-
     def test_one_workspace_anvil_admins(self):
-        ManagedGroupFactory.create(name="anvil-admins")
         workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
         # Delete the auth domain to mimic having no other groups.
         workspace_data.workspace.authorization_domains.clear()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil-admins")
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
         audit.run_audit()
         self.assertEqual(len(audit.get_all_results()), 0)
 
     def test_one_workspace_anvil_devs(self):
-        ManagedGroupFactory.create(name="anvil_devs")
         workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
         # Delete the auth domain to mimic having no other groups.
         workspace_data.workspace.authorization_domains.clear()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil_devs")
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
         audit.run_audit()
         self.assertEqual(len(audit.get_all_results()), 0)
@@ -10431,16 +10417,107 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
         )
 
-    def test_dcc_writers(self):
-        self.fail("write tests")
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
 
-    def test_dcc_members(self):
-        self.fail("write tests")
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
 
     def test_anvil_groups(self):
-        self.fail("write tests")
-
-    def test_auth_domain(self):
         self.fail("write tests")
 
     def test_other_group(self):
@@ -10577,11 +10654,105 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
         )
 
-    def test_dcc_writers(self):
-        self.fail("write tests")
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
 
-    def test_dcc_members(self):
-        self.fail("write tests")
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
 
     def test_anvil_groups(self):
         self.fail("write tests")
@@ -10726,11 +10897,105 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
         )
 
-    def test_dcc_writers(self):
-        self.fail("write tests")
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
 
-    def test_dcc_members(self):
-        self.fail("write tests")
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
 
     def test_anvil_groups(self):
         self.fail("write tests")
