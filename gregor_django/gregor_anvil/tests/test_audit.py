@@ -10613,8 +10613,107 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
         )
 
-    def test_anvil_groups(self):
-        self.fail("write tests")
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_other_group(self):
         self.fail("write tests")
@@ -10946,8 +11045,107 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
         )
 
-    def test_anvil_groups(self):
-        self.fail("write tests")
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_other_group(self):
         self.fail("write tests")
@@ -11282,8 +11480,107 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
             record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
         )
 
-    def test_anvil_groups(self):
-        self.fail("write tests")
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_other_group(self):
         self.fail("write tests")
