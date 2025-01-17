@@ -1,10 +1,155 @@
-from anvil_consortium_manager.models import ManagedGroup, WorkspaceGroupSharing
+from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, DCCProcessedDataWorkspace
-from . import workspace_sharing_audit_results
+from . import workspace_auth_domain_audit_results, workspace_sharing_audit_results
 from .base import GREGoRAudit
+
+
+class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
+    """A class to run an audit on DCCProcessedDataWorkspace auth domain membership."""
+
+    DCC_ADMIN_AS_ADMIN = "The DCC admins group should always be an admin."
+    # DCC members.
+    DCC_GROUPS_BEFORE_COMBINED_COMPLETE = "DCC groups should be members before the combined workspace is ready."
+    DCC_GROUPS_AFTER_COMBINED_COMPLETE = (
+        "DCC groups should not be direct members after the combined workspace is ready."
+    )
+    # GREGOR_ALL
+    GREGOR_ALL_BEFORE_COMBINED_COMPLETE = "GREGOR_ALL should not be members before the combined workspace is ready."
+    GREGOR_ALL_AFTER_COMBINED_COMPLETE = "GREGOR_ALL should be members after the combined workspace is ready."
+    # Other groups.
+    OTHER_GROUP = "This group should not have access to this workspace."
+
+    results_table_class = "foo"
+
+    def __init__(self, queryset=None):
+        super().__init__()
+        if queryset is None:
+            queryset = DCCProcessedDataWorkspace.objects.all()
+        elif not (isinstance(queryset, QuerySet) and queryset.model == DCCProcessedDataWorkspace):
+            raise ValueError("queryset must be a QuerySet of DCCProcessedDataWorkspace objects.")
+        self.queryset = queryset
+
+    def _run_audit(self):
+        for workspace in self.queryset:
+            self.audit_workspace(workspace)
+
+    def _get_current_membership(self, workspace_data, managed_group):
+        try:
+            current_membership = GroupGroupMembership.objects.get(
+                parent_group=workspace_data.workspace.authorization_domains.first(), child_group=managed_group
+            )
+        except GroupGroupMembership.DoesNotExist:
+            current_membership = None
+        return current_membership
+
+    def audit_workspace(self, workspace_data):
+        """Audit the auth domain membership of a single CombinedWorkspace."""
+        group_names = [
+            "GREGOR_ALL",
+            "GREGOR_DCC_MEMBERS",
+            "GREGOR_DCC_WRITERS",
+            settings.ANVIL_DCC_ADMINS_GROUP_NAME,
+        ]
+        groups_to_audit = ManagedGroup.objects.filter(
+            # Specific groups to include.
+            Q(name__in=group_names)
+            |
+            # Any other groups that are members.
+            Q(parent_memberships__parent_group=workspace_data.workspace.authorization_domains.first())
+        ).distinct()
+
+        for group in groups_to_audit:
+            self.audit_workspace_and_group(workspace_data, group)
+
+    def audit_workspace_and_group(self, workspace_data, managed_group):
+        if managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
+            self._audit_workspace_and_dcc_admin_group(workspace_data, managed_group)
+        elif managed_group.name in ["GREGOR_DCC_MEMBERS", "GREGOR_DCC_WRITERS"]:
+            self._audit_workspace_and_dcc_group(workspace_data, managed_group)
+        elif managed_group.name == "GREGOR_ALL":
+            self._audit_workspace_and_gregor_all_group(workspace_data, managed_group)
+        elif managed_group.name in ["anvil-admins", "anvil_devs"]:
+            self._audit_workspace_and_anvil_group(workspace_data, managed_group)
+        else:
+            self._audit_workspace_and_other_group(workspace_data, managed_group)
+
+    def _audit_workspace_and_dcc_admin_group(self, workspace_data, managed_group):
+        """Audit the auth domain membership for a specific workspace and the DCC admins group.
+
+        Expectations:
+        - Admin at all times.
+        """
+        self.verified.append(
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+                workspace=workspace_data.workspace,
+                managed_group=managed_group,
+                current_membership_instance=None,
+                note="foo",
+            )
+        )
+
+    def _audit_workspace_and_gregor_all_group(self, workspace_data, managed_group):
+        """Audit the auth domain membership for a specific workspace and the GREGOR_ALL group.
+
+        Expectations:
+        - Not direct member before combined workspace is complete.
+        - Member after combined workspace is complete.
+        """
+        self.verified.append(
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+                workspace=workspace_data.workspace,
+                managed_group=managed_group,
+                current_membership_instance=None,
+                note="foo",
+            )
+        )
+
+    def _audit_workspace_and_dcc_group(self, workspace_data, managed_group):
+        """Audit the auth domain membership for a specific workspace and the AnVIL admins/devs groups.
+
+        Expectations:
+        - Member before combined workspace is complete.
+        - Not direct member after combined workspace is complete.
+        """
+        self.verified.append(
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+                workspace=workspace_data.workspace,
+                managed_group=managed_group,
+                current_membership_instance=None,
+                note="foo",
+            )
+        )
+
+    def _audit_workspace_and_anvil_group(self, workspace_data, managed_group):
+        """Audit the auth domain membership for a specific workspace and the AnVIL admins/devs groups.
+
+        We do not want to make any assumptions about the access of these groups."""
+        self.verified.append(
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+                workspace=workspace_data.workspace,
+                managed_group=managed_group,
+                current_membership_instance=None,
+                note="foo",
+            )
+        )
+
+    def _audit_workspace_and_other_group(self, workspace_data, managed_group):
+        """Audit the auth domain membership for a specific workspace and any other group.
+
+        Expectations:
+        - Not a member at any time.
+        """
+        self.verified.append(
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+                workspace=workspace_data.workspace,
+                managed_group=managed_group,
+                current_membership_instance=None,
+                note="foo",
+            )
+        )
 
 
 class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
