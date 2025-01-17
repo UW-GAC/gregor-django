@@ -12126,8 +12126,63 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
     def test_gregor_all(self):
         self.fail()
 
-    def test_other_group(self):
-        self.fail()
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
 
 
 class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
@@ -12236,8 +12291,63 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
     def test_gregor_all(self):
         self.fail()
 
-    def test_other_group(self):
-        self.fail()
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
 
 
 class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
@@ -12352,5 +12462,60 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
     def test_gregor_all(self):
         self.fail()
 
-    def test_other_group(self):
-        self.fail()
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )

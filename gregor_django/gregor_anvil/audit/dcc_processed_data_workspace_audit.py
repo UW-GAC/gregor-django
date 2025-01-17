@@ -148,14 +148,18 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
         Expectations:
         - Not a member at any time.
         """
-        self.verified.append(
-            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-                current_membership_instance=None,
-                note="foo",
-            )
-        )
+        current_membership = self._get_current_membership(workspace_data, managed_group)
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": current_membership,
+            "note": self.OTHER_GROUP,
+        }
+
+        if current_membership:
+            self.errors.append(workspace_auth_domain_audit_results.Remove(**audit_result_args))
+        else:
+            self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(**audit_result_args))
 
 
 class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
