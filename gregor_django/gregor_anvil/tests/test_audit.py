@@ -12117,11 +12117,67 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
     def test_dcc_members(self):
         self.fail()
 
-    def test_anvil_admins(self):
-        self.fail()
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
-    def test_anvil_devs(self):
-        self.fail()
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_gregor_all(self):
         self.fail()
@@ -12282,11 +12338,67 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
     def test_dcc_members(self):
         self.fail()
 
-    def test_anvil_admins(self):
-        self.fail()
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
-    def test_anvil_devs(self):
-        self.fail()
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_gregor_all(self):
         self.fail()
@@ -12453,11 +12565,67 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
     def test_dcc_members(self):
         self.fail()
 
-    def test_anvil_admins(self):
-        self.fail()
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
-    def test_anvil_devs(self):
-        self.fail()
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
 
     def test_gregor_all(self):
         self.fail()

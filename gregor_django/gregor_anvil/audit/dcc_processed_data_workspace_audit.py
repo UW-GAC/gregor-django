@@ -133,14 +133,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
         """Audit the auth domain membership for a specific workspace and the AnVIL admins/devs groups.
 
         We do not want to make any assumptions about the access of these groups."""
-        self.verified.append(
-            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-                current_membership_instance=None,
-                note="foo",
-            )
-        )
+        pass
 
     def _audit_workspace_and_other_group(self, workspace_data, managed_group):
         """Audit the auth domain membership for a specific workspace and any other group.
