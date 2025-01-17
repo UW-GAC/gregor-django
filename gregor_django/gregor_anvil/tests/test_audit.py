@@ -11850,7 +11850,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         )
 
 
-class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
+class Test(TestCase):
     def test_completed(self):
         """The completed attribute is set appropriately."""
         # Instantiate the class.
@@ -12017,3 +12017,340 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
                 # wrong model type.
                 queryset=models.UploadWorkspace.objects.all()
             )
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
+    """Tests for the `UploadWorkspaceAuthDomainAudit` class for future cycle UploadWorkspaces."""
+
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # No combined workspace.
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers(self):
+        self.fail()
+
+    def test_dcc_members(self):
+        self.fail()
+
+    def test_anvil_admins(self):
+        self.fail()
+
+    def test_anvil_devs(self):
+        self.fail()
+
+    def test_gregor_all(self):
+        self.fail()
+
+    def test_other_group(self):
+        self.fail()
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Combined workspace that is not ready.
+        factories.CombinedConsortiumDataWorkspaceFactory(upload_cycle=self.workspace_data.upload_cycle)
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers(self):
+        self.fail()
+
+    def test_dcc_members(self):
+        self.fail()
+
+    def test_anvil_admins(self):
+        self.fail()
+
+    def test_anvil_devs(self):
+        self.fail()
+
+    def test_gregor_all(self):
+        self.fail()
+
+    def test_other_group(self):
+        self.fail()
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Combined workspace that is not ready.
+        self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.workspace_data.upload_cycle,
+            date_completed=fake.date_this_year(
+                before_today=True,
+                after_today=False,
+            ),
+        )
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers(self):
+        self.fail()
+
+    def test_dcc_members(self):
+        self.fail()
+
+    def test_anvil_admins(self):
+        self.fail()
+
+    def test_anvil_devs(self):
+        self.fail()
+
+    def test_gregor_all(self):
+        self.fail()
+
+    def test_other_group(self):
+        self.fail()

@@ -10,7 +10,7 @@ from .base import GREGoRAudit
 class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
     """A class to run an audit on DCCProcessedDataWorkspace auth domain membership."""
 
-    DCC_ADMIN_AS_ADMIN = "The DCC admins group should always be an admin."
+    DCC_ADMINS = "The DCC admins group should always be an admin."
     # DCC members.
     DCC_GROUPS_BEFORE_COMBINED_COMPLETE = "DCC groups should be members before the combined workspace is ready."
     DCC_GROUPS_AFTER_COMBINED_COMPLETE = (
@@ -82,14 +82,20 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
         Expectations:
         - Admin at all times.
         """
-        self.verified.append(
-            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
-                current_membership_instance=None,
-                note="foo",
-            )
-        )
+        current_membership = self._get_current_membership(workspace_data, managed_group)
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_membership_instance": current_membership,
+            "note": self.DCC_ADMINS,
+        }
+
+        if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+            self.verified.append(workspace_auth_domain_audit_results.VerifiedAdmin(**audit_result_args))
+        elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+            self.needs_action.append(workspace_auth_domain_audit_results.ChangeToAdmin(**audit_result_args))
+        else:
+            self.needs_action.append(workspace_auth_domain_audit_results.AddAdmin(**audit_result_args))
 
     def _audit_workspace_and_gregor_all_group(self, workspace_data, managed_group):
         """Audit the auth domain membership for a specific workspace and the GREGOR_ALL group.
