@@ -245,10 +245,25 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
         Sharing expectations:
         - No access.
         """
-        self.verified.append(
-            workspace_sharing_audit_results.VerifiedNotShared(
-                note=self.OTHER_GROUP,
-                workspace=workspace_data.workspace,
-                managed_group=managed_group,
+        current_sharing = self._get_current_sharing(workspace_data, managed_group)
+
+        audit_result_args = {
+            "workspace": workspace_data.workspace,
+            "managed_group": managed_group,
+            "current_sharing_instance": current_sharing,
+        }
+
+        if not current_sharing:
+            self.verified.append(
+                workspace_sharing_audit_results.VerifiedNotShared(
+                    note=self.OTHER_GROUP,
+                    **audit_result_args,
+                )
             )
-        )
+        else:
+            self.errors.append(
+                workspace_sharing_audit_results.StopSharing(
+                    note=self.OTHER_GROUP,
+                    **audit_result_args,
+                )
+            )
