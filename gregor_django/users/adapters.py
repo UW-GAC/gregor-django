@@ -32,7 +32,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_info] user {user} " f"name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_info] user {user} name updated from {user.name} to {full_name}"
             )
             user.name = full_name
             user_changed = True
@@ -94,7 +94,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             if existing_pg not in partner_group_object_list:
                 user.partner_groups.remove(existing_pg)
                 logger.info(
-                    "[SocialAccountAdapter:update_user_partner_groups] " f"removing pg {existing_pg} for user {user}"
+                    f"[SocialAccountAdapter:update_user_partner_groups] removing pg {existing_pg} for user {user}"
                 )
 
     def update_user_research_centers(self, user, extra_data: Dict):
@@ -139,7 +139,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             if existing_rc not in research_center_object_list:
                 user.research_centers.remove(existing_rc)
                 logger.info(
-                    "[SocialAccountAdatpter:update_user_research_centers] " f"removing rc {existing_rc} for user {user}"
+                    f"[SocialAccountAdatpter:update_user_research_centers] removing rc {existing_rc} for user {user}"
                 )
 
     def update_user_groups(self, user, extra_data: Dict):
