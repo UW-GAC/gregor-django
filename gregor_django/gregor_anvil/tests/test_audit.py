@@ -11850,7 +11850,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         )
 
 
-class Test(TestCase):
+class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
     def test_completed(self):
         """The completed attribute is set appropriately."""
         # Instantiate the class.
