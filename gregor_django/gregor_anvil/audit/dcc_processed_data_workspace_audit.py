@@ -1,8 +1,10 @@
+import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup, WorkspaceGroupSharing
 from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from ..models import CombinedConsortiumDataWorkspace, DCCProcessedDataWorkspace
+from ..tables import BooleanIconColumn
 from . import workspace_auth_domain_audit_results, workspace_sharing_audit_results
 from .base import GREGoRAudit
 
@@ -258,6 +260,23 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
             self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(**audit_result_args))
 
 
+class DCCProcessedDataWorkspaceSharingAuditTable(tables.Table):
+    """A table to display the audit results of the sharing of a combined consortium data workspace."""
+
+    workspace = tables.Column(linkify=True)
+    managed_group = tables.Column(linkify=True)
+    access = tables.Column(verbose_name="Current access")
+    can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="black", false_color="black")
+    note = tables.Column()
+    # action = tables.TemplateColumn(
+    #     template_name="gregor_anvil/snippets/combinedconsortiumdataworkspace_sharing_audit_action_button.html"
+    # )
+    action = tables.Column()
+
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
+
 class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
     """A class to hold audit results for the GREGoR DCCProcessedDataWorkspace audit."""
 
@@ -280,7 +299,7 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
     # Other groups.
     OTHER_GROUP = "This group should not have access to this workspace."
 
-    results_table_class = "foo"
+    results_table_class = DCCProcessedDataWorkspaceSharingAuditTable
 
     def __init__(self, queryset=None):
         super().__init__()

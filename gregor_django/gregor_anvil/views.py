@@ -21,6 +21,7 @@ from gregor_django.users.tables import UserTable
 from . import forms, models, tables, viewmixins
 from .audit import (
     combined_workspace_audit,
+    dcc_processed_data_workspace_audit,
     upload_workspace_audit,
 )
 
@@ -577,3 +578,16 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
+
+
+class DCCProcessedDataWorkspaceSharingAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
+    """View to audit UploadWorkspace sharing for all UploadWorkspaces."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit.html"
+
+    def run_audit(self, **kwargs):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        return audit
