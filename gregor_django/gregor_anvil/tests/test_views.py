@@ -1156,6 +1156,14 @@ class UploadCycleDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
         )
+        self.assertNotContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -1171,6 +1179,14 @@ class UploadCycleDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
         )
 
     def test_links_staff_edit_user(self):
@@ -1190,6 +1206,14 @@ class UploadCycleDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
         )
 
     def test_includes_date_ready_for_compute(self):
