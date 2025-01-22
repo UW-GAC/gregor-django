@@ -9,6 +9,22 @@ from . import workspace_auth_domain_audit_results, workspace_sharing_audit_resul
 from .base import GREGoRAudit
 
 
+class DCCProcessedDataWorkspaceAuthDomainAuditTable(tables.Table):
+    """A table to display the audit results of the sharing of a combined consortium data workspace."""
+
+    workspace = tables.Column(verbose_name="Workspace")
+    managed_group = tables.Column(verbose_name="Group")
+    role = tables.Column(verbose_name="Current role")
+    note = tables.Column()
+    # action = tables.TemplateColumn(
+    #     template_name="gregor_anvil/snippets/dccprocesseddataworkspace_auth_domain_audit_action_button.html"
+    # )
+    action = tables.Column()
+
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
+
 class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
     """A class to run an audit on DCCProcessedDataWorkspace auth domain membership."""
 
@@ -22,7 +38,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
     # Other groups.
     OTHER_GROUP = "This group should not have access to this workspace."
 
-    results_table_class = "foo"
+    results_table_class = DCCProcessedDataWorkspaceAuthDomainAuditTable
 
     def __init__(self, queryset=None):
         super().__init__()

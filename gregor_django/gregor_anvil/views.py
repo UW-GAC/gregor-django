@@ -693,3 +693,16 @@ class DCCProcessedDataWorkspaceSharingAuditResolve(
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
+
+
+class DCCProcessedDataWorkspaceAuthDomainAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
+    """View to audit auth domain membership for all DCCProcessedDataWorkspaces."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_auth_domain_audit.html"
+
+    def run_audit(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        return audit
