@@ -153,11 +153,11 @@ dcc_processed_data_workspace_sharing_audit_patterns = (
         #     views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view(),
         #     name="by_upload_cycle",
         # ),
-        # path(
-        #     "<slug:billing_project_slug>/<slug:workspace_slug>/",
-        #     views.DCCProcessedDataWorkspaceSharingAuditByWorkspace.as_view(),
-        #     name="by_workspace",
-        # ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.DCCProcessedDataWorkspaceSharingAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
     ],
     "sharing",
 )
