@@ -625,3 +625,34 @@ class DCCProcessedDataWorkspaceSharingAuditByWorkspace(
         )
         audit.run_audit()
         return audit
+
+
+class DCCProcessedDataWorkspaceSharingAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit sharing for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        cycle = self.kwargs.get("cycle", None)
+        queryset = self.model.objects.filter(cycle=cycle)
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self, **kwargs):
+        # Run the audit.
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(upload_cycle=self.object)
+        )
+        audit.run_audit()
+        return audit

@@ -148,11 +148,11 @@ dcc_processed_data_workspace_sharing_audit_patterns = (
         #     views.DCCProcessedDataWorkspaceSharingAuditResolve.as_view(),
         #     name="resolve",
         # ),
-        # path(
-        #     "upload_cycle/<int:cycle>/",
-        #     views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view(),
-        #     name="by_upload_cycle",
-        # ),
+        path(
+            "upload_cycle/<int:cycle>/",
+            views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view(),
+            name="by_upload_cycle",
+        ),
         path(
             "<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.DCCProcessedDataWorkspaceSharingAuditByWorkspace.as_view(),

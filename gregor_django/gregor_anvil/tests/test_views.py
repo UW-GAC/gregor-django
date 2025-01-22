@@ -12071,4 +12071,314 @@ class DCCProcessedDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin
             )
         )
         self.assertContains(response, str(self.workspace))
-        # self.assertNotIn("all upload workspaces", response.content.decode().lower())
+        # self.assertNotIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAuditByUploadCycle view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.upload_cycle = factories.UploadCycleFactory.create(is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(self.upload_cycle.cycle + 1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.upload_cycle.cycle + 1),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cycle=self.upload_cycle.cycle)
+
+    def test_invalid_upload_cycle(self):
+        """Raises a 404 error with an invalid upload cycle."""
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cycle=self.upload_cycle.cycle + 1)
+
+    def test_context_audit_results_no_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_audit_results_ignores_other_upload_cycles(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__cycle=self.upload_cycle.cycle + 1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+        self.assertNotIn(workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=group, access=acm_models.WorkspaceGroupSharing.OWNER
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+        )
+        factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        # Change upload workspace end dates so it's in the past.
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertContains(response, str(self.upload_cycle))
+        self.assertNotIn("all dcc processed data workspaces", response.content.decode().lower())
