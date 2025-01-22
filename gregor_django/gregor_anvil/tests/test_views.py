@@ -11790,7 +11790,37 @@ class DCCProcessedDataWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase)
 
     def test_context_link_to_resolve_view(self):
         """The link to the resolve view is in the context."""
-        self.fail()
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
 
     def test_title(self):
         self.client.force_login(self.user)
@@ -12126,7 +12156,37 @@ class DCCProcessedDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin
 
     def test_context_link_to_resolve_view(self):
         """The link to the resolve view is in the context."""
-        self.fail()
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
 
     def test_title(self):
         self.client.force_login(self.user)
@@ -12442,6 +12502,39 @@ class DCCProcessedDataWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMix
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
 
     def test_title(self):
         self.client.force_login(self.user)

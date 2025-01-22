@@ -268,10 +268,9 @@ class DCCProcessedDataWorkspaceSharingAuditTable(tables.Table):
     access = tables.Column(verbose_name="Current access")
     can_compute = BooleanIconColumn(show_false_icon=True, null=True, true_color="black", false_color="black")
     note = tables.Column()
-    # action = tables.TemplateColumn(
-    #     template_name="gregor_anvil/snippets/combinedconsortiumdataworkspace_sharing_audit_action_button.html"
-    # )
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="gregor_anvil/snippets/dccprocesseddataworkspace_sharing_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
