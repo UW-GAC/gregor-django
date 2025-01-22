@@ -2673,6 +2673,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -2687,6 +2701,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
     def test_links_staff_edit_user(self):
@@ -2704,6 +2732,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
 
