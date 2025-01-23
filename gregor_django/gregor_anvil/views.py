@@ -740,3 +740,32 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace(
         )
         audit.run_audit()
         return audit
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit auth domain memberhsip for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_auth_domain_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        # Filter the queryset based on kwargs.
+        cycle = self.kwargs.get("cycle", None)
+        queryset = self.model.objects.filter(cycle=cycle)
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self, **kwargs):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(upload_cycle=self.object)
+        )
+        audit.run_audit()
+        return audit
