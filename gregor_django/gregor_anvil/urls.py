@@ -165,11 +165,11 @@ dcc_processed_data_workspace_sharing_audit_patterns = (
 dcc_processed_data_workspace_auth_domain_audit_patterns = (
     [
         path("all/", views.DCCProcessedDataWorkspaceAuthDomainAudit.as_view(), name="all"),
-        # path(
-        #     "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
-        #     views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.as_view(),
-        #     name="resolve",
-        # ),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.as_view(),
+            name="resolve",
+        ),
         path(
             "upload_cycle/<int:cycle>/",
             views.DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle.as_view(),
