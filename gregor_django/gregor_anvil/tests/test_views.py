@@ -13747,6 +13747,38 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
     def test_title(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -14131,6 +14163,42 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
     def test_title(self):
         self.client.force_login(self.user)
         response = self.client.get(
@@ -14482,6 +14550,38 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
 
     def test_title(self):
         self.client.force_login(self.user)

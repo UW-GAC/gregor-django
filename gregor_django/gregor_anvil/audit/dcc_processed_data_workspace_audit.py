@@ -16,10 +16,9 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTable(tables.Table):
     managed_group = tables.Column(verbose_name="Group")
     role = tables.Column(verbose_name="Current role")
     note = tables.Column()
-    # action = tables.TemplateColumn(
-    #     template_name="gregor_anvil/snippets/dccprocesseddataworkspace_auth_domain_audit_action_button.html"
-    # )
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="gregor_anvil/snippets/dccprocesseddataworkspace_auth_domain_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
