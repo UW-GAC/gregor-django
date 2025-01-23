@@ -175,11 +175,11 @@ dcc_processed_data_workspace_auth_domain_audit_patterns = (
         #     views.DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle.as_view(),
         #     name="by_upload_cycle",
         # ),
-        # path(
-        #     "<slug:billing_project_slug>/<slug:workspace_slug>/",
-        #     views.DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
-        #     name="by_workspace",
-        # ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
     ],
     "auth_domains",
 )
