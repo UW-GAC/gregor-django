@@ -15,7 +15,7 @@ django>=4.2.15,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
 # Read from .env files
 # Note that django-environ 0.11+ introduces a bug where secret keys are truncated if they have a #
 # https://github.com/joke2k/django-environ/issues/497
-django-environ<0.11.0  # https://github.com/joke2k/django-environ
+django-environ<0.13.0  # https://github.com/joke2k/django-environ
 # Turn on and off maintenance mode
 # 0.21.1 fixes a bug with permissions of the maintenance mode file.
 django-maintenance-mode>=0.21.1 # https://github.com/fabiocaccamo/django-maintenance-mode

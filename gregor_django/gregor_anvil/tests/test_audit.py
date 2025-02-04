@@ -23,6 +23,7 @@ from freezegun import freeze_time
 from .. import models
 from ..audit import (
     combined_workspace_audit,
+    dcc_processed_data_workspace_audit,
     upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
@@ -653,6 +654,17 @@ class WorkspaceSharingAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(instance.handled)
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
 
+    def test_handle_not_implemented(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        result = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
+            workspace=workspace,
+            managed_group=group,
+            note="foo",
+        )
+        with self.assertRaises(NotImplementedError):
+            result.handle()
+
 
 class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
     """General tests of the WorkspaceAuthDomainAuditResult dataclasses."""
@@ -882,6 +894,17 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         instance.handle()
         self.assertTrue(instance.handled)
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_handle_not_implemented(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        result = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+            workspace=workspace,
+            managed_group=group,
+            note="foo",
+        )
+        with self.assertRaises(NotImplementedError):
+            result.handle()
 
     def test_member_as_admin(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
@@ -10113,3 +10136,3098 @@ class CombinedConsortiumWorkspaceSharingAuditAfterCompleteTest(TestCase):
         self.assertEqual(record.managed_group, self.other_group)
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(record.note, combined_workspace_audit.CombinedConsortiumDataWorkspaceSharingAudit.OTHER_GROUP)
+
+
+class DCCProcessedDataWorkspaceSharingAuditTest(TestCase):
+    def test_completed(self):
+        """The completed attribute is set appropriately."""
+        # Instantiate the class.
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_workspaces(self):
+        """The audit works if there are no combined workspaces."""
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_no_groups(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_dcc_admin_group(self):
+        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_one_workspace_dcc_admin_group_different_name(self):
+        group = ManagedGroupFactory.create(name="foo")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_dcc_writer_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_anvil_admins(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil-admins")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_anvil_devs(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil_devs")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_auth_domain(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace_data.workspace.authorization_domains.first()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_other_group_shared(self):
+        group = ManagedGroupFactory.create()
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group=group)
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_other_group_not_shared(self):
+        ManagedGroupFactory.create()
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Delete the auth domain to mimic having no other groups.
+        workspace_data.workspace.authorization_domains.clear()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_two_workspaces(self):
+        """Audit works with two workspaces."""
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        results = audit.get_all_results()
+        self.assertEqual(len(results), 2)
+        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset."""
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        # First workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
+        # Second workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+                # wrong model type.
+                queryset=models.UploadWorkspace.objects.all()
+            )
+
+
+class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
+    """Tests for the `DCCProcessedDataWorkspaceSharingAudit` class before the combined workspace exists."""
+
+    def setUp(self):
+        super().setUp()
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # No combined workspace.
+
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_auth_domain_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.auth_domain,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_other_group_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.other_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+
+class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
+    """Tests for the `DCCProcessedDataWorkspaceSharingAudit` class before the combined workspace is ready."""
+
+    def setUp(self):
+        super().setUp()
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Create a corresponding combined workspace.
+        self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.workspace_data.upload_cycle,
+            date_completed=None,
+        )
+
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_auth_domain_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.auth_domain,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_other_group_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.other_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+
+class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
+    """Tests for the `DCCProcessedDataWorkspaceSharingAudit` class after the combined workspace is ready."""
+
+    def setUp(self):
+        super().setUp()
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Create a corresponding combined workspace.
+        self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.workspace_data.upload_cycle,
+            date_completed=fake.date_this_year(
+                before_today=True,
+                after_today=False,
+            ),
+        )
+
+    def test_dcc_admin_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_admin_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_admin_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_admin_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_dcc_admin_different_setting(self):
+        group = ManagedGroupFactory.create(name="foo")
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER
+        )
+
+    def test_dcc_writers_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.dcc_writer_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_dcc_writers_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.dcc_writer_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_auth_domain_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.auth_domain,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_auth_domain_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.auth_domain, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.auth_domain)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.auth_domain)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER
+        )
+
+    def test_anvil_admins_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_admins,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_admins, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_writer_can_compute(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.anvil_devs,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_reader(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_shared_as_owner(self):
+        WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.anvil_devs, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_other_group_shared_as_writer_no_compute(self):
+        # Share the workspace with the group.
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.WRITER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_not_shared(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, None)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_writer_can_compute(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace,
+            group=self.other_group,
+            access=WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_reader(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.READER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+    def test_other_group_shared_as_owner(self):
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace_data.workspace, group=self.other_group, access=WorkspaceGroupSharing.OWNER
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, workspace_sharing_audit_results.StopSharing)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_sharing_instance, sharing)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP
+        )
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
+    def test_completed(self):
+        """The completed attribute is set appropriately."""
+        # Instantiate the class.
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_workspaces(self):
+        """The audit works if there are no combined workspaces."""
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_no_groups(self):
+        factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_dcc_admin_group(self):
+        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foo")
+    def test_one_workspace_dcc_admin_group_different_name(self):
+        group = ManagedGroupFactory.create(name="foo")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_dcc_writer_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_dcc_member_group(self):
+        group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertNotEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_anvil_admins(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil-admins")
+        factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_anvil_devs(self):
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace_data.workspace, group__name="anvil_devs")
+        factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_one_workspace_other_group_shared(self):
+        group = ManagedGroupFactory.create()
+        workspace_data = factories.DCCProcessedDataWorkspaceFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace_data.workspace.authorization_domains.first(), child_group=group
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertEqual(record.note, audit.OTHER_GROUP)
+
+    def test_one_workspace_other_group_not_shared(self):
+        ManagedGroupFactory.create()
+        factories.DCCProcessedDataWorkspaceFactory.create()
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 0)
+
+    def test_two_workspaces(self):
+        """Audit works with two workspaces."""
+        group = ManagedGroupFactory.create()
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace_data_1.workspace.authorization_domains.first(), child_group=group
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace_data_2.workspace.authorization_domains.first(), child_group=group
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        results = audit.get_all_results()
+        self.assertEqual(len(results), 2)
+        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, group)
+        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset."""
+        group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace_data_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_data_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        # First workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data_1.workspace)
+        self.assertEqual(record.managed_group, group)
+        # Second workspace
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(pk=workspace_data_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.get_all_results()), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
+        self.assertEqual(record.workspace, workspace_data_2.workspace)
+        self.assertEqual(record.managed_group, group)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+                # wrong model type.
+                queryset=models.UploadWorkspace.objects.all()
+            )
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
+    """Tests for the `UploadWorkspaceAuthDomainAudit` class for future cycle UploadWorkspaces."""
+
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # No combined workspace.
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_gregor_all_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Combined workspace that is not ready.
+        factories.CombinedConsortiumDataWorkspaceFactory(upload_cycle=self.workspace_data.upload_cycle)
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_gregor_all_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.dcc_member_group = ManagedGroupFactory.create(name="GREGOR_DCC_MEMBERS")
+        self.dcc_writer_group = ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.dcc_admin_group = ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.gregor_all_group = ManagedGroupFactory.create(name="GREGOR_ALL")
+        self.workspace_data = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_current=True)
+        self.auth_domain = self.workspace_data.workspace.authorization_domains.get()
+        self.other_group = ManagedGroupFactory.create()
+        self.anvil_admins = ManagedGroupFactory.create(name="anvil-admins")
+        self.anvil_devs = ManagedGroupFactory.create(name="anvil_devs")
+        # Combined workspace that is not ready.
+        self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.workspace_data.upload_cycle,
+            date_completed=fake.date_this_year(
+                before_today=True,
+                after_today=False,
+            ),
+        )
+
+    def test_dcc_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_admins_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_admin_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_admin_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
+    def test_dcc_admins_different_setting(self):
+        group = ManagedGroupFactory.create(name="foobar")
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS
+        )
+
+    def test_dcc_writers_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_writers_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_writer_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_writer_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_dcc_members_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.dcc_member_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.dcc_member_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+
+    def test_anvil_admins_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_admins_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_admins,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_member(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_anvil_devs_admin(self):
+        GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.anvil_devs,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_gregor_all_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_gregor_all_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.gregor_all_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.gregor_all_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_other_group_not_member(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertIsNone(record.current_membership_instance)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_member(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )
+
+    def test_other_group_admin(self):
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.workspace_data.workspace.authorization_domains.first(),
+            child_group=self.other_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.audit_workspace_and_group(self.workspace_data, self.other_group)
+        audit.completed = True
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.get_all_results()[0]
+        self.assertIsInstance(record, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(record.workspace, self.workspace_data.workspace)
+        self.assertEqual(record.managed_group, self.other_group)
+        self.assertEqual(record.current_membership_instance, membership)
+        self.assertEqual(
+            record.note, dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP
+        )

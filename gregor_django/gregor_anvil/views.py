@@ -21,6 +21,7 @@ from gregor_django.users.tables import UserTable
 from . import forms, models, tables, viewmixins
 from .audit import (
     combined_workspace_audit,
+    dcc_processed_data_workspace_audit,
     upload_workspace_audit,
 )
 
@@ -572,6 +573,234 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(
 
     def get_audit_result(self):
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
+        # No way to set the group queryset, since it is dynamically determined by the workspace.
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+
+class DCCProcessedDataWorkspaceSharingAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
+    """View to audit UploadWorkspace sharing for all UploadWorkspaces."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit.html"
+
+    def run_audit(self, **kwargs):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceSharingAuditByWorkspace(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit sharing for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit.html"
+    model = models.DCCProcessedDataWorkspace
+
+    def get_object(self, queryset=None):
+        """Look up the DCCProcessedDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.DCCProcessedDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self, **kwargs):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=self.model.objects.filter(pk=self.object.pk)
+        )
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceSharingAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit sharing for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        cycle = self.kwargs.get("cycle", None)
+        queryset = self.model.objects.filter(cycle=cycle)
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self, **kwargs):
+        # Run the audit.
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(upload_cycle=self.object)
+        )
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceSharingAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
+    """View to resolve DCCProcessedDataWorkspace audit results."""
+
+    form_class = Form
+    template_name = "gregor_anvil/dccprocesseddataworkspace_sharing_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_workspace_data_object(self):
+        """Look up the UploadWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.DCCProcessedDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit()
+        # No way to set the group queryset, since it is dynamically determined by the workspace.
+        audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+
+class DCCProcessedDataWorkspaceAuthDomainAudit(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, TemplateView
+):
+    """View to audit auth domain membership for all DCCProcessedDataWorkspaces."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_auth_domain_audit.html"
+
+    def run_audit(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit UploadWorkspace sharing for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/upload_workspace_auth_domain_audit.html"
+    model = models.DCCProcessedDataWorkspace
+
+    def get_object(self, queryset=None):
+        """Look up the DCCProcessedDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.DCCProcessedDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+            queryset=self.model.objects.filter(pk=self.object.pk)
+        )
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle(
+    AnVILConsortiumManagerStaffViewRequired, viewmixins.AuditMixin, DetailView
+):
+    """View to audit auth domain memberhsip for a specific DCCProcessedDataWorkspace."""
+
+    template_name = "gregor_anvil/dccprocesseddataworkspace_auth_domain_audit.html"
+    model = models.UploadCycle
+
+    def get_object(self, queryset=None):
+        # Filter the queryset based on kwargs.
+        cycle = self.kwargs.get("cycle", None)
+        queryset = self.model.objects.filter(cycle=cycle)
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def run_audit(self, **kwargs):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit(
+            queryset=models.DCCProcessedDataWorkspace.objects.filter(upload_cycle=self.object)
+        )
+        audit.run_audit()
+        return audit
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, viewmixins.AuditResolveMixin, FormView
+):
+    """View to resolve UploadWorkspace auth domain audit results."""
+
+    form_class = Form
+    template_name = "gregor_anvil/dccprocesseddataworkspace_auth_domain_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_workspace_data_object(self):
+        """Look up the DCCProcessedDataWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.DCCProcessedDataWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         # No way to set the group queryset, since it is dynamically determined by the workspace.
         audit.audit_workspace_and_group(self.workspace_data_object, self.managed_group)
         # Set to completed, because we are just running this one specific check.

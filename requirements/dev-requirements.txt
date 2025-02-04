@@ -48,13 +48,13 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.17
+django==4.2.18
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==4.4.6
+django-debug-toolbar==5.0.1
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
@@ -121,7 +121,7 @@ platformdirs==4.2.0
     # via
     #   pylint
     #   virtualenv
-pre-commit==4.0.1
+pre-commit==4.1.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.8.6
+ruff==0.9.4
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -225,7 +225,7 @@ urllib3==2.2.2
     #   requests
 uvicorn==0.30.5
     # via sphinx-autobuild
-virtualenv==20.25.1
+virtualenv==20.26.6
     # via pre-commit
 watchfiles==0.22.0
     # via sphinx-autobuild
