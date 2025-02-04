@@ -203,7 +203,6 @@ class CombinedConsortiumDataWorkspaceSharingAudit(GREGoRAudit):
 
     def audit_combined_workspace(self, combined_workspace):
         """Audit sharing for a specific combined workspace."""
-        # raise NotImplementedError("write this.")
         # Get a list of managed groups that should be included in this audit.
         group_names_to_include = [
             "GREGOR_DCC_MEMBERS",  # DCC members

@@ -182,7 +182,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
-        else:
+        else:  # pragma: no cover
             raise ValueError("No case matched.")
 
     def _audit_workspace_and_dcc_group(self, workspace_data, managed_group):
@@ -246,7 +246,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
                         **audit_result_args,
                     )
                 )
-        else:
+        else:  # pragma: no cover
             raise ValueError("No case matched.")
 
     def _audit_workspace_and_anvil_group(self, workspace_data, managed_group):
@@ -447,7 +447,7 @@ class DCCProcessedDataWorkspaceSharingAudit(GREGoRAudit):
                         **audit_results_arg,
                     )
                 )
-        else:
+        else:  # pragma: no cover
             raise ValueError("No case matched.")
 
     def _audit_workspace_and_auth_domain(self, workspace_data, managed_group):

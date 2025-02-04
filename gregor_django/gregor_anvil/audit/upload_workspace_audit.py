@@ -563,7 +563,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
                 self.errors.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
             else:
                 self.needs_action.append(workspace_sharing_audit_results.StopSharing(note=note, **audit_result_args))
-        else:
+        else:  # pragma: no cover
             raise ValueError("No case matched for RC uploader group.")
 
     def _audit_workspace_and_dcc_writer_group(self, upload_workspace, managed_group):
@@ -687,7 +687,7 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
                     )
                 )
 
-        else:
+        else:  # pragma: no cover
             raise ValueError("No case matched for DCC writer group.")
 
     def _audit_workspace_and_auth_domain(self, upload_workspace, managed_group):
