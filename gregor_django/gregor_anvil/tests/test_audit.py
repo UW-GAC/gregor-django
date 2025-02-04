@@ -654,6 +654,17 @@ class WorkspaceSharingAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(instance.handled)
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
 
+    def test_handle_not_implemented(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        result = workspace_sharing_audit_results.WorkspaceSharingAuditResult(
+            workspace=workspace,
+            managed_group=group,
+            note="foo",
+        )
+        with self.assertRaises(NotImplementedError):
+            result.handle()
+
 
 class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
     """General tests of the WorkspaceAuthDomainAuditResult dataclasses."""
@@ -883,6 +894,17 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         instance.handle()
         self.assertTrue(instance.handled)
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_handle_not_implemented(self):
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
+        group = ManagedGroupFactory.create()
+        result = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
+            workspace=workspace,
+            managed_group=group,
+            note="foo",
+        )
+        with self.assertRaises(NotImplementedError):
+            result.handle()
 
     def test_member_as_admin(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
