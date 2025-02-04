@@ -51,6 +51,11 @@ workspace = factories.UploadWorkspaceFactory.create(
     research_center=rc,
     workspace__name="TEST_U01_RC1",
 )
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U01_DCC_PROCESSEED_DATA",
+)
 
 ## Current upload cycle before compute.
 upload_cycle = factories.UploadCycleFactory.create(
@@ -121,6 +126,49 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
+)
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U02_DCC_PROCESSEED_DATA",
+)
+# Create records as appropriate for the step in the previous cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# Create auth domain membership as appropriate.
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_writer_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_member_group,
+    role=GroupGroupMembership.MEMBER,
 )
 
 
@@ -196,6 +244,49 @@ GroupGroupMembershipFactory.create(
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
 )
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U03_DCC_PROCESSEED_DATA",
+)
+# Create records as appropriate for the step in the previous cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# Create auth domain membership as appropriate.
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_writer_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_member_group,
+    role=GroupGroupMembership.MEMBER,
+)
 
 # Create a past upload cycle before qc is completed.
 upload_cycle = factories.UploadCycleFactory.create(
@@ -267,6 +358,49 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
     role=GroupGroupMembership.ADMIN,
+)
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U04_DCC_PROCESSEED_DATA",
+)
+# Create records as appropriate for the step in the previous cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# Create auth domain membership as appropriate.
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_writer_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_member_group,
+    role=GroupGroupMembership.MEMBER,
 )
 
 ## Past upload cycle after QC is completed; combined workspace is not complete.
@@ -342,6 +476,49 @@ combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
 combined_workspace.workspace.authorization_domains.clear()
 combined_workspace.workspace.authorization_domains.add(combined_auth_domain)
 # No sharing records yet.
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U05_DCC_PROCESSEED_DATA",
+)
+# Create records as appropriate for the step in the previous cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# Create auth domain membership as appropriate.
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_writer_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_member_group,
+    role=GroupGroupMembership.MEMBER,
+)
 
 
 ## Past upload cycle with a combined workspace.
@@ -428,4 +605,47 @@ WorkspaceGroupSharingFactory.create(
     group=dcc_member_group,
     access=WorkspaceGroupSharing.READER,
     can_compute=False,
+)
+# DCC processed data workspace.
+workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+    upload_cycle=upload_cycle,
+    workspace__name="TEST_U06_DCC_PROCESSEED_DATA",
+)
+# Create records as appropriate for the step in the previous cycle.
+# Auth domain.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=workspace.workspace.authorization_domains.first(),
+    access=WorkspaceGroupSharing.READER,
+    can_compute=False,
+)
+# DCC admins.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_admin_group,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
+# DCC writers.
+WorkspaceGroupSharingFactory.create(
+    workspace=workspace.workspace,
+    group=dcc_writer_group,
+    access=WorkspaceGroupSharing.WRITER,
+    can_compute=True,
+)
+# Create auth domain membership as appropriate.
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_admin_group,
+    role=GroupGroupMembership.ADMIN,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_writer_group,
+    role=GroupGroupMembership.MEMBER,
+)
+GroupGroupMembershipFactory.create(
+    parent_group=workspace.workspace.authorization_domains.first(),
+    child_group=dcc_member_group,
+    role=GroupGroupMembership.MEMBER,
 )

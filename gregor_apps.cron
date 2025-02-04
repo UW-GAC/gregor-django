@@ -16,3 +16,6 @@ MAILTO="gregorweb@uw.edu"
 
 # Nightly combined workspace audit
 0 3 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_combined_workspace_audit --email gregorconsortium@uw.edu >> cron.log
+
+# Nightly DCC processed data workspace audit
+0 3 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_dcc_processed_data_workspace_audit --email gregorconsortium@uw.edu >> cron.log

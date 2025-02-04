@@ -161,12 +161,27 @@
   {% endif %}
 {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
   <p>
-  <a href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
-    Audit upload workspace sharing
-  </a>
-  <a href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle' cycle=object.cycle %}" class="btn btn-secondary" role="button">
-    Audit upload workspace auth domains
-  </a>
+
+    <div class="btn-group">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Audit consortium sharing
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'gregor_anvil:audit:upload_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}">Upload workspaces</a></li>
+        <li><a class="dropdown-item" href="{% url 'gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle' cycle=object.cycle %}">DCC processed data workspaces</a></li>
+      </ul>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Audit auth domain membership
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle' cycle=object.cycle %}">Upload workspaces</a></li>
+        <li><a class="dropdown-item" href="{% url 'gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle' cycle=object.cycle %}">DCC processed data workspaces</a></li>
+      </ul>
+    </div>
+
   </p>
 {% endif %}
 {% endblock action_buttons %}

@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -99,7 +99,7 @@ jobs:
         run: ls -lhta
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: coverage-data-${{ strategy.job-index }}
           path: coverage-${{ strategy.job-index }}
@@ -114,7 +114,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.10'
 
@@ -140,6 +140,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.1.2
+        uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

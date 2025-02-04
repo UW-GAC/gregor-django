@@ -124,7 +124,7 @@ LOGGING = {
             "()": "maintenance_mode.logging.RequireNotMaintenanceMode503",
         },
     },
-    "formatters": {"verbose": {"format": "%(levelname)s %(asctime)s %(module)s " "%(process)d %(thread)d %(message)s"}},
+    "formatters": {"verbose": {"format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"}},
     "handlers": {
         "mail_admins": {
             "level": "ERROR",
