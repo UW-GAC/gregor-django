@@ -27,6 +27,7 @@ from gregor_django.users.tests.factories import UserFactory
 from .. import adapters, forms, models, tables, views
 from ..audit import (
     combined_workspace_audit,
+    dcc_processed_data_workspace_audit,
     upload_workspace_audit,
     workspace_auth_domain_audit_results,
     workspace_sharing_audit_results,
@@ -1155,6 +1156,14 @@ class UploadCycleDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
         )
+        self.assertNotContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -1170,6 +1179,14 @@ class UploadCycleDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
         )
 
     def test_links_staff_edit_user(self):
@@ -1189,6 +1206,14 @@ class UploadCycleDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:audit:upload_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle])
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle", args=[obj.cycle]),
+        )
+        self.assertContains(
+            response,
+            reverse("gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle", args=[obj.cycle]),
         )
 
     def test_includes_date_ready_for_compute(self):
@@ -2648,6 +2673,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -2662,6 +2701,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
     def test_links_staff_edit_user(self):
@@ -2679,6 +2732,20 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
 
@@ -11448,5 +11515,4419 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         self.assertEqual(membership.modified, date_created)
         self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
         # No message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+
+class DCCProcessedDataWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:all",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceSharingAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_audit_results_no_upload_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.READER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Create a completed combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # self.assertContains(response, str(self.upload_workspace))
+        self.assertIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAuditByWorkspace view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceSharingAuditByWorkspace.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_slug=self.workspace.workspace.billing_project.name,
+                workspace_slug=self.workspace.workspace.name,
+            )
+
+    def test_invalid_billing_project_name(self):
+        """Raises a 404 error with an invalid object billing project."""
+        request = self.factory.get(self.get_url("foo", self.workspace.workspace.name))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug="foo",
+                workspace_slug=self.workspace.workspace.name,
+            )
+
+    def test_invalid_workspace_name(self):
+        """Raises a 404 error with an invalid workspace name."""
+        request = self.factory.get(self.get_url(self.workspace.workspace.billing_project.name, "foo"))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug=self.workspace.workspace.billing_project.name,
+                workspace_slug="foo",
+            )
+
+    def test_context_audit_results(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(self.workspace, audit_results.queryset)
+
+    def test_context_audit_results_does_not_include_other_workspaces(self):
+        """The audit_results does not include other workspaces."""
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        audit_results = response.context_data["audit_results"]
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertNotIn(other_workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace, group=group, access=acm_models.WorkspaceGroupSharing.OWNER
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = self.workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=self.workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=self.workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Create a completed combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=self.workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=self.workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=self.workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=self.workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.workspace.workspace.billing_project.name, self.workspace.workspace.name)
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertContains(response, str(self.workspace))
+        # self.assertNotIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAuditByUploadCycle view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.upload_cycle = factories.UploadCycleFactory.create(is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_upload_cycle",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(self.upload_cycle.cycle + 1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.upload_cycle.cycle + 1),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cycle=self.upload_cycle.cycle)
+
+    def test_invalid_upload_cycle(self):
+        """Raises a 404 error with an invalid upload cycle."""
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cycle=self.upload_cycle.cycle + 1)
+
+    def test_context_audit_results_no_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_audit_results_ignores_other_upload_cycles(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__cycle=self.upload_cycle.cycle + 1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+        self.assertNotIn(workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=group, access=acm_models.WorkspaceGroupSharing.OWNER
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_reader(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = workspace.workspace.authorization_domains.first()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_with_compute(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_share_as_owner(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("access"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_stop_sharing(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Change upload workspace end dates so it's in the past.
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+        )
+        factories.CombinedConsortiumDataWorkspaceFactory.create(
+            upload_cycle=self.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.WRITER,
+            can_compute=True,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_stop_sharing(self):
+        """error_table shows a record when an audit error is detected."""
+        # Change upload workspace end dates so it's in the past.
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Share with the auth domain to prevent that audit error.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=workspace.workspace.authorization_domains.first(),
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        # Create a sharing record.
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("access"), "READER")
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertContains(response, str(self.upload_cycle))
+        self.assertNotIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:sharing:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceSharingAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar", "foobar"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_get_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_group_does_not_exist(self):
+        """get request raises a 404 error with an non-existent email."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            workspace_sharing_audit_results.WorkspaceSharingAuditResult,
+        )
+
+    def test_get_verified_shared(self):
+        """Get request with VerifiedShared result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+            access=acm_models.WorkspaceGroupSharing.READER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedShared)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+
+    def test_get_verified_not_shared(self):
+        """Get request with VerifiedNotShared result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.VerifiedNotShared)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.OTHER_GROUP,
+        )
+
+    def test_get_share_as_reader(self):
+        """Get request with ShareAsReader result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsReader)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.AUTH_DOMAIN_AS_READER,
+        )
+
+    def test_get_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareWithCompute)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+        )
+
+    def test_get_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsOwner)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_ADMIN_AS_OWNER,
+        )
+
+    def test_post_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url("foo", workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_group_does_not_exist(self):
+        """post request raises a 404 error with an non-existent email."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_shared(self):
+        """Post request with VerifiedShared result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = workspace.workspace.authorization_domains.first()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+
+    def test_post_verified_not_shared(self):
+        """Post request with VerifiedNotShared result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_new_share_as_reader(self):
+        """Post request with ShareAsReader result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_stop_sharing(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "NO ACCESS",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_update_share_with_compute(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_update_share_as_owner(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=workspace.workspace,
+                group=group,
+                access=acm_models.WorkspaceGroupSharing.READER,
+            )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertGreater(sharing.modified, date_created)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_share_as_reader_htmx(self):
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "READER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.READER)
+        self.assertFalse(sharing.can_compute)
+
+    def test_post_new_share_with_compute_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.WRITER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_share_as_owner_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "OWNER",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing = acm_models.WorkspaceGroupSharing.objects.get(workspace=workspace.workspace, group=group)
+        self.assertEqual(sharing.access, acm_models.WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_post_new_stop_sharing_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        acm_factories.WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace,
+            group=group,
+        )
+        # Add the mocked API response.
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "NO ACCESS",
+                "canShare": False,  # We're not tracking this in ACM so we always send False.
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_success)
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_post_share_as_reader_anvil_api_error(self):
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsReader)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_share_with_compute_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareWithCompute)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_share_as_owner_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            upload_cycle__is_future=True,
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.ShareAsOwner)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_new_stop_sharing_anvil_api_error(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=workspace.workspace,
+                group=group,
+            )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+        # Audit result is still as expected.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_sharing_audit_results.StopSharing)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_share_as_reader_anvil_api_error_htmx(self):
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        group = workspace.workspace.authorization_domains.first()
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_with_compute_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_as_owner_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_error)
+        # No sharing object was created.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_stop_sharing_anvil_api_error_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create()
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            sharing = acm_factories.WorkspaceGroupSharingFactory.create(
+                workspace=workspace.workspace,
+                group=group,
+            )
+        # Add the mocked API response.
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_error)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.created, date_created)
+        self.assertEqual(sharing.modified, date_created)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_new_share_with_compute_group_not_found_on_anvil_htmx(self):
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        acls = [
+            {
+                "email": group.email,
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": False,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/test-bp/test-ws/acl?inviteUsersNotFound=false",
+            # Successful error code, but with usersNotFound
+            status=200,
+            json={"invitesSent": [], "usersNotFound": acls, "usersUpdated": []},
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceSharingAuditResolve.htmx_error)
+        # The sharing object was not deleted.
+        self.assertEqual(acm_models.WorkspaceGroupSharing.objects.count(), 0)
+        # sharing.refresh_from_db()
+        # self.assertEqual(sharing.created, date_created)
+        # self.assertEqual(sharing.modified, date_created)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:all",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceAuthDomainAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_audit_results_no_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verifiednotmember."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_past=True)
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), None)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_member(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_admin(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_past=True)
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_remove(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_errors_table_change_to_member(self):
+        """errors table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_change_to_admin(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        # self.assertContains(response, str(self.workspace))
+        self.assertIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_slug=self.workspace.workspace.billing_project.name,
+                workspace_slug=self.workspace.workspace.name,
+            )
+
+    def test_invalid_billing_project_name(self):
+        """Raises a 404 error with an invalid object billing project."""
+        request = self.factory.get(self.get_url("foo", self.workspace.workspace.name))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug="foo",
+                workspace_slug=self.workspace.workspace.name,
+            )
+
+    def test_invalid_workspace_name(self):
+        """Raises a 404 error with an invalid workspace name."""
+        request = self.factory.get(self.get_url(self.workspace.workspace.billing_project.name, "foo"))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug=self.workspace.workspace.billing_project.name,
+                workspace_slug="foo",
+            )
+
+    def test_context_audit_results(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(self.workspace, audit_results.queryset)
+
+    def test_context_audit_results_does_not_include_other_workspaces(self):
+        """The audit_results does not include other workspaces."""
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        audit_results = response.context_data["audit_results"]
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertNotIn(other_workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verifiednotmember."""
+        self.workspace.upload_cycle.start_date = timezone.localdate() - timedelta(days=20)
+        self.workspace.upload_cycle.start_date = timezone.localdate() - timedelta(days=10)
+        self.workspace.upload_cycle.save()
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=self.workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), None)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_member(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_admin(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        self.workspace.upload_cycle.start_date = timezone.localdate() - timedelta(days=20)
+        self.workspace.upload_cycle.start_date = timezone.localdate() - timedelta(days=10)
+        self.workspace.upload_cycle.save()
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=self.workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_remove(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_errors_table_change_to_member(self):
+        """needs action table shows a record when audit finds that access needs to be removed."""
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_change_to_admin(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=self.workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            )
+        )
+        self.assertContains(response, str(self.workspace))
+        self.assertNotIn("all upload workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceSharingAuditByUploadCycle view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.upload_cycle = factories.UploadCycleFactory.create(is_future=True)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_upload_cycle",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(self.upload_cycle.cycle + 1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.upload_cycle.cycle + 1),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cycle=self.upload_cycle.cycle)
+
+    def test_invalid_upload_cycle(self):
+        """Raises a 404 error with an invalid upload cycle."""
+        request = self.factory.get(self.get_url(self.upload_cycle.cycle + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cycle=self.upload_cycle.cycle + 1)
+
+    def test_context_audit_results_no_workspaces(self):
+        """The audit_results exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+
+    def test_context_audit_results_one_workspace(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 1)
+        self.assertIn(workspace, audit_results.queryset)
+
+    def test_context_audit_results_two_workspaces(self):
+        """The audit_results exists in the context."""
+        workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 2)
+        self.assertIn(workspace_1, audit_results.queryset)
+        self.assertIn(workspace_2, audit_results.queryset)
+
+    def test_context_audit_results_ignores_other_upload_cycles(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__cycle=self.upload_cycle.cycle + 1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertIn("audit_results", response.context_data)
+        audit_results = response.context_data["audit_results"]
+        self.assertIsInstance(
+            audit_results,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit,
+        )
+        self.assertTrue(audit_results.completed)
+        self.assertEqual(audit_results.queryset.count(), 0)
+        self.assertNotIn(workspace, audit_results.queryset)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verifiednotmember."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__start_date=timezone.localdate() - timedelta(days=20),
+            upload_cycle__end_date=timezone.localdate() - timedelta(days=10),
+        )
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), None)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_member(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_add_admin(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertIsNone(table.rows[0].get_cell_value("role"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__start_date=timezone.localdate() - timedelta(days=20),
+            upload_cycle__end_date=timezone.localdate() - timedelta(days=10),
+        )
+        # Create and share a combined workspace.
+        factories.CombinedConsortiumDataWorkspaceFactory(
+            upload_cycle=workspace.upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_error_table_remove(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_errors_table_change_to_member(self):
+        """needs action table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_change_to_admin(self):
+        """error table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+        self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_link_to_resolve_view(self):
+        """The link to the resolve view is in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle=self.upload_cycle)
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.upload_cycle.cycle))
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
+        self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+        expected_url = reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.name,
+            ],
+        )
+        self.assertIn(expected_url, table.rows[0].get_cell("action"))
+
+    def test_title(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.upload_cycle.cycle))
+        self.assertContains(response, str(self.upload_cycle))
+        self.assertNotIn("all dcc processed data workspaces", response.content.decode().lower())
+
+
+class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DCCProcessedDataWorkspaceAuthDomainAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar", "foobar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar", "foobar"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url("foo", "bar", "foobar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_get_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_group_does_not_exist(self):
+        """get request raises a 404 error with an non-existent email."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The audit_results exists in the context."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult,
+        )
+
+    def test_get_verified_member(self):
+        """Get request with VerifiedMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedMember)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_get_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedAdmin)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+
+    def test_get_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.VerifiedNotMember)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+
+    def test_get_add_member(self):
+        """Get request with AddMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddMember)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_get_add_admin(self):
+        """Get request with AddAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.AddAdmin)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+
+    def test_get_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToMember)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
+        )
+
+    def test_get_change_to_admin(self):
+        """Get request with ChangeToAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.ChangeToAdmin)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
+        )
+
+    def test_get_remove(self):
+        """Get request with ChangeToAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_auth_domain_audit_results.Remove)
+        self.assertEqual(audit_result.workspace, workspace.workspace)
+        self.assertEqual(audit_result.managed_group, group)
+        self.assertEqual(
+            audit_result.note,
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
+        )
+
+    def test_post_billing_project_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url("foo", workspace.workspace.name, group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_workspace_name_does_not_exist(self):
+        """Raises a 404 error with an invalid billing project."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(workspace.workspace.billing_project.name, "foo", group.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_group_does_not_exist(self):
+        """post request raises a 404 error with an non-existent email."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_member(self):
+        """Get request with VerifiedMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_add_member(self):
+        """Get request with AddMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_add_admin(self):
+        """Get request with AddAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_change_to_admin(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_verified_member(self):
+        """Get request with VerifiedMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_htmx_verified_admin(self):
+        """Get request with VerifiedAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(upload_cycle__is_future=True)
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_htmx_verified_not_member(self):
+        """Get request with VerifiedNotMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        group = acm_factories.ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_add_member(self):
+        """Get request with AddMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_htmx_add_admin(self):
+        """Get request with AddAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership = acm_models.GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_htmx_change_to_member(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+
+    def test_post_htmx_change_to_admin(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertGreater(membership.modified, membership.created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+
+    def test_post_htmx_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.ADMIN,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_htmx_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        acm_factories.GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+            role=acm_models.GroupGroupMembership.MEMBER,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_success)
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+
+    def test_post_api_error_add_member(self):
+        """Get request with AddMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_add_admin(self):
+        """Get request with AddAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_member_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_member_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_admin_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_change_to_admin_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_api_error_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name)
+        )
+        self.assertEqual(response.status_code, 200)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # Error message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_post_htmx_api_error_add_member(self):
+        """Get request with AddMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_add_admin(self):
+        """Get request with AddAdmin result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        self.client.force_login(self.user)
+        # Add the mocked API response.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # No memberships were created.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 0)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_member_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_member_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name="GREGOR_DCC_WRITERS")
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_admin_error_on_delete_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_change_to_admin_error_on_put_call(self):
+        """Get request with ChangeToMember result."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        # Add the mocked API responses - one to create and one to delete.
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_remove_admin(self):
+        """Post request with Remove result for an admin membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.ADMIN,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/admin/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        # No messages
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_post_htmx_api_error_remove_member(self):
+        """Post request with Remove result for a member membership."""
+        workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle__is_future=True, workspace__name="test-ws"
+        )
+        group = acm_factories.ManagedGroupFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = acm_factories.GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=group,
+                role=acm_models.GroupGroupMembership.MEMBER,
+            )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            self.api_client.sam_entry_point + f"/api/groups/v1/auth_test-ws/member/{group.name}@firecloud.org",
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name, group.name),
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.htmx_error)
+        # The membership was not updated.
+        self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)

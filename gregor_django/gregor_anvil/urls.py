@@ -140,11 +140,63 @@ combined_workspace_audit_patterns = (
     "combined_workspaces",
 )
 
+dcc_processed_data_workspace_sharing_audit_patterns = (
+    [
+        path("all/", views.DCCProcessedDataWorkspaceSharingAudit.as_view(), name="all"),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.DCCProcessedDataWorkspaceSharingAuditResolve.as_view(),
+            name="resolve",
+        ),
+        path(
+            "upload_cycle/<int:cycle>/",
+            views.DCCProcessedDataWorkspaceSharingAuditByUploadCycle.as_view(),
+            name="by_upload_cycle",
+        ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.DCCProcessedDataWorkspaceSharingAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
+    ],
+    "sharing",
+)
+
+dcc_processed_data_workspace_auth_domain_audit_patterns = (
+    [
+        path("all/", views.DCCProcessedDataWorkspaceAuthDomainAudit.as_view(), name="all"),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<slug:managed_group_slug>/",
+            views.DCCProcessedDataWorkspaceAuthDomainAuditResolve.as_view(),
+            name="resolve",
+        ),
+        path(
+            "upload_cycle/<int:cycle>/",
+            views.DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycle.as_view(),
+            name="by_upload_cycle",
+        ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.DCCProcessedDataWorkspaceAuthDomainAuditByWorkspace.as_view(),
+            name="by_workspace",
+        ),
+    ],
+    "auth_domains",
+)
+
+dcc_processed_data_workspace_audit_patterns = (
+    [
+        path("sharing/", include(dcc_processed_data_workspace_sharing_audit_patterns)),
+        path("auth_domain/", include(dcc_processed_data_workspace_auth_domain_audit_patterns)),
+    ],
+    "dcc_processed_data_workspaces",
+)
 
 audit_patterns = (
     [
         path("upload_workspaces/", include(upload_workspace_audit_patterns)),
         path("combined_workspaces/", include(combined_workspace_audit_patterns)),
+        path("dcc_processed_data_workspaces/", include(dcc_processed_data_workspace_audit_patterns)),
     ],
     "audit",
 )

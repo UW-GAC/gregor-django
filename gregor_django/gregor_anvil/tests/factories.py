@@ -194,6 +194,7 @@ class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.DCCProcessedDataWorkspace
+        skip_postgeneration_save = True
 
     consent_group = SubFactory(ConsentGroupFactory)
     upload_cycle = SubFactory(UploadCycleFactory)
@@ -201,6 +202,17 @@ class DCCProcessedDataWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type="dcc_processed_data",
     )
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
+        self.workspace.authorization_domains.add(auth_domain)
 
 
 class ExchangeWorkspaceFactory(DjangoModelFactory):

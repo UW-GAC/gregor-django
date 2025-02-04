@@ -19,3 +19,19 @@
 
   </dl>
 {% endblock workspace_data %}
+
+{% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+<p>
+  <a href="{% url 'gregor_anvil:audit:dcc_processed_data_workspaces:sharing:by_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit consortium sharing
+  </a>
+
+  <a href="{% url 'gregor_anvil:audit:dcc_processed_data_workspaces:auth_domains:by_workspace' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Audit auth domain membership
+  </a>
+</p>
+{% endif %}
+
+{{ block.super }}
+{% endblock action_buttons %}
