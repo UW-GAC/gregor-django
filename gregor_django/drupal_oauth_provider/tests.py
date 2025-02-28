@@ -10,12 +10,12 @@ from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.models import SocialApp
 from allauth.socialaccount.tests import OAuth2TestsMixin
-from allauth.tests import MockedResponse, TestCase
+from allauth.tests import MockedResponse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
-from django.test import RequestFactory
+from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 
 from .provider import CustomProvider
