@@ -90,6 +90,9 @@ jobs:
       - name: Collect staticfiles
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
+      - name: Run Django DB config check
+        run: python manage.py check --database default --fail-level WARNING --settings=config.settings.test
+
       - name: Run tests
         run:  |
           pytest --cov=gregor_django -n auto
@@ -140,6 +143,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.3.0
+        uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
