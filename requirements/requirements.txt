@@ -32,9 +32,9 @@ crispy-bootstrap5==2024.10
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==44.0.1
+cryptography==44.0.2
     # via -r requirements/requirements.in
-django==4.2.18
+django==4.2.19
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -56,7 +56,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.3.1
+django-constance==4.3.2
     # via -r requirements/requirements.in
 django-crispy-forms==2.3
     # via
@@ -73,7 +73,7 @@ django-extensions==3.2.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.21.0
+django-htmx==1.22.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
@@ -165,7 +165,7 @@ urllib3==2.2.2
     # via requests
 wheel==0.42.0
     # via pip-tools
-whitenoise==6.8.2
+whitenoise==6.9.0
     # via -r requirements/requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
