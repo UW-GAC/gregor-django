@@ -58,7 +58,7 @@ pytest==8.3.5
     #   pytest-xdist
 pytest-cov==6.0.0
     # via -r requirements/test-requirements.in
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
