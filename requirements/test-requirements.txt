@@ -74,7 +74,7 @@ requests==2.32.3
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.25.6
+responses==0.25.7
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
@@ -87,7 +87,7 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.32.0.20250301
+types-requests==2.32.0.20250306
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
