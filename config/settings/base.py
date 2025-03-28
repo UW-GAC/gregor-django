@@ -286,7 +286,9 @@ MAINTENANCE_MODE_IGNORE_TESTS = True
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 ACCOUNT_LOGIN_METHODS = {"username"}
-ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_EMAIL_REQUIRED = True
+# Replaces above for new allauth signup.
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
