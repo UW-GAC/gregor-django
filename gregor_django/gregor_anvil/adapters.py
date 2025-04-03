@@ -3,6 +3,7 @@ from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdap
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 from anvil_consortium_manager.models import (
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     WorkspaceGroupSharing,
@@ -84,6 +85,29 @@ class AccountAdapter(BaseAccountAdapter):
         else:
             name = "---"
         return "{} ({})".format(name, account.email)
+
+    def after_account_verification(self, account):
+        """Add the user to appropriate MEMBERS groups."""
+        super().after_account_verification(account)
+        # Get a list of RC and PartnerGroup member groups.
+        groups = ManagedGroup.objects.filter(
+            Q(research_center_of_members__user=account.user) | Q(partner_group_of_members__user=account.user),
+        ).distinct()
+        for group in groups:
+            try:
+                membership = GroupAccountMembership.objects.get(
+                    group=group,
+                    account=account,
+                )
+            except GroupAccountMembership.DoesNotExist:
+                membership = GroupAccountMembership(
+                    group=group,
+                    account=account,
+                    role=GroupAccountMembership.MEMBER,
+                )
+                membership.full_clean()
+                membership.save()
+                membership.anvil_create()
 
 
 class ManagedGroupAdapter(BaseManagedGroupAdapter):
