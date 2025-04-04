@@ -7,8 +7,11 @@ from allauth.socialaccount.models import SocialAccount
 from anvil_consortium_manager.models import Account
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django_tables2.export import TableExport
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2, OAuth2Session
@@ -22,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class TextTable(object):
     def render_to_text(self):
+        self.gregor_is_export = True
         return TableExport(export_format=TableExport.CSV, table=self).export()
 
 
@@ -31,12 +35,19 @@ class UserAuditResultsTable(tables.Table, TextTable):
     result_type = tables.Column()
     local_user_id = tables.Column()
     local_username = tables.Column()
+    local_user_link = tables.Column()
     remote_user_id = tables.Column()
     remote_username = tables.Column()
     remote_name = tables.Column()
     changes = tables.Column()
     note = tables.Column()
     anvil_groups = tables.Column()
+
+    def render_local_user_link(self, value, record, bound_column):
+        # Check if the table is being exported
+        if getattr(self, "gregor_is_export", None):
+            return value  # Custom export format
+        return mark_safe(f"<a href='{value}'>User Detail Link</a>")
 
     class Meta:
         orderable = False
@@ -61,10 +72,16 @@ class UserAuditResult(GREGoRAuditResult):
             "result_type": type(self).__name__,
         }
         if self.local_user:
+            user_detail_url = (
+                "https://"
+                + Site.objects.get_current().domain
+                + reverse("users:detail", kwargs={"username": self.local_user.user.username})
+            )
             row.update(
                 {
                     "local_user_id": self.local_user.user.id,
                     "local_username": self.local_user.user.username,
+                    "local_user_link": user_detail_url,
                 }
             )
         if self.remote_user_data:
@@ -302,8 +319,12 @@ class UserAudit(GREGoRAudit):
         ).distinct()
 
         for inactive_anvil_user in inactive_anvil_users:
+            drupal_social_account = inactive_anvil_user.user.socialaccount_set.filter(
+                provider=CustomProvider.id
+            ).first()
             self.errors.append(
                 InactiveAnvilUser(
+                    local_user=drupal_social_account,
                     anvil_account=inactive_anvil_user,
                     anvil_groups=list(
                         inactive_anvil_user.groupaccountmembership_set.all().values_list("group__name", flat=True)
