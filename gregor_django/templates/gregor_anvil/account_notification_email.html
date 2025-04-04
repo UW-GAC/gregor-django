@@ -1,0 +1,12 @@
+{% extends "anvil_consortium_manager/account_notification_email.html" %}
+
+{% block extra_content %}
+
+Group memberships:
+<ul>
+    {% for membership in memberships %}
+        <li>{{ membership }}</li>
+    {% endfor %}
+</ul>
+
+{% endblock extra_content %}

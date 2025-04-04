@@ -3,6 +3,7 @@ from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdap
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 from anvil_consortium_manager.models import (
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     WorkspaceGroupSharing,
@@ -70,6 +71,9 @@ class AccountAdapter(BaseAccountAdapter):
     account_link_verify_redirect = "users:redirect"
     account_link_email_subject = "Verify your AnVIL account email"
     account_verification_notification_email = "gregorconsortium@uw.edu"
+    account_verification_notification_template = "gregor_anvil/account_notification_email.html"
+
+    after_account_verification_change_reason = "added automatically after account verification"
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
@@ -84,6 +88,38 @@ class AccountAdapter(BaseAccountAdapter):
         else:
             name = "---"
         return "{} ({})".format(name, account.email)
+
+    def after_account_verification(self, account):
+        """Add the user to appropriate MEMBERS groups."""
+        super().after_account_verification(account)
+        # Get a list of RC and PartnerGroup member groups.
+        groups = ManagedGroup.objects.filter(
+            Q(research_center_of_members__user=account.user) | Q(partner_group_of_members__user=account.user),
+        ).distinct()
+        for group in groups:
+            try:
+                membership = GroupAccountMembership.objects.get(
+                    group=group,
+                    account=account,
+                )
+            except GroupAccountMembership.DoesNotExist:
+                membership = GroupAccountMembership(
+                    group=group,
+                    account=account,
+                    role=GroupAccountMembership.MEMBER,
+                )
+                membership.full_clean()
+                membership._change_reason = self.after_account_verification_change_reason
+                membership.save()
+                membership.anvil_create()
+
+    def get_account_verification_notification_context(self, account):
+        """Get the context for the account verification notification email."""
+        context = super().get_account_verification_notification_context(account)
+        # Add the list of groups that the account is already in.
+        memberships = GroupAccountMembership.objects.filter(account=account)
+        context["memberships"] = memberships
+        return context
 
 
 class ManagedGroupAdapter(BaseManagedGroupAdapter):
