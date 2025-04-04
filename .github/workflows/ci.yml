@@ -90,6 +90,9 @@ jobs:
       - name: Collect staticfiles
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
+      - name: Run Django DB config check
+        run: python manage.py check --database default --fail-level WARNING --settings=config.settings.test
+
       - name: Run tests
         run:  |
           pytest --cov=gregor_django -n auto
@@ -99,7 +102,7 @@ jobs:
         run: ls -lhta
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-data-${{ strategy.job-index }}
           path: coverage-${{ strategy.job-index }}
@@ -124,7 +127,7 @@ jobs:
           pip install --upgrade coverage "django<4" django-coverage-plugin
 
       - name: Download coverage data
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.2.1
         with:
           path: ./artifacts/
 
@@ -140,6 +143,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

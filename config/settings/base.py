@@ -271,22 +271,25 @@ LOGGING = {
     "root": {"level": "DEBUG", "handlers": ["console"]},
 }
 
+# Django silence system check warnings. https://docs.djangoproject.com/en/5.1/ref/checks/#security
+# This check is regarding constraints placed by django-allauth
+# that mysql does not support. https://github.com/pennersr/django-allauth/issues/3385
+# we would need to move to postgres to support this type of constraint with filter
+SILENCED_SYSTEM_CHECKS = ["models.W036"]
+
 # django-maintenance-mode
 MAINTENANCE_MODE_IGNORE_SUPERUSER = True
 MAINTENANCE_MODE_IGNORE_TESTS = True
 
 # django-allauth
 # ------------------------------------------------------------------------------
+# https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
-# https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_AUTHENTICATION_METHOD = "username"
-# https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_REQUIRED = True
-# https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-# https://django-allauth.readthedocs.io/en/latest/configuration.html
+ACCOUNT_LOGIN_METHODS = {"username"}
+# ACCOUNT_EMAIL_REQUIRED = True
+# Replaces above for new allauth signup.
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
-# https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
