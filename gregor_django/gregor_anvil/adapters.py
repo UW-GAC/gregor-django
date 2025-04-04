@@ -73,6 +73,8 @@ class AccountAdapter(BaseAccountAdapter):
     account_verification_notification_email = "gregorconsortium@uw.edu"
     account_verification_notification_template = "gregor_anvil/account_notification_email.html"
 
+    after_account_verification_change_reason = "added automatically after account verification"
+
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
         if q:
@@ -107,6 +109,7 @@ class AccountAdapter(BaseAccountAdapter):
                     role=GroupAccountMembership.MEMBER,
                 )
                 membership.full_clean()
+                membership._change_reason = self.after_account_verification_change_reason
                 membership.save()
                 membership.anvil_create()
 

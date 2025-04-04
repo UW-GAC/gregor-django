@@ -308,6 +308,32 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
+    def test_after_account_verification_history_change_reason(self):
+        member_group = ManagedGroupFactory.create()
+        research_center = ResearchCenterFactory.create(member_group=member_group)
+        # Create an account whose user is linked to this RC.
+        user = UserFactory.create()
+        user.research_centers.add(research_center)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for RC membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        # Run the adapter method.
+        adapter_instance = adapters.AccountAdapter()
+        adapter_instance.after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.first()
+        # History is added.
+        self.assertEqual(membership.history.count(), 1)
+        history = membership.history.latest()
+        self.assertEqual(history.history_type, "+")
+        # Reason is expected.
+        self.assertEqual(history.history_change_reason, adapter_instance.after_account_verification_change_reason)
+
     def test_get_account_verification_notification_context(self):
         account = AccountFactory.create(verified=True)
         context = adapters.AccountAdapter().get_account_verification_notification_context(account)
