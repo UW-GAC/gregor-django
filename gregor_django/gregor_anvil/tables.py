@@ -93,7 +93,7 @@ class PartnerGroupTable(tables.Table):
 
     class Meta:
         model = models.PartnerGroup
-        fields = ("full_name", "short_name")
+        fields = ("full_name", "short_name", "status")
 
 
 class ConsentGroupTable(tables.Table):

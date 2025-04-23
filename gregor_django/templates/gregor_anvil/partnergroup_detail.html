@@ -7,6 +7,7 @@
   <ul>
     <li>Full name: {{ object.full_name }}</li>
     <li>Short name: {{ object.short_name }}</li>
+    <li>Status: {{ object.get_status_display }}</li>
     <li>Member group:
       {% if object.member_group %}
         <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a>

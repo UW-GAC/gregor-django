@@ -100,23 +100,23 @@ class Command(BaseCommand):
             notification_content += "PartnerGroups requiring intervention:\n"
             notification_content += partner_group_audit.get_errors_table().render_to_text()
 
-        user_audit = audit.UserAudit(
-            apply_changes=self.apply_changes,
-            ignore_deactivate_threshold=self.ignore_threshold,
-        )
-        user_audit.run_audit()
-        notification_content += (
-            "--------------------------------------\n"
-            f"UserAudit summary: status ok: {user_audit.ok()} verified: {len(user_audit.verified)} "
-            f"needs_changes: {len(user_audit.needs_action)} errors: {len(user_audit.errors)}\n"
-        )
-        if user_audit.needs_action:
-            notification_content += "Users that need syncing (will be resolved by this script if in update mode):\n"
-            notification_content += user_audit.get_needs_action_table().render_to_text()
-        if user_audit.errors:
-            notification_content += "Users that need intervention (cannot be resolved by script):\n"
-            notification_content += user_audit.get_errors_table().render_to_text()
+        # user_audit = audit.UserAudit(
+        #     apply_changes=self.apply_changes,
+        #     ignore_deactivate_threshold=self.ignore_threshold,
+        # )
+        # user_audit.run_audit()
+        # notification_content += (
+        #     "--------------------------------------\n"
+        #     f"UserAudit summary: status ok: {user_audit.ok()} verified: {len(user_audit.verified)} "
+        #     f"needs_changes: {len(user_audit.needs_action)} errors: {len(user_audit.errors)}\n"
+        # )
+        # if user_audit.needs_action:
+        #     notification_content += "Users that need syncing (will be resolved by this script if in update mode):\n"
+        #     notification_content += user_audit.get_needs_action_table().render_to_text()
+        # if user_audit.errors:
+        #     notification_content += "Users that need intervention (cannot be resolved by script):\n"
+        #     notification_content += user_audit.get_errors_table().render_to_text()
 
         self.stdout.write(notification_content)
-        if self.email:
-            self._send_email(user_audit, site_audit, partner_group_audit)
+        # if self.email:
+        #     self._send_email(user_audit, site_audit, partner_group_audit)

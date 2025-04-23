@@ -475,7 +475,9 @@ class PartnerGroupAuditResultsTable(tables.Table, TextTable):
 
     result_type = tables.Column()
     local_partner_group_name = tables.Column()
+    local_status = tables.Column()
     remote_partner_group_name = tables.Column()
+    remote_status = tables.Column()
     changes = tables.Column()
     note = tables.Column()
 
@@ -488,7 +490,7 @@ class PartnerGroupAuditResultsTable(tables.Table, TextTable):
 
 @dataclass
 class PartnerGroupAuditResult(GREGoRAuditResult):
-    local_partner_group: ResearchCenter
+    local_partner_group: PartnerGroup
     remote_partner_group_data: jsonapi_requests.JsonApiObject = None
     changes: dict = None
     note: str = None
@@ -504,12 +506,14 @@ class PartnerGroupAuditResult(GREGoRAuditResult):
             row.update(
                 {
                     "local_partner_group_name": self.local_partner_group.short_name,
+                    "local_status": self.local_partner_group.get_status_display(),
                 }
             )
         if self.remote_partner_group_data:
             row.update(
                 {
                     "remote_partner_group_name": self.remote_partner_group_data.get("short_name"),
+                    "remote_status": self.remote_partner_group_data.get("status"),
                 }
             )
         return row
@@ -557,6 +561,8 @@ class PartnerGroupAudit(GREGoRAudit):
             short_name = study_partner_group_info["short_name"]
             full_name = study_partner_group_info["full_name"]
             node_id = study_partner_group_info["node_id"]
+            status = study_partner_group_info["status"]
+
             valid_nodes.add(node_id)
 
             try:
@@ -568,6 +574,7 @@ class PartnerGroupAudit(GREGoRAudit):
                         drupal_node_id=node_id,
                         short_name=short_name,
                         full_name=full_name,
+                        status=status,
                     )
                 self.needs_action.append(
                     NewPartnerGroup(
@@ -583,17 +590,15 @@ class PartnerGroupAudit(GREGoRAudit):
                     )
                     study_partner_group.full_name = full_name
 
-                # Short name not currently maintained in drupal
-                # if study_partner_group.short_name != short_name:
-                #     study_partner_group_updates.update(
-                #         {
-                #             "short_name": {
-                #                 "old": study_partner_group.short_name,
-                #                 "new": short_name,
-                #             }
-                #         }
-                #     )
-                #     study_partner_group.short_name = short_name
+                if study_partner_group.short_name != short_name:
+                    study_partner_group_updates.update(
+                        {"short_name": {"old": study_partner_group.short_name, "new": short_name}}
+                    )
+                    study_partner_group.short_name = short_name
+
+                if study_partner_group.status != status:
+                    study_partner_group_updates.update({"status": {"old": study_partner_group.status, "new": status}})
+                    study_partner_group.status = status
 
                 if study_partner_group_updates:
                     if self.apply_changes is True:
@@ -683,6 +688,7 @@ def get_partner_groups(json_api):
 
     for ss in partner_groups_response.data:
         full_name = ss.attributes["title"]
+        field_status = ss.attributes["field_status"]
         # try to figure out short name - try to split on dash
         # or just truncate to max len of field
         short_name = partner_group_short_name_from_full_name(full_name)
@@ -693,5 +699,6 @@ def get_partner_groups(json_api):
             "node_id": node_id,
             "short_name": short_name,
             "full_name": full_name,
+            "status": field_status,
         }
     return partner_groups_info
