@@ -30,11 +30,12 @@ class ResearchCenterMockObject:
 
 
 class PartnerGroupMockObject:
-    def __init__(self, id, title, drupal_internal__nid):
+    def __init__(self, id, title, drupal_internal__nid, field_status):
         self.id = id
         self.title = title
         self.full_name = title
         self.drupal_internal__nid = drupal_internal__nid
+        self.field_status = field_status
 
 
 class UserMockObject:
@@ -74,6 +75,10 @@ class PartnerGroupSchema(Schema):
     id = fields.Str(dump_only=True)
     title = fields.Str()
     drupal_internal__nid = fields.Str()
+    field_status = fields.Str()
+
+    class Meta:
+        type_ = "node--partner_group"
 
 
 class UserSchema(Schema):
@@ -133,14 +138,11 @@ TEST_PARTNER_GROUP_DATA = [
             "id": "11",
             "title": "Partner Group 11",
             "drupal_internal__nid": "11",
+            "field_status": "Active",
         }
     ),
     PartnerGroupMockObject(
-        **{
-            "id": "22",
-            "title": "Partner Group 22",
-            "drupal_internal__nid": "22",
-        }
+        **{"id": "22", "title": "Partner Group 22", "drupal_internal__nid": "22", "field_status": "Inactive"}
     ),
 ]
 
@@ -199,7 +201,7 @@ class TestUserDataAudit(TestCase):
         url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/partner_group/"
         responses.get(
             url=url_path,
-            body=json.dumps(ResearchCenterSchema(many=True).dump(TEST_PARTNER_GROUP_DATA)),
+            body=json.dumps(PartnerGroupSchema(many=True).dump(TEST_PARTNER_GROUP_DATA)),
         )
 
     def add_fake_users_response(self):
@@ -301,11 +303,13 @@ class TestUserDataAudit(TestCase):
             drupal_node_id=TEST_PARTNER_GROUP_DATA[0].drupal_internal__nid,
             short_name="WrongShortName",
             full_name="WrongTitle",
+            status=PartnerGroup.STATUS_INACTIVE,
         )
         PartnerGroup.objects.create(
             drupal_node_id=TEST_PARTNER_GROUP_DATA[1].drupal_internal__nid,
             short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[1].title),
             full_name=TEST_PARTNER_GROUP_DATA[1].title,
+            status=TEST_PARTNER_GROUP_DATA[1].field_status,
         )
         self.get_fake_json_api()
         self.add_fake_partner_groups_response()
@@ -320,10 +324,11 @@ class TestUserDataAudit(TestCase):
         needs_action_table = pg_audit.get_needs_action_table()
         self.assertIn("UpdatePartnerGroup", needs_action_table.render_to_text())
 
-        first_test_ss = PartnerGroup.objects.get(full_name=TEST_PARTNER_GROUP_DATA[0].title)
+        first_test_pg = PartnerGroup.objects.get(drupal_node_id=TEST_PARTNER_GROUP_DATA[0].drupal_internal__nid)
+
         # did we update the long name
-        assert first_test_ss.full_name == TEST_PARTNER_GROUP_DATA[0].title
-        # assert first_test_ss.short_name == TEST_PARTNER_GROUP_DATA[0].title
+        assert first_test_pg.full_name == TEST_PARTNER_GROUP_DATA[0].title
+        assert first_test_pg.status == TEST_PARTNER_GROUP_DATA[0].field_status
 
     @responses.activate
     def test_audit_study_sites_with_extra_site(self):
