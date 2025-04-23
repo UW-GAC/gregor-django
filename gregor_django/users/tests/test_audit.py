@@ -138,11 +138,16 @@ TEST_PARTNER_GROUP_DATA = [
             "id": "11",
             "title": "Partner Group 11",
             "drupal_internal__nid": "11",
-            "field_status": "Active",
+            "field_status": PartnerGroup.StatusTypes.ACTIVE,
         }
     ),
     PartnerGroupMockObject(
-        **{"id": "22", "title": "Partner Group 22", "drupal_internal__nid": "22", "field_status": "Inactive"}
+        **{
+            "id": "22",
+            "title": "Partner Group 22",
+            "drupal_internal__nid": "22",
+            "field_status": PartnerGroup.StatusTypes.INACTIVE,
+        }
     ),
 ]
 
@@ -303,7 +308,7 @@ class TestUserDataAudit(TestCase):
             drupal_node_id=TEST_PARTNER_GROUP_DATA[0].drupal_internal__nid,
             short_name="WrongShortName",
             full_name="WrongTitle",
-            status=PartnerGroup.STATUS_INACTIVE,
+            status=PartnerGroup.StatusTypes.INACTIVE,
         )
         PartnerGroup.objects.create(
             drupal_node_id=TEST_PARTNER_GROUP_DATA[1].drupal_internal__nid,

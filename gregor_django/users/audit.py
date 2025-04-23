@@ -535,6 +535,11 @@ class RemovePartnerGroup(PartnerGroupAuditResult):
 
 
 @dataclass
+class MembershipIssuePartnerGroup(PartnerGroupAuditResult):
+    pass
+
+
+@dataclass
 class UpdatePartnerGroup(PartnerGroupAuditResult):
     changes: dict
 
@@ -557,6 +562,7 @@ class PartnerGroupAudit(GREGoRAudit):
         valid_nodes = set()
         json_api = get_drupal_json_api()
         study_partner_groups = get_partner_groups(json_api=json_api)
+        newly_inactive_partner_groups = set()
         for study_partner_group_info in study_partner_groups.values():
             short_name = study_partner_group_info["short_name"]
             full_name = study_partner_group_info["full_name"]
@@ -599,6 +605,8 @@ class PartnerGroupAudit(GREGoRAudit):
                 if study_partner_group.status != status:
                     study_partner_group_updates.update({"status": {"old": study_partner_group.status, "new": status}})
                     study_partner_group.status = status
+                    if status == PartnerGroup.StatusTypes.INACTIVE:
+                        newly_inactive_partner_groups.add(study_partner_group.id)
 
                 if study_partner_group_updates:
                     if self.apply_changes is True:
@@ -623,6 +631,16 @@ class PartnerGroupAudit(GREGoRAudit):
             self.errors.append(
                 RemovePartnerGroup(local_partner_group=iss, note=self.ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID)
             )
+
+        # Check for membership issues with inactive partner groups
+        # It is an issue if the member group is part of GREGOR_ALL
+        inactive_partner_groups = PartnerGroup.objects.filter(
+            Q(status=PartnerGroup.StatusTypes.INACTIVE) | Q(id__in=newly_inactive_partner_groups)
+        )
+        for inactive_partner_group in inactive_partner_groups:
+            if inactive_partner_group.member_group is not None:
+                if inactive_partner_group.member_group.parent_memberships.filter(parent_group__name="GREGOR_ALL"):
+                    self.errors.append(MembershipIssuePartnerGroup(local_partner_group=inactive_partner_group))
 
 
 def get_drupal_json_api():
