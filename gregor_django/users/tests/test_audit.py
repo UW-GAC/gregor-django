@@ -352,7 +352,7 @@ class TestUserDataAudit(TestCase):
             child_group=pg_member_group,
             role=GroupGroupMembership.MEMBER,
         )
-        PartnerGroup.objects.create(
+        pg2 = PartnerGroup.objects.create(
             drupal_node_id=pg2_nid_id,
             short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[1].title),
             full_name=TEST_PARTNER_GROUP_DATA[1].title,
@@ -365,10 +365,16 @@ class TestUserDataAudit(TestCase):
         pg_audit = audit.PartnerGroupAudit(apply_changes=True)
         pg_audit.run_audit()
 
+        pg2.refresh_from_db()
+
         self.assertFalse(pg_audit.ok())
         self.assertEqual(len(pg_audit.errors), 1)
         self.assertEqual(PartnerGroup.objects.all().count(), 2)
 
+        # Verify that status was updated by the audit
+        self.assertEqual(pg2.status, PartnerGroup.StatusTypes.INACTIVE)
+        # Verify our partner group that is inactive and a member of GREGOR_ALL
+        # is reported as an error in our audit.
         errors_table = pg_audit.get_errors_table()
         self.assertIn("MembershipIssuePartnerGroup", errors_table.render_to_text())
 
