@@ -364,9 +364,7 @@ class TestUserDataAudit(TestCase):
         self.add_fake_partner_groups_response()
         pg_audit = audit.PartnerGroupAudit(apply_changes=True)
         pg_audit.run_audit()
-        import sys
 
-        print(f"AUDIT AUDIT: {pg_audit} {pg_audit.ok()}", file=sys.stderr)
         self.assertFalse(pg_audit.ok())
         self.assertEqual(len(pg_audit.errors), 1)
         self.assertEqual(PartnerGroup.objects.all().count(), 2)
