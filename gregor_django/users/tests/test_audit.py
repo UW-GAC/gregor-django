@@ -356,7 +356,7 @@ class TestUserDataAudit(TestCase):
             drupal_node_id=pg2_nid_id,
             short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[1].title),
             full_name=TEST_PARTNER_GROUP_DATA[1].title,
-            status=TEST_PARTNER_GROUP_DATA[1].field_status,
+            status=PartnerGroup.StatusTypes.ACTIVE,
             member_group=pg_member_group,
         )
 
