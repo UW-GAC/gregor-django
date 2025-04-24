@@ -47,7 +47,7 @@ class UserAuditResultsTable(tables.Table, TextTable):
         # Check if the table is being exported
         if getattr(self, "gregor_is_export", None):
             return value  # Custom export format
-        return mark_safe(f"<a href='{value}'>User Detail Link</a>")
+        return mark_safe(f"<a href='{value}'>User Detail</a>")
 
     class Meta:
         orderable = False
@@ -632,8 +632,7 @@ class PartnerGroupAudit(GREGoRAudit):
                 RemovePartnerGroup(local_partner_group=iss, note=self.ISSUE_TYPE_LOCAL_PARTNER_GROUP_INVALID)
             )
 
-        # Check for membership issues with inactive partner groups
-        # It is an issue if the member group is part of GREGOR_ALL
+        # It is an issue if the member group for an inactive pg is part of GREGOR_ALL
         inactive_partner_groups = PartnerGroup.objects.filter(
             Q(status=PartnerGroup.StatusTypes.INACTIVE) | Q(id__in=newly_inactive_partner_groups)
         )

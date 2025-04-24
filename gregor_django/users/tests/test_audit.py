@@ -4,10 +4,10 @@ from io import StringIO
 
 import responses
 from allauth.socialaccount.models import SocialAccount
-from anvil_consortium_manager.models import (
-    Account,
-    GroupAccountMembership,
-    ManagedGroup,
+from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
+from anvil_consortium_manager.tests.factories import (
+    GroupGroupMembershipFactory,
+    ManagedGroupFactory,
 )
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -334,6 +334,45 @@ class TestUserDataAudit(TestCase):
         # did we update the long name
         assert first_test_pg.full_name == TEST_PARTNER_GROUP_DATA[0].title
         assert first_test_pg.status == TEST_PARTNER_GROUP_DATA[0].field_status
+
+    @responses.activate
+    def test_audit_inactive_partner_groups_in_gregor_all(self):
+        PartnerGroup.objects.create(
+            drupal_node_id=TEST_PARTNER_GROUP_DATA[0].drupal_internal__nid,
+            short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[0].title),
+            full_name=TEST_PARTNER_GROUP_DATA[0].title,
+            status=TEST_PARTNER_GROUP_DATA[0].field_status,
+        )
+        pg2_nid_id = TEST_PARTNER_GROUP_DATA[1].drupal_internal__nid
+
+        gregor_all_group = ManagedGroupFactory(name="GREGOR_ALL")
+        pg_member_group = ManagedGroupFactory(name=f"PG_{pg2_nid_id}_MEMBER_GROUP")
+        GroupGroupMembershipFactory.create(
+            parent_group=gregor_all_group,
+            child_group=pg_member_group,
+            role=GroupGroupMembership.MEMBER,
+        )
+        PartnerGroup.objects.create(
+            drupal_node_id=pg2_nid_id,
+            short_name=audit.partner_group_short_name_from_full_name(TEST_PARTNER_GROUP_DATA[1].title),
+            full_name=TEST_PARTNER_GROUP_DATA[1].title,
+            status=TEST_PARTNER_GROUP_DATA[1].field_status,
+            member_group=pg_member_group,
+        )
+
+        self.get_fake_json_api()
+        self.add_fake_partner_groups_response()
+        pg_audit = audit.PartnerGroupAudit(apply_changes=True)
+        pg_audit.run_audit()
+        import sys
+
+        print(f"AUDIT AUDIT: {pg_audit} {pg_audit.ok()}", file=sys.stderr)
+        self.assertFalse(pg_audit.ok())
+        self.assertEqual(len(pg_audit.errors), 1)
+        self.assertEqual(PartnerGroup.objects.all().count(), 2)
+
+        errors_table = pg_audit.get_errors_table()
+        self.assertIn("MembershipIssuePartnerGroup", errors_table.render_to_text())
 
     @responses.activate
     def test_audit_study_sites_with_extra_site(self):
