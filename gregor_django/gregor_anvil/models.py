@@ -101,6 +101,10 @@ class ResearchCenter(TimeStampedModel, models.Model):
 class PartnerGroup(TimeStampedModel, models.Model):
     """A model to track Partner Groups"""
 
+    class StatusTypes(models.TextChoices):
+        ACTIVE = "Active", "Active"
+        INACTIVE = "Inactive", "Inactive"
+
     short_name = models.CharField(max_length=15, unique=True)
     """The short name of the Partner Group"""
 
@@ -109,6 +113,8 @@ class PartnerGroup(TimeStampedModel, models.Model):
 
     drupal_node_id = models.IntegerField(blank=True, null=True)
     """Reference node ID for entity in drupal"""
+
+    status = models.CharField(max_length=20, choices=StatusTypes.choices, default=StatusTypes.ACTIVE)
 
     member_group = models.OneToOneField(
         ManagedGroup,
