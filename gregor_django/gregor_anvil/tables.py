@@ -95,6 +95,16 @@ class PartnerGroupTable(tables.Table):
         model = models.PartnerGroup
         fields = ("full_name", "short_name", "status")
 
+    def render_status(self, value):
+        status_classes = {
+            models.PartnerGroup.StatusTypes.ACTIVE: "bg-success",
+            models.PartnerGroup.StatusTypes.INACTIVE: "bg-danger",
+        }
+
+        css_class = status_classes.get(value, "bg-warning")
+
+        return format_html('<span class="badge {}">{}</span>', css_class, value)
+
 
 class ConsentGroupTable(tables.Table):
     """A table for `ConsentGroups`."""
