@@ -19,7 +19,7 @@ coverage[toml]==7.5.2
     #   pytest-cov
 django-coverage-plugin==3.1.0
     # via -r requirements/test-requirements.in
-django-test-migrations==1.4.0
+django-test-migrations==1.5.0
     # via -r requirements/test-requirements.in
 exceptiongroup==1.2.0
     # via pytest
@@ -56,9 +56,9 @@ pytest==8.3.5
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
-pytest-cov==6.0.0
+pytest-cov==6.1.1
     # via -r requirements/test-requirements.in
-pytest-django==4.10.0
+pytest-django==4.11.1
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
@@ -87,7 +87,7 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.32.0.20250306
+types-requests==2.32.0.20250328
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
