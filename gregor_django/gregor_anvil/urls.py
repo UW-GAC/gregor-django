@@ -204,7 +204,7 @@ audit_patterns = (
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
-    path("partner_groups", include(partner_group_patterns)),
+    path("partner_groups/", include(partner_group_patterns)),
     path("consent_groups/", include(consent_group_patterns)),
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
