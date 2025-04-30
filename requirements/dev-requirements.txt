@@ -70,7 +70,7 @@ executing==2.0.1
     # via stack-data
 filelock==3.13.1
     # via virtualenv
-h11==0.14.0
+h11==0.16.0
     # via uvicorn
 identify==2.5.35
     # via pre-commit
@@ -150,7 +150,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.11.2
+ruff==0.11.7
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
