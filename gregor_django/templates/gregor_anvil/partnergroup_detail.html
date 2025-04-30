@@ -7,6 +7,13 @@
   <ul>
     <li>Full name: {{ object.full_name }}</li>
     <li>Short name: {{ object.short_name }}</li>
+    <li>Status:
+      <span class="badge
+      {% if object.status == object.StatusTypes.ACTIVE %}bg-success
+      {% else %}bg-danger{% endif %}">
+        {{ object.get_status_display }}
+      </span>
+    </li>
     <li>Member group:
       {% if object.member_group %}
         <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a>
