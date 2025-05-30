@@ -654,7 +654,7 @@ class TestUserDataAudit(TestCase):
             uid=999,
             provider=CustomProvider.id,
         )
-        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):
+        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True, DRUPAL_DATA_AUDIT_DEACTIVATE_USER_THRESHOLD=3):
             user_audit = audit.UserAudit(apply_changes=False)
             user_audit.run_audit()
             self.assertFalse(user_audit.ok())

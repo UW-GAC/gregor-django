@@ -7,7 +7,7 @@ app_name = "gregor_anvil"
 
 research_center_patterns = (
     [
-        path("<int:pk>", views.ResearchCenterDetail.as_view(), name="detail"),
+        path("<int:pk>/", views.ResearchCenterDetail.as_view(), name="detail"),
         path("", views.ResearchCenterList.as_view(), name="list"),
     ],
     "research_centers",
@@ -15,7 +15,7 @@ research_center_patterns = (
 
 partner_group_patterns = (
     [
-        path("<int:pk>", views.PartnerGroupDetail.as_view(), name="detail"),
+        path("<int:pk>/", views.PartnerGroupDetail.as_view(), name="detail"),
         path("", views.PartnerGroupList.as_view(), name="list"),
     ],
     "partner_groups",
@@ -23,7 +23,7 @@ partner_group_patterns = (
 
 consent_group_patterns = (
     [
-        path("<int:pk>", views.ConsentGroupDetail.as_view(), name="detail"),
+        path("<int:pk>/", views.ConsentGroupDetail.as_view(), name="detail"),
         path("", views.ConsentGroupList.as_view(), name="list"),
     ],
     "consent_groups",
