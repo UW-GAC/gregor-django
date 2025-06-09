@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/requirements.in
 #
-argon2-cffi==23.1.0
+argon2-cffi==25.1.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
@@ -34,7 +34,7 @@ crispy-bootstrap5==2025.4
     #   django-anvil-consortium-manager
 cryptography==45.0.3
     # via -r requirements/requirements.in
-django==4.2.21
+django==4.2.22
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -50,7 +50,7 @@ django==4.2.21
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.8.1
+django-allauth==65.9.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.31.0
     # via -r requirements/requirements.in
