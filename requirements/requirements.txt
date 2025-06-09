@@ -34,7 +34,7 @@ crispy-bootstrap5==2025.4
     #   django-anvil-consortium-manager
 cryptography==45.0.3
     # via -r requirements/requirements.in
-django==4.2.21
+django==4.2.22
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -52,7 +52,7 @@ django==4.2.21
     #   django-tables2
 django-allauth==65.8.1
     # via -r requirements/requirements.in
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.30.0
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.31.0
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
