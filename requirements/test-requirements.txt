@@ -72,7 +72,7 @@ python-dateutil==2.8.2
     #   freezegun
 pyyaml==6.0.1
     # via responses
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   responses
@@ -95,7 +95,7 @@ typing-extensions==4.8.0
     # via
     #   -c requirements/requirements.txt
     #   django-test-migrations
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   requests

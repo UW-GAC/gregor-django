@@ -148,7 +148,7 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -221,7 +221,7 @@ typing-extensions==4.8.0
     #   django-stubs-ext
     #   mypy
     #   uvicorn
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt

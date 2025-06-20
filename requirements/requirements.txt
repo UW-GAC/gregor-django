@@ -135,8 +135,9 @@ pytz==2023.4
     # via
     #   django-anvil-consortium-manager
     #   django-dbbackup
-requests==2.32.3
+requests==2.32.4
     # via
+    #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
     #   jsonapi-requests
     #   requests-oauthlib
@@ -161,8 +162,10 @@ tomli==2.0.1
     #   pyproject-hooks
 typing-extensions==4.8.0
     # via asgiref
-urllib3==2.2.2
-    # via requests
+urllib3==2.5.0
+    # via
+    #   -r requirements/requirements.in
+    #   requests
 wheel==0.42.0
     # via pip-tools
 whitenoise==6.9.0
