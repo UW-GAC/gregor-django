@@ -138,7 +138,6 @@ class OverDeactivateThresholdUser(UserAuditResult):
 class UserAudit(GREGoRAudit):
     ISSUE_TYPE_USER_INACTIVE = "User is inactive in drupal"
     ISSUE_TYPE_USER_REMOVED_FROM_SITE = "User removed from site"
-    USER_DEACTIVATE_THRESHOLD = 3
     results_table_class = UserAuditResultsTable
 
     def __init__(self, apply_changes=False, ignore_deactivate_threshold=False):
@@ -150,6 +149,7 @@ class UserAudit(GREGoRAudit):
         super().__init__()
         self.apply_changes = apply_changes
         self.ignore_deactivate_threshold = ignore_deactivate_threshold
+        self.USER_DEACTIVATE_THRESHOLD = settings.DRUPAL_DATA_AUDIT_DEACTIVATE_USER_THRESHOLD
 
     def _run_audit(self):
         """Run the audit on local and remote users."""

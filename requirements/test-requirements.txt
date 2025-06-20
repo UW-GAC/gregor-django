@@ -29,7 +29,7 @@ factory-boy==3.3.3
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
-freezegun==1.5.1
+freezegun==1.5.2
     # via -r requirements/test-requirements.in
 idna==3.7
     # via
@@ -49,7 +49,9 @@ packaging==23.2
     #   pytest-sugar
 pluggy==1.5.0
     # via pytest
-pytest==8.3.5
+pygments==2.19.1
+    # via pytest
+pytest==8.4.0
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
@@ -62,7 +64,7 @@ pytest-django==4.11.1
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
-pytest-xdist==3.6.1
+pytest-xdist==3.7.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via
@@ -70,7 +72,7 @@ python-dateutil==2.8.2
     #   freezegun
 pyyaml==6.0.1
     # via responses
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   responses
@@ -87,13 +89,13 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.32.0.20250328
+types-requests==2.32.0.20250602
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
     #   -c requirements/requirements.txt
     #   django-test-migrations
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   requests
