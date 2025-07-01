@@ -48,7 +48,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.21
+django==4.2.22
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.16.0
+mypy==1.16.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -131,8 +131,9 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pygments==2.17.2
+pygments==2.19.1
     # via
+    #   -c requirements/test-requirements.txt
     #   ipython
     #   sphinx
 pylint==3.1.0
@@ -147,12 +148,12 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.11.12
+ruff==0.12.0
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -220,7 +221,7 @@ typing-extensions==4.8.0
     #   django-stubs-ext
     #   mypy
     #   uvicorn
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
