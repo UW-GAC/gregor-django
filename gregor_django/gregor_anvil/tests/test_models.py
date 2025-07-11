@@ -324,9 +324,9 @@ class UploadCycleTest(TestCase):
     def test_date_ready_for_compute_after_end_date(self):
         today = date.today()
         instance = factories.UploadCycleFactory.build(
-            start_date=today,
-            end_date=today + timedelta(days=10),
-            date_ready_for_compute=today + timedelta(days=11),
+            start_date=today - timedelta(days=10),
+            end_date=today - timedelta(days=5),
+            date_ready_for_compute=today - timedelta(days=4),
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -499,6 +499,41 @@ class UploadCycleTest(TestCase):
         self.assertFalse(instance.is_current)
         self.assertTrue(instance.is_future)
 
+    def test_date_ready_to_compute_future(self):
+        instance = factories.UploadCycleFactory.build(
+            start_date=timezone.localdate() - timedelta(days=20),
+            end_date=timezone.localdate() + timedelta(days=2),
+            date_ready_for_compute=timezone.localdate() + timedelta(days=1),
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+
+        self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
+
+        self.assertIn("Date cannot be in the future", e.exception.message_dict["date_ready_for_compute"][0])
+
+    def test_date_ready_to_compute_today(self):
+        instance = factories.UploadCycleFactory.build(
+            start_date=timezone.localdate() - timedelta(days=20),
+            end_date=timezone.localdate() + timedelta(days=2),
+            date_ready_for_compute=timezone.localdate(),
+        )
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_ready_to_compute_past(self):
+        instance = factories.UploadCycleFactory.build(
+            start_date=timezone.localdate() - timedelta(days=20),
+            end_date=timezone.localdate() - timedelta(days=2),
+            date_ready_for_compute=timezone.localdate() - timedelta(days=3),
+        )
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
 
 class UploadWorkspaceTest(TestCase):
     """Tests for the UploadWorkspace model."""
@@ -615,6 +650,30 @@ class UploadWorkspaceTest(TestCase):
         self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_date_qc_completed_future(self):
+        instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_past=True)
+        instance.date_qc_completed = timezone.localdate() + timedelta(days=1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("Date cannot be in the future", str(e.exception.error_dict["date_qc_completed"][0]))
+
+    def test_date_qc_completed_today(self):
+        instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_past=True)
+        instance.date_qc_completed = timezone.localdate()
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_qc_completed_past(self):
+        instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_past=True)
+        instance.date_qc_completed = timezone.localdate() - timedelta(days=1)
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
 
 
 class PartnerGroupTest(TestCase):
@@ -824,6 +883,32 @@ class PartnerUploadWorkspaceTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance_2.save()
 
+    def test_date_completed_past(self):
+        instance = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=timezone.localdate() - timedelta(days=1)
+        )
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_completed_today(self):
+        instance = factories.PartnerUploadWorkspaceFactory.create(date_completed=timezone.localdate())
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_completed_future(self):
+        instance = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=timezone.localdate() + timedelta(days=1)
+        )
+
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
+        self.assertIn("Date cannot be in the future", e.exception.message_dict["date_completed"][0])
+
 
 class ResourceWorkspaceTest(TestCase):
     """Tests for the ResourceWorkspace model."""
@@ -886,6 +971,32 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("after end_date", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_date_completed_past(self):
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=timezone.localdate() - timedelta(days=1)
+        )
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_completed_today(self):
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create(date_completed=timezone.localdate())
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_completed_future(self):
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create(
+            date_completed=timezone.localdate() + timedelta(days=1)
+        )
+
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
+        self.assertIn("Date cannot be in the future", e.exception.message_dict["date_completed"][0])
 
 
 class ReleaseWorkspaceTest(TestCase):
@@ -1028,6 +1139,28 @@ class ReleaseWorkspaceTest(TestCase):
         """get_dbgap_accession works as expected."""
         instance = factories.ReleaseWorkspaceFactory.create(dbgap_version=1, dbgap_participant_set=2)
         self.assertEqual(instance.get_dbgap_accession(), "phs003047.v1.p2")
+
+    def test_date_released_past(self):
+        instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate() - timedelta(days=1))
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_released_today(self):
+        instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate())
+        try:
+            instance.full_clean()
+        except ValidationError:
+            self.fail("full_clean() raised ValidationError unexpectedly")
+
+    def test_date_released_future(self):
+        instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate() + timedelta(days=1))
+
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
+        self.assertIn("Date cannot be in the future", e.exception.message_dict["date_released"][0])
 
 
 class DCCProcessingWorkspaceTest(TestCase):
