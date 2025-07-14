@@ -518,10 +518,8 @@ class UploadCycleTest(TestCase):
             end_date=timezone.localdate() + timedelta(days=2),
             date_ready_for_compute=timezone.localdate(),
         )
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_ready_to_compute_past(self):
         instance = factories.UploadCycleFactory.build(
@@ -529,10 +527,8 @@ class UploadCycleTest(TestCase):
             end_date=timezone.localdate() - timedelta(days=2),
             date_ready_for_compute=timezone.localdate() - timedelta(days=3),
         )
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
 
 class UploadWorkspaceTest(TestCase):
@@ -662,18 +658,14 @@ class UploadWorkspaceTest(TestCase):
     def test_date_qc_completed_today(self):
         instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_past=True)
         instance.date_qc_completed = timezone.localdate()
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_qc_completed_past(self):
         instance = factories.UploadWorkspaceFactory.create(upload_cycle__is_past=True)
         instance.date_qc_completed = timezone.localdate() - timedelta(days=1)
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
 
 class PartnerGroupTest(TestCase):
@@ -887,17 +879,13 @@ class PartnerUploadWorkspaceTest(TestCase):
         instance = factories.PartnerUploadWorkspaceFactory.create(
             date_completed=timezone.localdate() - timedelta(days=1)
         )
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_completed_today(self):
         instance = factories.PartnerUploadWorkspaceFactory.create(date_completed=timezone.localdate())
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_completed_future(self):
         instance = factories.PartnerUploadWorkspaceFactory.create(
@@ -976,17 +964,13 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         instance = factories.CombinedConsortiumDataWorkspaceFactory.create(
             date_completed=timezone.localdate() - timedelta(days=1)
         )
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_completed_today(self):
         instance = factories.CombinedConsortiumDataWorkspaceFactory.create(date_completed=timezone.localdate())
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_completed_future(self):
         instance = factories.CombinedConsortiumDataWorkspaceFactory.create(
@@ -1142,17 +1126,13 @@ class ReleaseWorkspaceTest(TestCase):
 
     def test_date_released_past(self):
         instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate() - timedelta(days=1))
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_released_today(self):
         instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate())
-        try:
-            instance.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly")
+
+        instance.full_clean()
 
     def test_date_released_future(self):
         instance = factories.ReleaseWorkspaceFactory.create(date_released=timezone.localdate() + timedelta(days=1))
