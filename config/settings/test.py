@@ -3,7 +3,7 @@ With these settings, tests run faster.
 """
 
 from .base import *  # noqa
-from .base import env
+from .base import CACHES, env
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -39,3 +39,8 @@ ANVIL_DCC_ADMINS_GROUP_NAME = "TEST_GREGOR_DCC_ADMINS"
 
 # Suppress DEBUG logging in tests without changing base.py file.
 LOGGING["root"]["level"] = "INFO"  # noqa: F405
+
+CACHES["default"] = {
+    "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+    "LOCATION": "base_cache_table",
+}
