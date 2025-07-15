@@ -3,10 +3,10 @@
 MAILTO="gregorweb@uw.edu"
 
 # nightly except sunday at 02:00
-0 2 * * MON-SAT . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --traceback --email gregorconsortium@uw.edu --errors-only >> cron.log
+0 2 * * MON-SAT . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --cache --traceback --email gregorconsortium@uw.edu --errors-only >> cron.log
 
 # sunday night at 02:00
-0 2 * * SUN . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --traceback --email gregorconsortium@uw.edu >> cron.log
+0 2 * * SUN . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py run_anvil_audit --cache --traceback --email gregorconsortium@uw.edu >> cron.log
 
 # Nightly user data audit
 0 3 * * * . /var/www/django/gregor_apps/gregor-apps-activate.sh; python manage.py sync-drupal-data --update --email gregorweb@uw.edu >> cron.log
