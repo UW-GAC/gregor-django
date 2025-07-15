@@ -3,7 +3,7 @@ import os
 # default to using dotenv files for all production environements
 os.environ["DJANGO_READ_DOT_ENV_FILE"] = "True"
 from .base import *  # noqa
-from .base import SILENCED_SYSTEM_CHECKS, env  # noqa
+from .base import CACHES, SILENCED_SYSTEM_CHECKS, env  # noqa
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -20,12 +20,11 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # no
 
 # CACHES
 # ------------------------------------------------------------------------------
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "base_cache_table",
-    }
+CACHES["default"] = {
+    "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+    "LOCATION": "base_cache_table",
 }
+
 # CACHES = {
 #     "default": {
 #         "BACKEND": "django_redis.cache.RedisCache",
