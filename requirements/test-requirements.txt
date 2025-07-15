@@ -6,11 +6,11 @@
 #
 certifi==2024.7.4
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 charset-normalizer==3.3.2
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 coverage[toml]==7.5.2
     # via
@@ -33,7 +33,7 @@ freezegun==1.5.3
     # via -r requirements/test-requirements.in
 idna==3.7
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 iniconfig==2.0.0
     # via pytest
@@ -43,7 +43,7 @@ marshmallow-jsonapi==0.24.0
     # via -r requirements/test-requirements.in
 packaging==23.2
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   marshmallow
     #   pytest
     #   pytest-sugar
@@ -76,30 +76,30 @@ pyyaml==6.0.1
     # via responses
 requests==2.32.4
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   responses
 responses==0.25.7
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   python-dateutil
 termcolor==2.4.0
     # via pytest-sugar
 tomli==2.0.1
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   coverage
     #   pytest
 types-requests==2.32.4.20250611
     # via -r requirements/test-requirements.in
 typing-extensions==4.8.0
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   django-test-migrations
 urllib3==2.5.0
     # via
-    #   -c /home/dependabot/dependabot-updater/tmp/20250714-1301-27wob6/dependabot_20250714-1301-ns73pc/requirements/requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
     #   responses
     #   types-requests
