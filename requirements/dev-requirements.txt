@@ -10,7 +10,7 @@ anyio==4.4.0
     # via
     #   starlette
     #   watchfiles
-asgiref==3.8.1
+asgiref==3.9.1
     # via
     #   -c requirements/requirements.txt
     #   django
