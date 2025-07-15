@@ -1,3 +1,5 @@
+from datetime import date
+
 from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -6,6 +8,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
+
+
+def validate_not_future_date(value: date):
+    if value > timezone.now().date():
+        raise ValidationError("Date cannot be in the future.")
 
 
 class ConsentGroup(TimeStampedModel, models.Model):
@@ -170,6 +177,7 @@ class UploadCycle(TimeStampedModel, models.Model):
         blank=True,
         null=True,
         default=None,
+        validators=[validate_not_future_date],
     )
     note = models.TextField(blank=True, help_text="Additional notes.")
 
@@ -250,6 +258,7 @@ class UploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         blank=True,
         null=True,
         default=None,
+        validators=[validate_not_future_date],
     )
 
     class Meta:
@@ -288,6 +297,7 @@ class PartnerUploadWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="The date when uploads to this workspace and data validation were completed.",
         null=True,
         blank=True,
+        validators=[validate_not_future_date],
     )
 
     class Meta:
@@ -321,6 +331,7 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         blank=True,
         null=True,
         default=None,
+        validators=[validate_not_future_date],
     )
 
     def clean(self):
@@ -357,6 +368,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         null=True,
         blank=True,
         help_text="Date that this workspace was released to the scientific community.",
+        validators=[validate_not_future_date],
     )
 
     class Meta:
