@@ -131,12 +131,12 @@ class UploadCycleUpdateFormTest(TestCase):
     def test_valid_date_ready_for_compute(self):
         """Form is valid with date_ready_for_compute."""
         form_data = {
-            "start_date": date.today(),
-            "end_date": date.today() + timedelta(days=60),
-            "date_ready_for_compute": date.today() + timedelta(days=10),
+            "start_date": date.today() - timedelta(days=10),
+            "end_date": date.today() - timedelta(days=5),
+            "date_ready_for_compute": date.today() - timedelta(days=6),
         }
         form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
+        self.assertTrue(form.is_valid(), f"For not valid, has errors {form.errors}")
 
 
 class UploadWorkspaceFormTest(TestCase):
