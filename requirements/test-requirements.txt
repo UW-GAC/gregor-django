@@ -29,7 +29,7 @@ factory-boy==3.3.3
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
-freezegun==1.5.2
+freezegun==1.5.3
     # via -r requirements/test-requirements.in
 idna==3.7
     # via
@@ -66,7 +66,7 @@ pytest-django==4.11.1
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
-pytest-xdist==3.7.0
+pytest-xdist==3.8.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via

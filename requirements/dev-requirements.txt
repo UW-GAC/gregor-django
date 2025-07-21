@@ -10,7 +10,7 @@ anyio==4.4.0
     # via
     #   starlette
     #   watchfiles
-asgiref==3.8.1
+asgiref==3.9.1
     # via
     #   -c requirements/requirements.txt
     #   django
@@ -48,7 +48,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.22
+django==4.2.23
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -100,7 +100,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.16.1
+mypy==1.17.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -153,7 +153,7 @@ requests==2.32.4
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.12.0
+ruff==0.12.4
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
