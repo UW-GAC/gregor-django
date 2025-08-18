@@ -8,7 +8,7 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
     WorkspaceGroupSharing,
 )
-from anvil_consortium_manager.tables import ManagedGroupStaffTable
+from anvil_consortium_manager.tables import ManagedGroupStaffTable, WorkspaceUserTable
 from django.conf import settings
 from django.db.models import Q
 
@@ -244,6 +244,15 @@ class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAd
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+
+    def get_extra_detail_context_data(self, workspace, request):
+        """Get extra context data for the release workspace detail view."""
+        context = super().get_extra_detail_context_data(workspace, request)
+        # Add the list of upload workspaces associated with this release workspace.
+        context["contributing_workspace_table"] = WorkspaceUserTable(
+            workspace.releaseworkspace.contributing_workspaces.all(),
+        )
+        return context
 
 
 class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):

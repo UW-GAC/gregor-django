@@ -2261,21 +2261,34 @@ class ReleaseWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
-    @skip("Need to allow extra context in ACM.")
-    def test_contains_upload_workspaces(self):
+    def test_contains_contributing_workspaces(self):
         """Response contains the upload workspaces."""
         upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
         upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.object.upload_cycle
+        )
+        self.object.contributing_workspaces.add(upload_workspace_1.workspace)
+        self.object.contributing_workspaces.add(upload_workspace_2.workspace)
+        self.object.contributing_workspaces.add(dcc_processed_data_workspace.workspace)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
-        self.assertIn("included_workspace_table", response.context_data)
+        self.assertIn("contributing_workspace_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["contributing_workspace_table"].data),
+            3,
+        )
         self.assertIn(
             upload_workspace_1.workspace,
-            response.context_data["included_workspace_table"].data,
+            response.context_data["contributing_workspace_table"].data,
         )
         self.assertIn(
             upload_workspace_2.workspace,
-            response.context_data["included_workspace_table"].data,
+            response.context_data["contributing_workspace_table"].data,
+        )
+        self.assertIn(
+            dcc_processed_data_workspace.workspace,
+            response.context_data["contributing_workspace_table"].data,
         )
 
     @skip("Need to allow extra context in ACM.")
