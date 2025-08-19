@@ -2361,6 +2361,243 @@ class ReleaseWorkspaceDetailTest(TestCase):
         )
 
 
+class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
+    """Tests of the anvil_consortium_manager ReleaseWorkspaceUpdateContributingWorkspaces view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        # Create a release workspace.
+        self.release_workspace = factories.ReleaseWorkspaceFactory.create()
+        # Create some contributing workspaces.
+        self.upload_workspace = factories.UploadWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+        )
+        self.dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("gregor_anvil:release_workspaces:update:contributing_workspaces", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.ReleaseWorkspaceUpdateContributingWorkspaces.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"))
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name)
+        )
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_name=self.release_workspace.workspace.billing_project.name,
+                workspace_name=self.release_workspace.workspace.name,
+            )
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name)
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_name=self.release_workspace.workspace.billing_project.name,
+                workspace_name=self.release_workspace.workspace.name,
+            )
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name)
+        )
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.ReleaseWorkspaceUpdateContributingWorkspacesForm)
+
+    def test_can_update_one_upload_workspace(self):
+        """Posting valid data to the form adds one workspace."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 1)
+        self.assertIn(self.upload_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+        # History is added.
+        self.assertEqual(self.release_workspace.history.count(), 2)
+        self.assertEqual(self.release_workspace.history.latest().history_type, "~")
+
+    def test_can_update_one_dcc_processed_data_workspace(self):
+        """Posting valid data to the form adds one workspace."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [self.dcc_processed_data_workspace.workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 1)
+        self.assertIn(self.dcc_processed_data_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+        # History is added.
+        self.assertEqual(self.release_workspace.history.count(), 2)
+        self.assertEqual(self.release_workspace.history.latest().history_type, "~")
+
+    def test_can_update_two_workspaces(self):
+        """Posting valid data to the form adds two workspaces."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [
+                    self.upload_workspace.workspace.pk,
+                    self.dcc_processed_data_workspace.workspace.pk,
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 2)
+        self.assertIn(self.upload_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+        self.assertIn(self.dcc_processed_data_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.ReleaseWorkspaceUpdateContributingWorkspaces.success_message, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+            },
+        )
+        self.assertRedirects(response, self.release_workspace.get_absolute_url())
+
+    def test_object_does_not_exist_billing_project(self):
+        """Raises 404 when object's billing project doesn't exist."""
+        request = self.factory.get(self.get_url("foo", self.release_workspace.workspace.name))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, billing_project_name="foo", workspace_name=self.release_workspace.workspace.name)
+
+    def test_object_does_not_exist_workspace(self):
+        """Raises 404 when object's billing project doesn't exist."""
+        request = self.factory.get(self.get_url(self.release_workspace.workspace.billing_project.name, "foo"))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_name=self.release_workspace.workspace.billing_project.name,
+                workspace_name="foo",
+            )
+
+    def test_object_does_not_exist_different_workspace_type(self):
+        """Raises 404 when object's billing project doesn't exist."""
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        request = self.factory.get(
+            self.get_url(other_workspace.workspace.billing_project.name, other_workspace.workspace.name)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_name=other_workspace.workspace.billing_project.name,
+                workspace_name=other_workspace.workspace.name,
+            )
+
+    def test_invalid_input(self):
+        """Posting invalid data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": "foo",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("contributing_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_workspaces"]), 1)
+        self.assertIn("valid value", form.errors["contributing_workspaces"][0])
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 0)
+
+    def test_post_blank_data_ready_for_compute(self):
+        """Can successfully post blank data for date_ready_for_compute."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_workspaces": [],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("contributing_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_workspaces"]), 1)
+        self.assertIn("required", form.errors["contributing_workspaces"][0])
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 0)
+
+
 class WorkspaceReportTest(TestCase):
     def setUp(self):
         """Set up test class."""

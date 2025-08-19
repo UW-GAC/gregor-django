@@ -46,6 +46,24 @@ workspace_report_patterns = (
     "reports",
 )
 
+release_workspace_update_patterns = (
+    [
+        path(
+            "contributing_workspaces/",
+            views.ReleaseWorkspaceUpdateContributingWorkspaces.as_view(),
+            name="contributing_workspaces",
+        ),
+    ],
+    "update",
+)
+
+release_workspace_patterns = (
+    [
+        path("<slug:billing_project_slug>/<slug:workspace_slug>/update/", include(release_workspace_update_patterns)),
+    ],
+    "release_workspaces",
+)
+
 upload_workspace_sharing_audit_patterns = (
     [
         path("all/", views.UploadWorkspaceSharingAudit.as_view(), name="all"),
@@ -209,4 +227,5 @@ urlpatterns = [
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
     path("audit/", include(audit_patterns)),
+    path("release_workspaces/", include(release_workspace_patterns)),
 ]

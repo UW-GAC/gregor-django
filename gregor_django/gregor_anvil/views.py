@@ -806,3 +806,38 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolve(
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
+
+
+class ReleaseWorkspaceUpdateContributingWorkspaces(
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update the contributing workspaces for a ReleaseWorkspace."""
+
+    model = models.ReleaseWorkspace
+    form_class = forms.ReleaseWorkspaceUpdateContributingWorkspacesForm
+    template_name = "gregor_anvil/releaseworkspace_update_contributing_workspaces.html"
+    success_message = "Successfully updated contributing workspaces."
+
+    def get_form(self, form_class=None):
+        """Get the form for the view."""
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(self.object, **self.get_form_kwargs())
+
+    def get_object(self, queryset=None):
+        """Get the object for the view."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = self.model.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj

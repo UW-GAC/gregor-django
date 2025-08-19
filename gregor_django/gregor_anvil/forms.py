@@ -148,6 +148,50 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
+class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update contributing_workspaces in a ReleaseWorkspace object."""
+
+    ERROR_INCORRECT_WORKSPACE_TYPE = (
+        "All contributing workspaces must be either UploadWorkspaces or DCCProcessedDataWorkspaces."
+    )
+    ERROR_DIFFERENT_CONSENT_GROUP = (
+        "All contributing workspaces must have the same consent group as the release workspace."
+    )
+    ERROR_UPLOAD_CYCLE_TOO_HIGH = (
+        "All contributing workspaces must have an upload cycle that is less than or equal to "
+        "the upload cycle of the release workspace."
+    )
+
+    def __init__(self, release_workspace, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object = release_workspace
+
+    class Meta:
+        model = models.ReleaseWorkspace
+        fields = ("contributing_workspaces",)
+        help_texts = {
+            "contributing_workspaces": "Select the workspaces that contributed to this release.",
+        }
+        widgets = {
+            "contributing_workspaces": forms.CheckboxSelectMultiple(),
+        }
+
+    def clean_contributing_workspaces(self):
+        """Ensure that all contributing workspaces have the same consent group as the release workspace."""
+        contributing_workspaces = self.cleaned_data.get("contributing_workspaces", [])
+        for workspace in contributing_workspaces:
+            if hasattr(workspace, "uploadworkspace"):
+                if workspace.uploadworkspace.consent_group != self.object.consent_group:
+                    raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+            elif hasattr(workspace, "dccprocesseddataworkspace"):
+                if workspace.dccprocesseddataworkspace.consent_group != self.object.consent_group:
+                    raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+            else:
+                raise forms.ValidationError(self.ERROR_INCORRECT_WORKSPACE_TYPE)
+
+        return contributing_workspaces
+
+
 class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a DCCProcessingWorkspace object."""
 
