@@ -26,3 +26,7 @@
     <button type="submit" class="btn btn-success">Save</button>
   </form>
 {% endblock %}
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}

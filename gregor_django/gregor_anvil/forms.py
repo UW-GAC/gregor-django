@@ -1,6 +1,7 @@
 """Forms classes for the gregor_anvil app."""
 
 from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
+from dal import autocomplete
 from django import forms
 
 from . import models
@@ -173,7 +174,10 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             "contributing_workspaces": "Select the workspaces that contributed to this release.",
         }
         widgets = {
-            "contributing_workspaces": forms.CheckboxSelectMultiple(),
+            "contributing_workspaces": autocomplete.ModelSelect2Multiple(
+                url="anvil_consortium_manager:workspaces:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
 
     def clean_contributing_workspaces(self):
