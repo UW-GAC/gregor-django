@@ -13,6 +13,13 @@
     Release workspace: <a href="{{object.get_absolute_url}}">{{ object }}</a>
 </p>
 
+  {% if has_workspace_suggestions %}
+    <div class="alert alert-primary" role="alert">
+        Contributing workspaces for this release workspace have not been set yet.
+        The selected workspaces below have been suggested using the consent code and upload cycle.
+    </div>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     {{ form|crispy }}

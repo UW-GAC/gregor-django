@@ -2380,9 +2380,11 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         # Create some contributing workspaces.
         self.upload_workspace = factories.UploadWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
         )
         self.dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
         )
 
     def get_url(self, *args):
@@ -2596,6 +2598,35 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         self.assertIn("required", form.errors["contributing_workspaces"][0])
         self.release_workspace.refresh_from_db()
         self.assertEqual(self.release_workspace.contributing_workspaces.count(), 0)
+
+    def test_initial_no_contributing_workspaces(self):
+        """Initial is set when release workspace has no contributing workspaces saved."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertEqual(len(form.initial["contributing_workspaces"]), 2)
+        self.assertIn(self.upload_workspace.workspace, form.initial["contributing_workspaces"])
+        self.assertIn(self.dcc_processed_data_workspace.workspace, form.initial["contributing_workspaces"])
+
+    def test_initial_with_contributing_workspaces(self):
+        """Initial is not set when workspace already has contributing workspaces saved."""
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        self.release_workspace.contributing_workspaces.add(contributing_workspace.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertEqual(len(form.initial["contributing_workspaces"]), 1)
+        self.assertIn(contributing_workspace.workspace, form.initial["contributing_workspaces"])
 
 
 class WorkspaceReportTest(TestCase):

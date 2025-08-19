@@ -818,6 +818,23 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
     template_name = "gregor_anvil/releaseworkspace_update_contributing_workspaces.html"
     success_message = "Successfully updated contributing workspaces."
 
+    def get_initial(self):
+        initial = super().get_initial()
+        # Only suggest workspaces if there are no contributing workspaces already set.
+        if self.object.contributing_workspaces.count() == 0:
+            qs = Workspace.objects.filter(
+                (
+                    Q(uploadworkspace__consent_group=self.object.consent_group)
+                    & Q(uploadworkspace__upload_cycle=self.object.upload_cycle)
+                )
+                | (
+                    Q(dccprocesseddataworkspace__consent_group=self.object.consent_group)
+                    & Q(dccprocesseddataworkspace__upload_cycle=self.object.upload_cycle)
+                )
+            )
+            initial["contributing_workspaces"] = qs
+        return initial
+
     def get_form(self, form_class=None):
         """Get the form for the view."""
         if form_class is None:
@@ -841,3 +858,9 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
                 _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add a flag to indicate whether the view will suggest workspaces using consent code and upload cycle.
+        context["has_workspace_suggestions"] = self.object.contributing_workspaces.count() == 0
+        return context
