@@ -55,3 +55,16 @@
 </div>
 {{ block.super }}
 {% endblock after_panel %}
+
+
+{% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+<p>
+  <a href="{% url 'gregor_anvil:release_workspaces:update:contributing_workspaces' billing_project_slug=object.billing_project.name workspace_slug=object.name %}" class="btn btn-secondary" role="button">
+    Update contributing workspaces
+  </a>
+</p>
+{% endif %}
+
+{{ block.super }}
+{% endblock action_buttons %}

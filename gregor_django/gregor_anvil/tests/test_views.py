@@ -2326,6 +2326,14 @@ class ReleaseWorkspaceDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
+        # Link to contributing_workspaces button
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:release_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -2340,6 +2348,14 @@ class ReleaseWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        # Link to contributing_workspaces button
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:release_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
     def test_links_staff_edit_user(self):
@@ -2358,6 +2374,14 @@ class ReleaseWorkspaceDetailTest(TestCase):
         )
         self.assertContains(
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
+        )
+        # Link to contributing_workspaces button
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:release_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
         )
 
 
