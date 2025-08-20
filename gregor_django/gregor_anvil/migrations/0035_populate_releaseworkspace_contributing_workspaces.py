@@ -17,7 +17,7 @@ def populate_contributing_workspaces(apps, schema_editor):
         )
         for upload_workspace in upload_workspaces:
             # Add the upload workspace to the contributing workspaces.
-            row.contributing_workspaces.add(upload_workspace.workspace)
+            row.contributing_upload_workspaces.add(upload_workspace)
         # DCC processed data workspaces.
         dcc_workspaces = DCCProcessedDataWorkspace.objects.filter(
             upload_cycle=row.upload_cycle,
@@ -25,7 +25,7 @@ def populate_contributing_workspaces(apps, schema_editor):
         )
         for dcc_workspace in dcc_workspaces:
             # Add the DCC processed data workspace to the contributing workspaces.
-            row.contributing_workspaces.add(dcc_workspace.workspace)
+            row.contributing_dcc_processed_data_workspaces.add(dcc_workspace)
 
 
 class Migration(migrations.Migration):

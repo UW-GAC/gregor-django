@@ -820,19 +820,19 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
 
     def get_initial(self):
         initial = super().get_initial()
-        # Only suggest workspaces if there are no contributing workspaces already set.
-        if self.object.contributing_workspaces.count() == 0:
-            qs = Workspace.objects.filter(
-                (
-                    Q(uploadworkspace__consent_group=self.object.consent_group)
-                    & Q(uploadworkspace__upload_cycle=self.object.upload_cycle)
-                )
-                | (
-                    Q(dccprocesseddataworkspace__consent_group=self.object.consent_group)
-                    & Q(dccprocesseddataworkspace__upload_cycle=self.object.upload_cycle)
-                )
+        # Only suggest workspaces if there are no contributing upload workspaces already set.
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        if self.object.contributing_upload_workspaces.count() == 0:
+            qs_upload = models.UploadWorkspace.objects.filter(
+                consent_group=self.object.consent_group,
+                upload_cycle=self.object.upload_cycle,
             )
-            initial["contributing_workspaces"] = qs
+            initial["contributing_upload_workspaces"] = qs_upload
+            qs_dcc = models.DCCProcessedDataWorkspace.objects.filter(
+                consent_group=self.object.consent_group,
+                upload_cycle=self.object.upload_cycle,
+            )
+            initial["contributing_dcc_processed_data_workspaces"] = qs_dcc
         return initial
 
     def get_form(self, form_class=None):
@@ -862,5 +862,6 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add a flag to indicate whether the view will suggest workspaces using consent code and upload cycle.
-        context["has_workspace_suggestions"] = self.object.contributing_workspaces.count() == 0
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        context["is_suggesting_workspaces"] = self.object.contributing_upload_workspaces.count() == 0
         return context

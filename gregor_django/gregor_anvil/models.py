@@ -1,6 +1,6 @@
 from datetime import date
 
-from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup, Workspace
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -354,14 +354,6 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
     )
     upload_cycle = models.ForeignKey(UploadCycle, on_delete=models.PROTECT)
     full_data_use_limitations = models.TextField(help_text="The full data use limitations for this workspace.")
-    contributing_workspaces = models.ManyToManyField(
-        Workspace,
-        help_text=(
-            "Workspaces with data tables contributing to this release. "
-            "(Note that this does not include workspaces containing files contributing to this release.)"
-        ),
-        related_name="release_workspaces",
-    )
     dbgap_version = models.IntegerField(
         verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
@@ -371,6 +363,20 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         verbose_name=" dbGaP participant set",
         validators=[MinValueValidator(1)],
         help_text="dbGaP participant set of the workspace",
+    )
+    contributing_upload_workspaces = models.ManyToManyField(
+        UploadWorkspace,
+        help_text=(
+            "UploadWorkspaces with data tables contributing to this release. "
+            "(Note that this does not include workspaces containing files contributing to this release.)"
+        ),
+        related_name="release_workspaces",
+    )
+    contributing_dcc_processed_data_workspaces = models.ManyToManyField(
+        "DCCProcessedDataWorkspace",
+        help_text="DCCProcessedDataWorkspaces with data tables contributing to this release.",
+        related_name="release_workspaces",
+        blank=True,
     )
     date_released = models.DateField(
         null=True,

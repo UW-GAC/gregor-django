@@ -1142,25 +1142,25 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
         self.assertIn("Date cannot be in the future", e.exception.message_dict["date_released"][0])
 
-    def test_one_contributing_workspace(self):
+    def test_one_contributing_upload_workspace(self):
         """Can have one contributing workspace."""
         instance = factories.ReleaseWorkspaceFactory.create()
         upload_workspace = factories.UploadWorkspaceFactory.create()
         factories.UploadWorkspaceFactory.create()  # Create another to ensure only one is added
-        instance.contributing_workspaces.add(upload_workspace.workspace)
-        self.assertEqual(instance.contributing_workspaces.count(), 1)
-        self.assertIn(upload_workspace.workspace, instance.contributing_workspaces.all())
+        instance.contributing_upload_workspaces.add(upload_workspace)
+        self.assertEqual(instance.contributing_upload_workspaces.count(), 1)
+        self.assertIn(upload_workspace, instance.contributing_upload_workspaces.all())
 
-    def test_two_contributing_workspaces(self):
+    def test_two_contributing_upload_workspaces(self):
         """Can have one contributing workspace."""
         instance = factories.ReleaseWorkspaceFactory.create()
-        upload_workspace = factories.UploadWorkspaceFactory.create()
-        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
-        instance.contributing_workspaces.add(upload_workspace.workspace)
-        instance.contributing_workspaces.add(dcc_processed_data_workspace.workspace)
-        self.assertEqual(instance.contributing_workspaces.count(), 2)
-        self.assertIn(upload_workspace.workspace, instance.contributing_workspaces.all())
-        self.assertIn(dcc_processed_data_workspace.workspace, instance.contributing_workspaces.all())
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        instance.contributing_upload_workspaces.add(upload_workspace_1)
+        instance.contributing_upload_workspaces.add(upload_workspace_2)
+        self.assertEqual(instance.contributing_upload_workspaces.count(), 2)
+        self.assertIn(upload_workspace_1, instance.contributing_upload_workspaces.all())
+        self.assertIn(upload_workspace_2, instance.contributing_upload_workspaces.all())
 
 
 class DCCProcessingWorkspaceTest(TestCase):

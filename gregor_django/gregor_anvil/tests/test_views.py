@@ -2261,59 +2261,68 @@ class ReleaseWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
-    def test_contains_contributing_workspaces(self):
-        """Response contains the upload workspaces."""
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=self.object.upload_cycle)
-        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
-            upload_cycle=self.object.upload_cycle
-        )
-        self.object.contributing_workspaces.add(upload_workspace_1.workspace)
-        self.object.contributing_workspaces.add(upload_workspace_2.workspace)
-        self.object.contributing_workspaces.add(dcc_processed_data_workspace.workspace)
+    def test_contributing_workspaces_no_upload(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
-        self.assertIn("contributing_workspace_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["contributing_workspace_table"].data),
-            3,
-        )
-        self.assertIn(
-            upload_workspace_1.workspace,
-            response.context_data["contributing_workspace_table"].data,
-        )
-        self.assertIn(
-            upload_workspace_2.workspace,
-            response.context_data["contributing_workspace_table"].data,
-        )
-        self.assertIn(
-            dcc_processed_data_workspace.workspace,
-            response.context_data["contributing_workspace_table"].data,
-        )
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertIsInstance(response.context_data["contributing_upload_workspace_table"], tables.UploadWorkspaceTable)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 0)
 
-    @skip("Need to allow extra context in ACM.")
-    def test_contains_upload_workspaces_from_previous_cycles(self):
-        """Response contains the upload workspaces."""
-        upload_cycle_1 = factories.UploadCycleFactory.create(upload_cycle=1)
-        upload_cycle_2 = factories.UploadCycleFactory.create(upload_cycle=2)
-        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=upload_cycle_2)
-        upload_workspace_1 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_1)
-        upload_workspace_2 = factories.UploadWorkspaceFactory.create(upload_cycle=upload_cycle_2)
+    def test_contributing_workspaces_one_upload(self):
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.object.contributing_upload_workspaces.add(contributing_workspace)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                combined_workspace.workspace.billing_project.name,
-                combined_workspace.workspace.name,
-            )
-        )
-        self.assertIn("included_workspace_table", response.context_data)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 1)
         self.assertIn(
-            upload_workspace_1.workspace,
-            response.context_data["included_workspace_table"].data,
+            contributing_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data
+        )
+        self.assertNotIn(other_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data)
+
+    def test_contributing_workspaces_two_upload(self):
+        contributing_workspace_1 = factories.UploadWorkspaceFactory.create()
+        contributing_workspace_2 = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.object.contributing_upload_workspaces.add(contributing_workspace_1)
+        self.object.contributing_upload_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace, response.context_data["contributing_upload_workspace_table"].data
         )
         self.assertIn(
-            upload_workspace_2.workspace,
-            response.context_data["included_workspace_table"].data,
+            contributing_workspace_2.workspace, response.context_data["contributing_upload_workspace_table"].data
+        )
+        self.assertNotIn(other_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data)
+
+    def test_contributing_workspaces_no_dcc_processed_data(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["contributing_dcc_processed_data_workspace_table"],
+            tables.DCCProcessedDataWorkspaceTable,
+        )
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_dcc_processed_data(self):
+        contributing_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+        self.assertNotIn(
+            other_workspace.workspace, response.context_data["contributing_dcc_processed_data_workspace_table"].data
         )
 
     def test_links_view_user(self):
@@ -2406,10 +2415,6 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
             consent_group=self.release_workspace.consent_group,
             upload_cycle=self.release_workspace.upload_cycle,
         )
-        self.dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
-            consent_group=self.release_workspace.consent_group,
-            upload_cycle=self.release_workspace.upload_cycle,
-        )
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -2479,54 +2484,62 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
             },
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
         self.release_workspace.refresh_from_db()
-        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 1)
-        self.assertIn(self.upload_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 1)
+        self.assertIn(self.upload_workspace, self.release_workspace.contributing_upload_workspaces.all())
         # History is added.
         self.assertEqual(self.release_workspace.history.count(), 2)
         self.assertEqual(self.release_workspace.history.latest().history_type, "~")
+
+    def test_can_update_two_upload_workspaces(self):
+        """Posting valid data to the form adds one workspace."""
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [self.upload_workspace.pk, upload_workspace_2.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 2)
+        self.assertIn(self.upload_workspace, self.release_workspace.contributing_upload_workspaces.all())
+        self.assertIn(upload_workspace_2, self.release_workspace.contributing_upload_workspaces.all())
 
     def test_can_update_one_dcc_processed_data_workspace(self):
         """Posting valid data to the form adds one workspace."""
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": [self.dcc_processed_data_workspace.workspace.pk],
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
+                "contributing_dcc_processed_data_workspaces": [dcc_processed_data_workspace.pk],
             },
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
         self.release_workspace.refresh_from_db()
-        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 1)
-        self.assertIn(self.dcc_processed_data_workspace.workspace, self.release_workspace.contributing_workspaces.all())
+        self.assertEqual(self.release_workspace.contributing_dcc_processed_data_workspaces.count(), 1)
+        self.assertIn(
+            dcc_processed_data_workspace, self.release_workspace.contributing_dcc_processed_data_workspaces.all()
+        )
         # History is added.
         self.assertEqual(self.release_workspace.history.count(), 2)
         self.assertEqual(self.release_workspace.history.latest().history_type, "~")
-
-    def test_can_update_two_workspaces(self):
-        """Posting valid data to the form adds two workspaces."""
-        self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
-            {
-                "contributing_workspaces": [
-                    self.upload_workspace.workspace.pk,
-                    self.dcc_processed_data_workspace.workspace.pk,
-                ],
-            },
-        )
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
-        self.release_workspace.refresh_from_db()
-        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 2)
-        self.assertIn(self.upload_workspace.workspace, self.release_workspace.contributing_workspaces.all())
-        self.assertIn(self.dcc_processed_data_workspace.workspace, self.release_workspace.contributing_workspaces.all())
 
     def test_success_message(self):
         """Response includes a success message if successful."""
@@ -2534,7 +2547,7 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -2548,7 +2561,7 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": [self.upload_workspace.workspace.pk],
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
             },
         )
         self.assertRedirects(response, self.release_workspace.get_absolute_url())
@@ -2591,39 +2604,81 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": "foo",
+                "contributing_upload_workspaces": "foo",
             },
         )
         self.assertEqual(response.status_code, 200)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors.keys()), 1)
-        self.assertIn("contributing_workspaces", form.errors.keys())
-        self.assertEqual(len(form.errors["contributing_workspaces"]), 1)
-        self.assertIn("valid value", form.errors["contributing_workspaces"][0])
+        self.assertIn("contributing_upload_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("valid value", form.errors["contributing_upload_workspaces"][0])
         self.release_workspace.refresh_from_db()
-        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 0)
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
 
-    def test_post_blank_data_ready_for_compute(self):
-        """Can successfully post blank data for date_ready_for_compute."""
+    def test_post_blank_data_contributing_upload_workspaces(self):
+        """Can successfully post blank data for contributing_upload_workspaces."""
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
             {
-                "contributing_workspaces": [],
+                "contributing_upload_workspaces": [],
             },
         )
         self.assertEqual(response.status_code, 200)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors.keys()), 1)
-        self.assertIn("contributing_workspaces", form.errors.keys())
-        self.assertEqual(len(form.errors["contributing_workspaces"]), 1)
-        self.assertIn("required", form.errors["contributing_workspaces"][0])
+        self.assertIn("contributing_upload_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("required", form.errors["contributing_upload_workspaces"][0])
         self.release_workspace.refresh_from_db()
-        self.assertEqual(self.release_workspace.contributing_workspaces.count(), 0)
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
 
-    def test_initial_no_contributing_workspaces(self):
+    def test_invalid_upload_workspace_wrong_consent_group(self):
+        """Cannot add a workspace with a different consent group."""
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [upload_workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn(form.ERROR_DIFFERENT_CONSENT_GROUP, form.errors["contributing_upload_workspaces"][0])
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
+
+    def test_invalid_dcc_processed_data_workspace_wrong_consent_group(self):
+        """Cannot add a workspace with a different consent group."""
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
+                "contributing_dcc_processed_data_workspaces": [dcc_processed_data_workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_dcc_processed_data_workspaces"]), 1)
+        self.assertIn(form.ERROR_DIFFERENT_CONSENT_GROUP, form.errors["contributing_dcc_processed_data_workspaces"][0])
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
+        self.assertEqual(self.release_workspace.contributing_dcc_processed_data_workspaces.count(), 0)
+
+    def test_initial_no_contributing_workspaces_suggests_upload_workspace(self):
         """Initial is set when release workspace has no contributing workspaces saved."""
         self.client.force_login(self.user)
         response = self.client.get(
@@ -2633,14 +2688,21 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         # Check that the form's initial data is set correctly.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
-        self.assertEqual(len(form.initial["contributing_workspaces"]), 2)
-        self.assertIn(self.upload_workspace.workspace, form.initial["contributing_workspaces"])
-        self.assertIn(self.dcc_processed_data_workspace.workspace, form.initial["contributing_workspaces"])
+        self.assertIn("contributing_upload_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_dcc_processed_data_workspaces"]), 0)
+        # Check is_suggesting context.
+        self.assertIn("is_suggesting_workspaces", response.context_data)
+        self.assertTrue(response.context_data["is_suggesting_workspaces"])
 
-    def test_initial_with_contributing_workspaces(self):
-        """Initial is not set when workspace already has contributing workspaces saved."""
-        contributing_workspace = factories.UploadWorkspaceFactory.create()
-        self.release_workspace.contributing_workspaces.add(contributing_workspace.workspace)
+    def test_initial_no_contributing_workspaces_suggests_two_upload_workspaces(self):
+        """Initial is set when release workspace has no contributing workspaces saved."""
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
@@ -2649,8 +2711,138 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         # Check that the form's initial data is set correctly.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
-        self.assertEqual(len(form.initial["contributing_workspaces"]), 1)
-        self.assertIn(contributing_workspace.workspace, form.initial["contributing_workspaces"])
+        self.assertIn("contributing_upload_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 2)
+        self.assertIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertIn(upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.initial)
+
+    def test_initial_no_contributing_workspaces_upload_same_consent_group(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle__cycle=self.release_workspace.upload_cycle.cycle + 1,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_upload_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertNotIn(upload_workspace, form.initial["contributing_upload_workspaces"])
+
+    def test_initial_no_contributing_workspaces_upload_same_upload_cycle(self):
+        upload_workspace = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_upload_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertNotIn(upload_workspace, form.initial["contributing_upload_workspaces"])
+
+    def test_initial_no_contributing_workspaces_suggests_dcc_processed_data_workspace(self):
+        """Initial is set when release workspace has no contributing workspaces saved."""
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_dcc_processed_data_workspaces"]), 1)
+        self.assertIn(dcc_processed_data_workspace, form.initial["contributing_dcc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_dcc_same_consent_group(self):
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle__cycle=self.release_workspace.upload_cycle.cycle + 1,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_dcc_processed_data_workspaces"]), 0)
+        self.assertNotIn(dcc_processed_data_workspace, form.initial["contributing_dcc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_dcc_same_upload_cycle(self):
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_dcc_processed_data_workspaces"]), 0)
+        self.assertNotIn(dcc_processed_data_workspace, form.initial["contributing_dcc_processed_data_workspaces"])
+
+    def test_initial_with_contributing_workspaces_upload_not_set(self):
+        """Initial is not set when workspace already has contributing workspaces saved."""
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        self.release_workspace.contributing_upload_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(contributing_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertNotIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        # Check is_suggesting context.
+        self.assertIn("is_suggesting_workspaces", response.context_data)
+        self.assertFalse(response.context_data["is_suggesting_workspaces"])
+
+    def test_initial_with_contributing_workspaces_dcc_processed_data_not_set(self):
+        """Initial is not set when workspace already has contributing workspaces saved."""
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            upload_cycle=self.release_workspace.upload_cycle,
+        )
+        self.release_workspace.contributing_upload_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(contributing_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertNotIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertEqual(len(form.initial["contributing_dcc_processed_data_workspaces"]), 0)
+        self.assertNotIn(dcc_processed_data_workspace, form.initial["contributing_dcc_processed_data_workspaces"])
 
 
 class WorkspaceReportTest(TestCase):

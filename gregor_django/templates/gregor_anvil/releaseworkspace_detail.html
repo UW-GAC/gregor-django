@@ -19,6 +19,9 @@
 {% endblock workspace_data %}
 
 {% block after_panel %}
+
+{{ block.super }}
+
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">
@@ -37,23 +40,40 @@
   </div>
 </div>
 
-<div class="accordion mb-3" id="accordionContributingWorkspaces">
+<div class="accordion mb-3" id="accordionContributingUploadWorkspaces">
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContributingWorkspaces" aria-expanded="true" aria-controls="collapseContributingWorkspaces">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContributingUploadWorkspaces" aria-expanded="true" aria-controls="collapseContributingUploadWorkspaces">
         <span class="fa-solid fa-puzzle-piece mx-2"></span>
-        Contributing workspaces
-        <span class="badge mx-2 {% if contributing_workspace_table.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ contributing_workspace_table.rows|length }}</span>
+        Contributing Upload workspaces
+        <span class="badge mx-2 {% if contributing_upload_workspace_table.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ contributing_upload_workspace_table.rows|length }}</span>
       </button>
     </h2>
-    <div id="collapseContributingWorkspaces" class="accordion-collapse collapse" data-bs-parent="#accordionContributingWorkspaces">
+    <div id="collapseContributingUploadWorkspaces" class="accordion-collapse collapse" data-bs-parent="#accordionContributingUploadWorkspaces">
       <div class="accordion-body">
-        {% render_table contributing_workspace_table %}
+        {% render_table contributing_upload_workspace_table %}
       </div>
     </div>
   </div>
 </div>
-{{ block.super }}
+
+<div class="accordion mb-3" id="accordionContributingDCCProcessedDataWorkspaces">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContributingDCCProcessedDataWorkspaces" aria-expanded="true" aria-controls="collapseContributingDCCProcessedDataWorkspaces">
+        <span class="fa-solid fa-puzzle-piece mx-2"></span>
+        Contributing DCC Processed Data workspaces
+        <span class="badge mx-2 {% if contributing_dcc_processed_data_workspace_table.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ contributing_dcc_processed_data_workspace_table.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseContributingDCCProcessedDataWorkspaces" class="accordion-collapse collapse" data-bs-parent="#accordionContributingDCCProcessedDataWorkspaces">
+      <div class="accordion-body">
+        {% render_table contributing_dcc_processed_data_workspace_table %}
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock after_panel %}
 
 

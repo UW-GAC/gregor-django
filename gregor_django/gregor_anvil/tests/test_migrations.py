@@ -678,7 +678,7 @@ class PopulateReleaseWorkspaceContributingWorkspaces(MigratorTestCase):
             consent_group=consent_group_hmb,
             workspace=workspace,
         )
-        # DCC processed data workspaces only for upload cycle 3.
+        # DCC processed data workspaces only for upload cycle 3, just one consent group.
         workspace = factory.create(
             Workspace,
             workspace_type="dcc_processed_data",
@@ -756,19 +756,21 @@ class PopulateReleaseWorkspaceContributingWorkspaces(MigratorTestCase):
         ReleaseWorkspace = self.new_state.apps.get_model("gregor_anvil", "ReleaseWorkspace")
         # Check the first release workspaces.
         workspace = ReleaseWorkspace.objects.get(pk=self.release_r1_gru.pk)
-        self.assertEqual(workspace.contributing_workspaces.count(), 2)
-        self.assertIn(self.upload_uc2_rc1_gru.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
-        self.assertIn(self.upload_uc2_rc2_gru.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
+        self.assertEqual(workspace.contributing_upload_workspaces.count(), 2)
+        self.assertIn(self.upload_uc2_rc1_gru.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
+        self.assertIn(self.upload_uc2_rc2_gru.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
+        self.assertEqual(workspace.contributing_dcc_processed_data_workspaces.count(), 0)
         workspace = ReleaseWorkspace.objects.get(pk=self.release_r1_hmb.pk)
-        self.assertEqual(workspace.contributing_workspaces.count(), 1)
-        self.assertIn(self.upload_uc2_rc1_hmb.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
+        self.assertEqual(workspace.contributing_upload_workspaces.count(), 1)
+        self.assertIn(self.upload_uc2_rc1_hmb.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
         # Check the second release workspace.
         workspace = ReleaseWorkspace.objects.get(pk=self.release_r2_gru.pk)
-        self.assertEqual(workspace.contributing_workspaces.count(), 3)
-        self.assertIn(self.upload_uc3_rc1_gru.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
-        self.assertIn(self.upload_uc3_rc2_gru.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
-        self.assertIn(self.dcc_uc3_gru.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
+        self.assertEqual(workspace.contributing_upload_workspaces.count(), 2)
+        self.assertIn(self.upload_uc3_rc1_gru.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
+        self.assertIn(self.upload_uc3_rc2_gru.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
+        self.assertEqual(workspace.contributing_dcc_processed_data_workspaces.count(), 1)
+        self.assertIn(self.dcc_uc3_gru.pk, [x.pk for x in workspace.contributing_dcc_processed_data_workspaces.all()])
         workspace = ReleaseWorkspace.objects.get(pk=self.release_r2_hmb.pk)
-        self.assertEqual(workspace.contributing_workspaces.count(), 2)
-        self.assertIn(self.upload_uc3_rc1_hmb.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
-        self.assertIn(self.upload_uc3_rc2_hmb.workspace.pk, [x.pk for x in workspace.contributing_workspaces.all()])
+        self.assertEqual(workspace.contributing_upload_workspaces.count(), 2)
+        self.assertIn(self.upload_uc3_rc1_hmb.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
+        self.assertIn(self.upload_uc3_rc2_hmb.pk, [x.pk for x in workspace.contributing_upload_workspaces.all()])
