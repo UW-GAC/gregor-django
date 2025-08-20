@@ -1500,6 +1500,13 @@ class UploadWorkspaceDetailTest(TestCase):
         )
         self.assertContains(response, url)
 
+    def test_part_of_release_workspace(self):
+        release_workspace = factories.ReleaseWorkspaceFactory.create()
+        release_workspace.contributing_upload_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, release_workspace.get_absolute_url())
+
 
 class UploadWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
@@ -3244,6 +3251,13 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
                 args=[self.object.workspace.billing_project.name, self.object.workspace.name],
             ),
         )
+
+    def test_part_of_release_workspace(self):
+        release_workspace = factories.ReleaseWorkspaceFactory.create()
+        release_workspace.contributing_dcc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, release_workspace.get_absolute_url())
 
 
 class ExchangeWorkspaceDetailTest(TestCase):
