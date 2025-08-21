@@ -169,11 +169,15 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         fields = (
             "contributing_upload_workspaces",
             "contributing_dcc_processed_data_workspaces",
+            "contributing_partner_upload_workspaces",
         )
         help_texts = {
             "contributing_upload_workspaces": "Select the UploadWorkspaces that contributed to this release.",
             "contributing_dcc_processed_data_workspaces": (
                 "Select the DCC processed data workspaces that contributed to this release."
+            ),
+            "contributing_partner_upload_workspaces": (
+                "Select the PartnerUploadWorkspaces that contributed to this release."
             ),
         }
         widgets = {
@@ -183,6 +187,10 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             ),
             "contributing_dcc_processed_data_workspaces": autocomplete.ModelSelect2Multiple(
                 url="gregor_anvil:autocomplete:workspaces:dcc_processed_data",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_partner_upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:partner_upload",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
@@ -199,6 +207,15 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
     def clean_contributing_dcc_processed_data_workspaces(self):
         """Ensure that all contributing workspaces have the same consent group as the release workspace."""
         contributing_workspaces = self.cleaned_data.get("contributing_dcc_processed_data_workspaces", [])
+        for workspace_data in contributing_workspaces:
+            if workspace_data.consent_group != self.object.consent_group:
+                raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        return contributing_workspaces
+
+    def clean_contributing_partner_upload_workspaces(self):
+        """Ensure that all contributing workspaces have the same consent group as the release workspace."""
+        contributing_workspaces = self.cleaned_data.get("contributing_partner_upload_workspaces", [])
         for workspace_data in contributing_workspaces:
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)

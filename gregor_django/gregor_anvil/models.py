@@ -364,6 +364,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         validators=[MinValueValidator(1)],
         help_text="dbGaP participant set of the workspace",
     )
+    # Contributing workspaces.
     contributing_upload_workspaces = models.ManyToManyField(
         UploadWorkspace,
         help_text=(
@@ -378,6 +379,13 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         related_name="release_workspaces",
         blank=True,
     )
+    contributing_partner_upload_workspaces = models.ManyToManyField(
+        PartnerUploadWorkspace,
+        help_text="PartnerUploadWorkspaces with data tables contributing to this release.",
+        related_name="release_workspaces",
+        blank=True,
+    )
+
     date_released = models.DateField(
         null=True,
         blank=True,

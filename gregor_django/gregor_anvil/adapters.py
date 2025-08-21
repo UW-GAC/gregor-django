@@ -262,6 +262,13 @@ class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAd
                 )
             ),
         )
+        context["contributing_partner_upload_workspace_table"] = tables.PartnerUploadWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.releaseworkspace.contributing_partner_upload_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
         return context
 
 

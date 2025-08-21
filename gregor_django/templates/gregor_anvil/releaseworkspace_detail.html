@@ -74,6 +74,23 @@
   </div>
 </div>
 
+<div class="accordion mb-3" id="accordionContributingPartnerUploadWorkspaces">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContributingPartnerUploadWorkspaces" aria-expanded="true" aria-controls="collapseContributingPartnerUploadWorkspaces">
+        <span class="fa-solid fa-puzzle-piece mx-2"></span>
+        Contributing Partner Upload workspaces
+        <span class="badge mx-2 {% if contributing_partner_upload_workspace_table.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ contributing_partner_upload_workspace_table.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseContributingPartnerUploadWorkspaces" class="accordion-collapse collapse" data-bs-parent="#accordionContributingPartnerUploadWorkspaces">
+      <div class="accordion-body">
+        {% render_table contributing_partner_upload_workspace_table %}
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock after_panel %}
 
 

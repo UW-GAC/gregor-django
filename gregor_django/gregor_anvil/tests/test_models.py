@@ -1162,6 +1162,33 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertIn(upload_workspace_1, instance.contributing_upload_workspaces.all())
         self.assertIn(upload_workspace_2, instance.contributing_upload_workspaces.all())
 
+    def test_one_contributing_dcc_processed_data_workspace(self):
+        """Can have one contributing DCCProcessedDataWorkspace."""
+        instance = factories.ReleaseWorkspaceFactory.create()
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        instance.contributing_dcc_processed_data_workspaces.add(dcc_processed_data_workspace)
+        self.assertEqual(instance.contributing_dcc_processed_data_workspaces.count(), 1)
+        self.assertIn(dcc_processed_data_workspace, instance.contributing_dcc_processed_data_workspaces.all())
+
+    def one_contributing_partner_upload_workspace(self):
+        """Can have one contributing PartnerUploadWorkspace."""
+        instance = factories.ReleaseWorkspaceFactory.create()
+        partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create()
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace)
+        self.assertEqual(instance.contributing_partner_upload_workspaces.count(), 1)
+        self.assertIn(partner_upload_workspace, instance.contributing_partner_upload_workspaces.all())
+
+    def test_two_contributing_partner_upload_workspaces(self):
+        """Can have two contributing PartnerUploadWorkspaces."""
+        instance = factories.ReleaseWorkspaceFactory.create()
+        partner_upload_workspace_1 = factories.PartnerUploadWorkspaceFactory.create()
+        partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create()
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace_1)
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace_2)
+        self.assertEqual(instance.contributing_partner_upload_workspaces.count(), 2)
+        self.assertIn(partner_upload_workspace_1, instance.contributing_partner_upload_workspaces.all())
+        self.assertIn(partner_upload_workspace_2, instance.contributing_partner_upload_workspaces.all())
+
 
 class DCCProcessingWorkspaceTest(TestCase):
     """Tests for the DCCProcessingWorkspace model."""
