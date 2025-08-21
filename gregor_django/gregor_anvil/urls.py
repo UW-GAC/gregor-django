@@ -1,3 +1,4 @@
+from anvil_consortium_manager.views import WorkspaceAutocompleteByType
 from django.urls import include, path
 
 from . import views
@@ -219,6 +220,31 @@ audit_patterns = (
     "audit",
 )
 
+# Needed to prevent circular imports when using with DAL in forms.
+autocomplete_workspace_patterns = (
+    [
+        path(
+            "dcc_processed_data/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "dcc_processed_data"},
+            name="dcc_processed_data",
+        ),
+        path(
+            "upload/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "upload"},
+            name="upload",
+        ),
+    ],
+    "workspaces",
+)
+autocomplete_patterns = (
+    [
+        path("workspaces/", include(autocomplete_workspace_patterns)),
+    ],
+    "autocomplete",
+)
+
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
@@ -228,4 +254,5 @@ urlpatterns = [
     path("reports/", include(workspace_report_patterns)),
     path("audit/", include(audit_patterns)),
     path("release_workspaces/", include(release_workspace_patterns)),
+    path("autocomplete/", include(autocomplete_patterns)),
 ]

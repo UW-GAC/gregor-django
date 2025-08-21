@@ -178,11 +178,11 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         }
         widgets = {
             "contributing_upload_workspaces": autocomplete.ModelSelect2Multiple(
-                url="anvil_consortium_manager:workspaces:autocomplete",
+                url="gregor_anvil:autocomplete:workspaces:upload",
                 attrs={"data-theme": "bootstrap-5"},
             ),
             "contributing_dcc_processed_data_workspaces": autocomplete.ModelSelect2Multiple(
-                url="anvil_consortium_manager:workspaces:autocomplete",
+                url="gregor_anvil:autocomplete:workspaces:dcc_processed_data",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
