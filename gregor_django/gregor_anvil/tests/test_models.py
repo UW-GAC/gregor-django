@@ -1170,7 +1170,7 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertEqual(instance.contributing_dcc_processed_data_workspaces.count(), 1)
         self.assertIn(dcc_processed_data_workspace, instance.contributing_dcc_processed_data_workspaces.all())
 
-    def one_contributing_partner_upload_workspace(self):
+    def test_one_contributing_partner_upload_workspace(self):
         """Can have one contributing PartnerUploadWorkspace."""
         instance = factories.ReleaseWorkspaceFactory.create()
         partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create()
