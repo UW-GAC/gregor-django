@@ -806,3 +806,83 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolve(
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
+
+
+class ReleaseWorkspaceUpdateContributingWorkspaces(
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update the contributing workspaces for a ReleaseWorkspace."""
+
+    model = models.ReleaseWorkspace
+    form_class = forms.ReleaseWorkspaceUpdateContributingWorkspacesForm
+    template_name = "gregor_anvil/releaseworkspace_update_contributing_workspaces.html"
+    success_message = "Successfully updated contributing workspaces."
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # Only suggest workspaces if there are no contributing upload workspaces already set.
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        if self.object.contributing_upload_workspaces.count() == 0:
+            qs_upload = models.UploadWorkspace.objects.filter(
+                consent_group=self.object.consent_group,
+                upload_cycle=self.object.upload_cycle,
+            )
+            initial["contributing_upload_workspaces"] = qs_upload
+            qs_dcc = models.DCCProcessedDataWorkspace.objects.filter(
+                consent_group=self.object.consent_group,
+                upload_cycle=self.object.upload_cycle,
+            )
+            initial["contributing_dcc_processed_data_workspaces"] = qs_dcc
+            # For partner workspaces, this is more difficult because we can't do a direct groupby-max.
+            # Instead, get the id of the latest completed workspace for each partner group.
+            # Then do a query to get those ids.
+            # Start with a slow for loop, and then we can make it better if needed.
+            most_recent_workspaces = []
+            for partner_group in models.PartnerGroup.objects.all():
+                latest_workspace = (
+                    models.PartnerUploadWorkspace.objects.filter(
+                        consent_group=self.object.consent_group,
+                        partner_group=partner_group,
+                        date_completed__isnull=False,
+                    )
+                    .order_by("-version")
+                    .first()
+                )
+                if latest_workspace:
+                    most_recent_workspaces.append(latest_workspace.id)
+            qs_partner = models.PartnerUploadWorkspace.objects.filter(
+                id__in=most_recent_workspaces,
+            )
+            initial["contributing_partner_upload_workspaces"] = qs_partner
+        return initial
+
+    def get_form(self, form_class=None):
+        """Get the form for the view."""
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(self.object, **self.get_form_kwargs())
+
+    def get_object(self, queryset=None):
+        """Get the object for the view."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = self.model.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add a flag to indicate whether the view will suggest workspaces using consent code and upload cycle.
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        context["is_suggesting_workspaces"] = self.object.contributing_upload_workspaces.count() == 0
+        return context

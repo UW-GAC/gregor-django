@@ -17,6 +17,10 @@
       {% endif %}
     </dd>
 
+    <dt class="col-sm-2">Associated release workspace</dt> <dd class="col-sm-10">
+        <a href="{{ workspace_data_object.release_workspaces.get.get_absolute_url }}">{{ object.dccprocessingworkspace.release_workspaces.get }}</a><br>
+    </dd>
+
   </dl>
 {% endblock workspace_data %}
 
