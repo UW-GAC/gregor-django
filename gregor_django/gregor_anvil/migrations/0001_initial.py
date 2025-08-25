@@ -47,6 +47,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='uploadworkspace',
-            constraint=models.CheckConstraint(check=models.Q(('version__gt', 0)), name='positive_version'),
+            constraint=models.CheckConstraint(condition=models.Q(('version__gt', 0)), name='positive_version'),
         ),
     ]
