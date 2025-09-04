@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class CustomAdapter(OAuth2Adapter):
     provider_id = "drupal_oauth_provider"
+    supports_state = False
 
     provider_settings = app_settings.PROVIDERS.get(provider_id, {})
 

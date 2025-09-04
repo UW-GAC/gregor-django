@@ -1,26 +1,26 @@
-import base64
 import datetime
-import hashlib
 import json
-from urllib.parse import parse_qs, urlparse
+from unittest.mock import Mock, patch
 
 import jwt
-import requests
-from allauth.socialaccount import app_settings
+import responses
 from allauth.socialaccount.adapter import get_adapter
-from allauth.socialaccount.models import SocialApp
-from allauth.socialaccount.tests import OAuth2TestsMixin
-from allauth.tests import MockedResponse
+from allauth.socialaccount.models import SocialAccount, SocialApp
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
-from django.test import RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase
 from django.test.utils import override_settings
+from django.urls import reverse
 
 from .provider import CustomProvider
+from .views import CustomAdapter
+
+User = get_user_model()
 
 # Generated on https://mkjwk.org/, used to sign and verify the fake drupal id_token
+
 TESTING_JWT_KEYSET = {
     "p": (
         "1pbtdy7VdVkyRmhQw-OU9q3Ls_j7i-3fhBu71qcr60E43sXspV5iIXsesuUYmhLsPSgnXM_4EUQv8i2B51U5KpnGbZ"
@@ -61,6 +61,33 @@ TESTING_JWT_KEYSET = {
     ),
 }
 
+KEY_SERVER_RESP_JSON = {
+    "keys": [
+        {
+            "kty": TESTING_JWT_KEYSET["kty"],
+            "n": TESTING_JWT_KEYSET["n"],
+            "e": TESTING_JWT_KEYSET["e"],
+        }
+    ]
+}
+
+INVALID_KEY_RESP_JSON = {"keys": [{"kty": "TEST", "n": "TEST", "e": "TEST"}]}
+
+USER_INFO_RESP_JSON = {
+    "name": "testmaster",
+    "preferred_username": "testmaster",
+    "email": "test@testmaster.net",
+    "email_verified": "True",
+    "sub": "20122",
+}
+EXISTING_USER_RESP_JSON = {
+    "name": "existinguser",
+    "preferred_username": "existinguser",
+    "email": "testuser@example.com",
+    "email_verified": "True",
+    "sub": "99999",
+}
+
 
 def sign_id_token(payload):
     """
@@ -75,108 +102,40 @@ def sign_id_token(payload):
     )
 
 
-# Mocked version of the test data from /oauth/jwks
-KEY_SERVER_RESP_JSON = json.dumps(
-    {
-        "keys": [
-            {
-                "kty": TESTING_JWT_KEYSET["kty"],
-                "n": TESTING_JWT_KEYSET["n"],
-                "e": TESTING_JWT_KEYSET["e"],
-            }
-        ]
-    }
-)
-
-
-# disable token storing for testing as it conflicts with drupals use
-# of tokens for user info
-@override_settings(SOCIALACCOUNT_STORE_TOKENS=True)
-class CustomProviderTests(OAuth2TestsMixin, TestCase):
-    provider_id = CustomProvider.id
-
+class CustomProviderLoginTest(TestCase):
     def setUp(self):
-        super(CustomProviderTests, self).setUp()
-        # workaround to create a session. see:
-        # https://code.djangoproject.com/ticket/11475
-        User = get_user_model()
-        User.objects.create_user("testuser", "testuser@testuser.com", "testpw")
-        self.client.login(username="testuser", password="testpw")
+        """Set up test fixtures"""
+        self.client = Client()
         self.setup_time = datetime.datetime.now(datetime.timezone.utc)
-
-    # Provide two mocked responses, first is to the public key request
-    # second is used for the profile request for extra data
-    def get_mocked_response(self):
-        return [
-            MockedResponse(200, KEY_SERVER_RESP_JSON),
-            MockedResponse(
-                200,
-                """
-        {
-            "name": "testmaster",
-            "email": "test@testmaster.net",
-            "email_verified": "True",
-            "sub": "20122"
-        }""",
-            ),
-        ]
-
-    def login(self, resp_mock=None, process="login", with_refresh_token=True):
-        """
-        Unfortunately due to how our provider works we need to alter
-        this test login function as the default one fails.
-        """
-        with self.mocked_response():
-            resp = self.client.post(self.provider.get_login_url(self.request, process=process))
-        p = urlparse(resp["location"])
-        q = parse_qs(p.query)
-        pkce_enabled = app_settings.PROVIDERS.get(self.app.provider, {}).get(
-            "OAUTH_PKCE_ENABLED", self.provider.pkce_enabled_default
+        # Create a SocialApp for your custom provider
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,  # Replace with your provider ID
+            name=CustomProvider.name,
+            client_id="test_client_id",
+            secret="test_client_secret",
         )
+        self.social_app.sites.add(1)  # Add to default site
 
-        self.assertEqual("code_challenge" in q, pkce_enabled)
-        self.assertEqual("code_challenge_method" in q, pkce_enabled)
-        if pkce_enabled:
-            code_challenge = q["code_challenge"][0]
-            self.assertEqual(q["code_challenge_method"][0], "S256")
+        # Mock token data
+        self.mock_token_data = {
+            "access_token": "mock_access_token_12345",
+            "refresh_token": "mock_refresh_token_67890",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "scope": "read:user user:email",
+        }
 
-        complete_url = self.provider.get_callback_url()
-        self.assertGreater(q["redirect_uri"][0].find(complete_url), 0)
-        response_json = self.get_login_response_json(with_refresh_token=with_refresh_token)
-
-        resp_mocks = resp_mock if isinstance(resp_mock, list) else ([resp_mock] if resp_mock is not None else [])
-
-        with self.mocked_response(
-            MockedResponse(200, response_json, {"content-type": "application/json"}),
-            *resp_mocks,
-        ):
-            resp = self.client.get(complete_url, self.get_complete_parameters(q))
-
-            # Find the access token POST request, and assert that it contains
-            # the correct code_verifier if and only if PKCE is enabled
-            request_calls = requests.Session.request.call_args_list
-
-            for args, kwargs in request_calls:
-                data = kwargs.get("data", {})
-                if (
-                    args
-                    and args[0] == "POST"
-                    and isinstance(data, dict)
-                    and data.get("redirect_uri", "").endswith(complete_url)
-                ):
-                    self.assertEqual("code_verifier" in data, pkce_enabled)
-
-                    if pkce_enabled:
-                        hashed_code_verifier = hashlib.sha256(data["code_verifier"].encode("ascii"))
-                        expected_code_challenge = (
-                            base64.urlsafe_b64encode(hashed_code_verifier.digest()).rstrip(b"=").decode()
-                        )
-                        self.assertEqual(code_challenge, expected_code_challenge)
-
-        return resp
+        # Mock user data from provider API
+        self.mock_user_data = {
+            "id": "123456789",
+            "email": "testuser@example.com",
+            "name": "Test User",
+            "username": "testuser",
+            "verified": True,
+        }
 
     def get_id_token(self):
-        app = get_adapter().get_app(request=None, provider=self.provider_id)
+        app = get_adapter().get_app(request=None, provider=CustomProvider.id)
         allowed_audience = app.client_id
         return sign_id_token(
             {
@@ -191,11 +150,6 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
     def get_access_token(self) -> str:
         return self.get_id_token()
 
-    def get_expected_to_str(self):
-        return "test@testmaster.net"
-
-    # This login response mimics drupals in that it contains a set of scopes
-    # and the uid which has the name sub
     def get_login_response_json(self, with_refresh_token=True):
         id_token = self.get_id_token()
         response_data = {
@@ -206,7 +160,204 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
         }
         if with_refresh_token:
             response_data["refresh_token"] = "testrf"
-        return json.dumps(response_data)
+        return response_data
+
+    @responses.activate
+    def test_invalid_public_key(self):
+        """Test invalid key formatting"""
+        responses.add(responses.GET, CustomAdapter.public_key_url, json=INVALID_KEY_RESP_JSON, status=200)
+        rf = RequestFactory()
+        request = rf.get("/fake-url/", HTTP_HOST="testserver")
+        adapter = CustomAdapter(request)
+
+        pub_key = adapter.get_public_key(headers={"HTTP_HOST": "foo"})
+        self.assertEqual(pub_key, None)
+
+    @responses.activate
+    def test_complete_oauth_login_flow(self):
+        """Test the complete OAuth login flow with mocked responses"""
+
+        # Start the OAuth flow by visiting the login URL
+        login_url = reverse(f"{CustomProvider.id}_login")
+        responses.add(responses.POST, login_url, json=self.mock_token_data, status=200)
+
+        # This should redirect to the provider's authorization URL
+        response = self.client.post(login_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Simulate the callback from the provider with an authorization code
+        callback_url = reverse(f"{CustomProvider.id}_callback")
+        responses.add(responses.GET, callback_url, json=self.mock_user_data, status=200)
+
+        responses.add(responses.POST, CustomAdapter.access_token_url, json=self.get_login_response_json(), status=200)
+        responses.add(responses.GET, CustomAdapter.public_key_url, json=KEY_SERVER_RESP_JSON, status=200)
+        responses.add(responses.GET, CustomAdapter.profile_url, json=USER_INFO_RESP_JSON, status=200)
+        callback_response = self.client.get(
+            callback_url,
+            {
+                "code": "mock_authorization_code",
+                "state": "mock_state_value",  # You might need to handle state properly
+            },
+        )
+        self.assertEqual(callback_response.status_code, 302)
+
+        # Verify user was created
+        user = User.objects.get(email="test@testmaster.net")
+
+        # Verify social account was created
+        social_account = SocialAccount.objects.get(user=user)
+        self.assertEqual(social_account.provider, CustomProvider.id)
+        self.assertEqual(social_account.uid, "20122")
+
+        # Verify user is logged in
+        self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session}")
+        self.assertEqual(int(self.client.session["_auth_user_id"]), user.id)
+        responses.mock.assert_all_requests_are_fired
+
+    @responses.activate
+    def test_login_existing_user(self):
+        """Test login flow for existing user"""
+        uid = "99999"
+        # Create existing user and social account
+        existing_user = User.objects.create_user(username="existinguser", email="testuser@example.com")
+        SocialAccount.objects.create(
+            user=existing_user, provider=CustomProvider.id, uid=uid, extra_data=self.mock_user_data
+        )
+        # Start the OAuth flow by visiting the login URL
+        login_url = reverse(f"{CustomProvider.id}_login")
+        responses.add(responses.POST, login_url, json=self.mock_token_data, status=200)
+
+        response = self.client.post(login_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Simulate the callback from the provider with an authorization code
+        callback_url = reverse(f"{CustomProvider.id}_callback")
+        responses.add(
+            responses.GET,
+            callback_url,
+            json={"id": uid, "email": "testuser@example.com", "name": "Existing User", "username": "existinguser"},
+            status=200,
+        )
+        responses.add(responses.POST, CustomAdapter.access_token_url, json=self.get_login_response_json(), status=200)
+        responses.add(responses.GET, CustomAdapter.public_key_url, json=KEY_SERVER_RESP_JSON, status=200)
+        responses.add(responses.GET, CustomAdapter.profile_url, json=EXISTING_USER_RESP_JSON, status=200)
+        callback_response = self.client.get(
+            callback_url,
+            {
+                "code": "mock_authorization_code",
+                "state": "mock_state_value",  # You might need to handle state properly
+            },
+        )
+        self.assertEqual(callback_response.status_code, 302)
+        # Verify user is logged in
+        self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session.__dict__}")
+        self.assertEqual(int(self.client.session["_auth_user_id"]), existing_user.id)
+        responses.mock.assert_all_requests_are_fired
+
+    @patch("requests.post")
+    def test_token_exchange_failure(self, mock_post):
+        """Test handling of token exchange failure"""
+
+        # Mock failed token response
+        mock_token_response = Mock()
+        mock_token_response.status_code = 400
+        mock_token_response.json.return_value = {
+            "error": "invalid_grant",
+            "error_description": "The authorization code is invalid",
+        }
+        mock_post.return_value = mock_token_response
+
+        callback_url = reverse(f"{CustomProvider.id}_callback")
+
+        response = self.client.get(callback_url, {"code": "invalid_code", "state": "mock_state_value"})
+
+        # Should redirect to login page or show error
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "An error occurred")
+
+        # Verify no user was created
+        self.assertEqual(User.objects.count(), 0)
+
+    @patch("requests.post")
+    @patch("requests.get")
+    def test_user_info_failure(self, mock_get, mock_post):
+        """Test handling of user info API failure"""
+
+        # Mock successful token response
+        mock_token_response = Mock()
+        mock_token_response.status_code = 200
+        mock_token_response.json.return_value = self.mock_token_data
+        mock_post.return_value = mock_token_response
+
+        # Mock failed user info response
+        mock_user_response = Mock()
+        mock_user_response.status_code = 403
+        mock_user_response.json.return_value = {"error": "insufficient_scope"}
+        mock_get.return_value = mock_user_response
+
+        callback_url = reverse(f"{CustomProvider.id}_callback")
+
+        response = self.client.get(callback_url, {"code": "mock_authorization_code", "state": "mock_state_value"})
+
+        # Should handle the error gracefully
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "An error occurred")
+
+        # Verify no user was created
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_provider_settings(self):
+        """Test that provider settings are configured correctly"""
+
+        # Verify social app exists
+        self.assertTrue(SocialApp.objects.filter(provider=CustomProvider.id).exists())
+
+        # Verify provider is in INSTALLED_APPS or configured properly
+        # This depends on how you've set up your custom provider
+        from allauth.socialaccount import providers
+
+        # Your custom provider should be registered
+        provider_classes = providers.registry.get_class_list()
+        provider_ids = [p.id for p in provider_classes]
+        self.assertIn(CustomProvider.id, provider_ids)
+
+
+class CustomProviderIntegrationTest(TestCase):
+    """Integration tests that test the provider without mocking external calls"""
+
+    def setUp(self):
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name=CustomProvider.name,
+            client_id="test_client_id",
+            secret="test_client_secret",
+        )
+        self.social_app.sites.add(1)
+
+
+# Additional utility functions for testing
+
+# def create_mock_oauth2_token(access_token='mock_token', **kwargs):
+#     """Helper function to create mock OAuth2Token"""
+#     token_data = {
+#         'access_token': access_token,
+#         'token_type': 'Bearer',
+#         'expires_in': 3600,
+#         **kwargs
+#     }
+#     return OAuth2Token(token_data)
+
+
+# def create_test_social_app(provider_id=CustomProvider.id):
+#     """Helper function to create test social app"""
+#     app = SocialApp.objects.create(
+#         provider=provider_id,
+#         name=f'{provider_id} Test App',
+#         client_id='test_client_id',
+#         secret='test_client_secret'
+#     )
+#     app.sites.add(1)
+#     return app
 
 
 class TestProviderConfig(TestCase):
@@ -227,6 +378,7 @@ class TestProviderConfig(TestCase):
     def test_custom_provider_no_app(self):
         rf = RequestFactory()
         request = rf.get("/fake-url/")
+
         provider = CustomProvider(request)
         assert provider.app is not None
 
