@@ -322,44 +322,6 @@ class CustomProviderLoginTest(TestCase):
         self.assertIn(CustomProvider.id, provider_ids)
 
 
-class CustomProviderIntegrationTest(TestCase):
-    """Integration tests that test the provider without mocking external calls"""
-
-    def setUp(self):
-        self.social_app = SocialApp.objects.create(
-            provider=CustomProvider.id,
-            name=CustomProvider.name,
-            client_id="test_client_id",
-            secret="test_client_secret",
-        )
-        self.social_app.sites.add(1)
-
-
-# Additional utility functions for testing
-
-# def create_mock_oauth2_token(access_token='mock_token', **kwargs):
-#     """Helper function to create mock OAuth2Token"""
-#     token_data = {
-#         'access_token': access_token,
-#         'token_type': 'Bearer',
-#         'expires_in': 3600,
-#         **kwargs
-#     }
-#     return OAuth2Token(token_data)
-
-
-# def create_test_social_app(provider_id=CustomProvider.id):
-#     """Helper function to create test social app"""
-#     app = SocialApp.objects.create(
-#         provider=provider_id,
-#         name=f'{provider_id} Test App',
-#         client_id='test_client_id',
-#         secret='test_client_secret'
-#     )
-#     app.sites.add(1)
-#     return app
-
-
 class TestProviderConfig(TestCase):
     def setUp(self):
         # workaround to create a session. see:
