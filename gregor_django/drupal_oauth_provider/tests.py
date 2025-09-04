@@ -1,6 +1,7 @@
 import datetime
 import json
 from unittest.mock import Mock, patch
+from urllib.parse import parse_qs, urlparse
 
 import jwt
 import responses
@@ -185,6 +186,11 @@ class CustomProviderLoginTest(TestCase):
         response = self.client.post(login_url)
         self.assertEqual(response.status_code, 302)
 
+        redirect_url = response.url
+        parsed_url = urlparse(redirect_url)
+        query_params = parse_qs(parsed_url.query)
+        actual_state = query_params.get("state", [None])[0]
+
         # Simulate the callback from the provider with an authorization code
         callback_url = reverse(f"{CustomProvider.id}_callback")
         responses.add(responses.GET, callback_url, json=self.mock_user_data, status=200)
@@ -196,7 +202,7 @@ class CustomProviderLoginTest(TestCase):
             callback_url,
             {
                 "code": "mock_authorization_code",
-                "state": "mock_state_value",  # You might need to handle state properly
+                "state": actual_state,
             },
         )
         self.assertEqual(callback_response.status_code, 302)
@@ -230,6 +236,11 @@ class CustomProviderLoginTest(TestCase):
         response = self.client.post(login_url)
         self.assertEqual(response.status_code, 302)
 
+        redirect_url = response.url
+        parsed_url = urlparse(redirect_url)
+        query_params = parse_qs(parsed_url.query)
+        actual_state = query_params.get("state", [None])[0]
+
         # Simulate the callback from the provider with an authorization code
         callback_url = reverse(f"{CustomProvider.id}_callback")
         responses.add(
@@ -245,7 +256,7 @@ class CustomProviderLoginTest(TestCase):
             callback_url,
             {
                 "code": "mock_authorization_code",
-                "state": "mock_state_value",  # You might need to handle state properly
+                "state": actual_state,
             },
         )
         self.assertEqual(callback_response.status_code, 302)
