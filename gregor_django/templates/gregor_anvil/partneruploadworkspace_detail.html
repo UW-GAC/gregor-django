@@ -22,6 +22,10 @@
 
     <dt class="col-sm-2">Version</dt> <dd class="col-sm-10">{{ workspace_data_object.version }}</dd>
     <dt class="col-sm-2">Date completed</dt> <dd class="col-sm-10">{{ workspace_data_object.date_completed }}</dd>
+    <dt class="col-sm-2">Associated release workspace</dt> <dd class="col-sm-10">
+        <a href="{{ workspace_data_object.release_workspaces.get.get_absolute_url }}">{{ workspace_data_object.release_workspaces.get }}</a><br>
+    </dd>
+
   </dl>
 {% endblock workspace_data %}
 
