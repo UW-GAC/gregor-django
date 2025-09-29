@@ -210,7 +210,7 @@ types-pytz==2024.1.0.20240417
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-typing-extensions==4.8.0
+typing-extensions==4.15.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
