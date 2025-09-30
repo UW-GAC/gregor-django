@@ -6,6 +6,7 @@ from anvil_consortium_manager.models import (
     GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
+    Workspace,
     WorkspaceGroupSharing,
 )
 from anvil_consortium_manager.tables import ManagedGroupStaffTable
@@ -244,6 +245,31 @@ class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAd
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+
+    def get_extra_detail_context_data(self, workspace, request):
+        """Get extra context data for the release workspace detail view."""
+        context = super().get_extra_detail_context_data(workspace, request)
+        # Add the list of upload workspaces associated with this release workspace.
+        context["contributing_upload_workspace_table"] = tables.UploadWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.releaseworkspace.contributing_upload_workspaces.values_list("workspace__pk", flat=True)
+            ),
+        )
+        context["contributing_dcc_processed_data_workspace_table"] = tables.DCCProcessedDataWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.releaseworkspace.contributing_dcc_processed_data_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        context["contributing_partner_upload_workspace_table"] = tables.PartnerUploadWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.releaseworkspace.contributing_partner_upload_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        return context
 
 
 class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):

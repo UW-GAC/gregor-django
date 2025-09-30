@@ -191,7 +191,8 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         Invoked when there is an error in auth cycle.
         Log so we know what is going on.
         """
-        logger.error(
+
+        logger.exception(
             f"[SocialAccountAdapter:on_authentication_error] Provider: {provider_id} "
             f"Error {error} Exception: {exception} extra {extra_context}"
         )

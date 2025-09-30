@@ -1,6 +1,7 @@
 """Forms classes for the gregor_anvil app."""
 
 from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
+from dal import autocomplete
 from django import forms
 
 from . import models
@@ -146,6 +147,80 @@ class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         widgets = {
             "date_released": CustomDateInput(),
         }
+
+
+class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update contributing_workspaces in a ReleaseWorkspace object."""
+
+    ERROR_DIFFERENT_CONSENT_GROUP = (
+        "All contributing workspaces must have the same consent group as the release workspace."
+    )
+    ERROR_UPLOAD_CYCLE_TOO_HIGH = (
+        "All contributing workspaces must have an upload cycle that is less than or equal to "
+        "the upload cycle of the release workspace."
+    )
+
+    def __init__(self, release_workspace, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object = release_workspace
+
+    class Meta:
+        model = models.ReleaseWorkspace
+        fields = (
+            "contributing_upload_workspaces",
+            "contributing_dcc_processed_data_workspaces",
+            "contributing_partner_upload_workspaces",
+        )
+        help_texts = {
+            "contributing_upload_workspaces": "Select the UploadWorkspaces that contributed to this release.",
+            "contributing_dcc_processed_data_workspaces": (
+                "Select the DCC processed data workspaces that contributed to this release."
+            ),
+            "contributing_partner_upload_workspaces": (
+                "Select the PartnerUploadWorkspaces that contributed to this release."
+            ),
+        }
+        widgets = {
+            "contributing_upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:upload",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_dcc_processed_data_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:dcc_processed_data",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_partner_upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:partner_upload",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+    def clean_contributing_upload_workspaces(self):
+        """Ensure that all contributing workspaces have the same consent group as the release workspace."""
+        contributing_workspaces = self.cleaned_data.get("contributing_upload_workspaces", [])
+        for workspace_data in contributing_workspaces:
+            if workspace_data.consent_group != self.object.consent_group:
+                raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        return contributing_workspaces
+
+    def clean_contributing_dcc_processed_data_workspaces(self):
+        """Ensure that all contributing workspaces have the same consent group as the release workspace."""
+        contributing_workspaces = self.cleaned_data.get("contributing_dcc_processed_data_workspaces", [])
+        for workspace_data in contributing_workspaces:
+            if workspace_data.consent_group != self.object.consent_group:
+                raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        return contributing_workspaces
+
+    def clean_contributing_partner_upload_workspaces(self):
+        """Ensure that all contributing workspaces have the same consent group as the release workspace."""
+        contributing_workspaces = self.cleaned_data.get("contributing_partner_upload_workspaces", [])
+        for workspace_data in contributing_workspaces:
+            if workspace_data.consent_group != self.object.consent_group:
+                raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        return contributing_workspaces
 
 
 class DCCProcessingWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
