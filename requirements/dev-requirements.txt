@@ -209,7 +209,7 @@ traitlets==5.14.1
     #   matplotlib-inline
 types-pyyaml==6.0.12.12
     # via django-stubs
-typing-extensions==4.8.0
+typing-extensions==4.15.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
