@@ -8,7 +8,7 @@ argon2-cffi==25.1.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-asgiref==3.9.1
+asgiref==3.9.2
     # via
     #   -r requirements/requirements.in
     #   django
@@ -50,7 +50,7 @@ django==4.2.24
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.11.1
+django-allauth==65.11.2
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
     # via -r requirements/requirements.in
@@ -73,7 +73,7 @@ django-extensions==4.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.23.2
+django-htmx==1.26.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
