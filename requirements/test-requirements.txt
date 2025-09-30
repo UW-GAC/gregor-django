@@ -92,7 +92,7 @@ tomli==2.0.1
     #   pytest
 types-requests==2.32.4.20250809
     # via -r requirements/test-requirements.in
-typing-extensions==4.8.0
+typing-extensions==4.15.0
     # via
     #   -c requirements/requirements.txt
     #   django-test-migrations
