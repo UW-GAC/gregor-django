@@ -49,7 +49,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.24
+django==4.2.25
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
