@@ -13,6 +13,7 @@ anyio==4.4.0
 asgiref==3.9.2
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
 astroid==3.1.0
     # via pylint
@@ -51,6 +52,7 @@ distlib==0.3.8
 django==4.2.25
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
@@ -185,6 +187,7 @@ sphinxcontrib-serializinghtml==2.0.0
 sqlparse==0.5.1
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
     #   django-debug-toolbar
 stack-data==0.6.3
