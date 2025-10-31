@@ -8,7 +8,7 @@ argon2-cffi==25.1.0
     # via -r requirements/requirements.in
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-asgiref==3.9.2
+asgiref==3.10.0
     # via
     #   -r requirements/requirements.in
     #   django
@@ -32,7 +32,7 @@ crispy-bootstrap5==2025.6
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==46.0.2
+cryptography==46.0.3
     # via -r requirements/requirements.in
 django==4.2.25
     # via
@@ -50,7 +50,7 @@ django==4.2.25
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.11.2
+django-allauth==65.13.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
     # via -r requirements/requirements.in
@@ -111,7 +111,7 @@ packaging==23.2
     # via
     #   build
     #   plotly
-pip-tools==7.5.0
+pip-tools==7.5.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
@@ -147,7 +147,7 @@ six==1.16.0
     # via google-auth
 sqlparse==0.5.1
     # via django
-tablib==3.8.0
+tablib==3.9.0
     # via -r requirements/requirements.in
 tenacity==8.2.3
     # via
