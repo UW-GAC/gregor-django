@@ -111,7 +111,7 @@ packaging==23.2
     # via
     #   build
     #   plotly
-pip-tools==7.5.0
+pip-tools==7.5.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
