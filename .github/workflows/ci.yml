@@ -68,7 +68,7 @@ jobs:
       - name: Ensure pip is installed
         run: |
           python -m ensurepip --upgrade
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade "pip<25.3"
           # Upgrade setup tools
           python -m pip install --upgrade setuptools
 
