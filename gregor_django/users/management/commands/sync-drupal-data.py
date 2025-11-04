@@ -34,6 +34,12 @@ class Command(BaseCommand):
             "--email",
             help="""Email to which to send audit result details that need action or have errors.""",
         )
+        parser.add_argument(
+            "--error-email",
+            default=None,
+            dest="error_email",
+            help="""Email to which to send audit result details that need action or have errors.""",
+        )
 
     def _send_email(self, user_audit, site_audit, partner_group_audit):
         # Send email if requested and there are problems.
@@ -42,6 +48,12 @@ class Command(BaseCommand):
             # if we wanted to linkify any of our data we would need to do more here
             request = HttpRequest()
             subject = "[command:sync-drupal-data] report"
+
+            has_error = user_audit.errors or site_audit.errors or partner_group_audit.errors
+            recipient_list = [self.email]
+            if has_error and self.error_email:
+                recipient_list.append(self.error_email)
+
             html_body = render_to_string(
                 "users/drupal_data_audit_email.html",
                 context={
@@ -56,7 +68,7 @@ class Command(BaseCommand):
                 subject,
                 "Drupal data audit problems or changes found. Please see attached report.",
                 None,
-                [self.email],
+                recipient_list=recipient_list,
                 fail_silently=False,
                 html_message=html_body,
             )
@@ -64,6 +76,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.apply_changes = options.get("update")
         self.email = options["email"]
+        self.error_email = options["error_email"]
         self.ignore_threshold = options["ignore_threshold"]
 
         notification_content = (
