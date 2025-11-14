@@ -58,9 +58,9 @@ django==4.2.25
     #   django-stubs-ext
 django-debug-toolbar==6.1.0
     # via -r requirements/dev-requirements.in
-django-stubs==5.2.5
+django-stubs==5.2.7
     # via -r requirements/dev-requirements.in
-django-stubs-ext==5.2.5
+django-stubs-ext==5.2.7
     # via django-stubs
 docutils==0.20.1
     # via sphinx
@@ -125,7 +125,7 @@ platformdirs==4.2.0
     # via
     #   pylint
     #   virtualenv
-pre-commit==4.3.0
+pre-commit==4.4.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
