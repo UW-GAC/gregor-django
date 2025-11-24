@@ -125,7 +125,7 @@ platformdirs==4.2.0
     # via
     #   pylint
     #   virtualenv
-pre-commit==4.4.0
+pre-commit==4.5.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
