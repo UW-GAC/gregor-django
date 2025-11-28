@@ -94,6 +94,8 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.6
     # via sphinx
+librt==0.6.2
+    # via mypy
 markupsafe==2.1.5
     # via
     #   jinja2
@@ -102,7 +104,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==1.18.2
+mypy==1.19.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
