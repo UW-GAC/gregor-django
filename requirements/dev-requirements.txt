@@ -58,9 +58,9 @@ django==4.2.26
     #   django-stubs-ext
 django-debug-toolbar==6.1.0
     # via -r requirements/dev-requirements.in
-django-stubs==5.2.7
+django-stubs==5.2.8
     # via -r requirements/dev-requirements.in
-django-stubs-ext==5.2.7
+django-stubs-ext==5.2.8
     # via django-stubs
 docutils==0.20.1
     # via sphinx
