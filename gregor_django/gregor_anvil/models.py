@@ -11,7 +11,7 @@ from simple_history.models import HistoricalRecords
 
 
 def validate_not_future_date(value: date):
-    if value > timezone.now().date():
+    if value > timezone.localdate():
         raise ValidationError("Date cannot be in the future.")
 
 
