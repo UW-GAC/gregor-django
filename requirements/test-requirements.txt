@@ -4,6 +4,10 @@
 #
 #    pip-compile requirements/test-requirements.in
 #
+asgiref==3.10.0
+    # via
+    #   -c requirements/requirements.txt
+    #   django
 certifi==2024.7.4
     # via
     #   -c requirements/requirements.txt
@@ -12,12 +16,16 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   requests
-coverage[toml]==7.5.2
+coverage[toml]==7.10.6
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
-django-coverage-plugin==3.1.1
+django==4.2.26
+    # via
+    #   -c requirements/requirements.txt
+    #   django-coverage-plugin
+django-coverage-plugin==3.2.0
     # via -r requirements/test-requirements.in
 django-test-migrations==1.5.0
     # via -r requirements/test-requirements.in
@@ -29,7 +37,7 @@ factory-boy==3.3.3
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
-freezegun==1.5.2
+freezegun==1.5.5
     # via -r requirements/test-requirements.in
 idna==3.7
     # via
@@ -46,27 +54,26 @@ packaging==23.2
     #   -c requirements/requirements.txt
     #   marshmallow
     #   pytest
-    #   pytest-sugar
 pluggy==1.5.0
     # via
     #   pytest
     #   pytest-cov
 pygments==2.19.1
     # via pytest
-pytest==8.4.1
+pytest==9.0.1
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via -r requirements/test-requirements.in
 pytest-django==4.11.1
     # via -r requirements/test-requirements.in
-pytest-sugar==1.0.0
+pytest-sugar==1.1.1
     # via -r requirements/test-requirements.in
-pytest-xdist==3.7.0
+pytest-xdist==3.8.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via
@@ -78,12 +85,16 @@ requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.25.7
+responses==0.25.8
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
     #   -c requirements/requirements.txt
     #   python-dateutil
+sqlparse==0.5.1
+    # via
+    #   -c requirements/requirements.txt
+    #   django
 termcolor==2.4.0
     # via pytest-sugar
 tomli==2.0.1
@@ -91,11 +102,12 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-types-requests==2.32.4.20250611
+types-requests==2.32.4.20250913
     # via -r requirements/test-requirements.in
-typing-extensions==4.8.0
+typing-extensions==4.15.0
     # via
     #   -c requirements/requirements.txt
+    #   asgiref
     #   django-test-migrations
 urllib3==2.5.0
     # via

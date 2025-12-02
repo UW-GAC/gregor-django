@@ -14,6 +14,8 @@ updates:
     # Check for updates to GitHub Actions every weekday
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "django-anvil-consortium-manager"
     allow:
       # Allow only direct dependencies - should be ok with pip-sync?
       - dependency-type: "direct"

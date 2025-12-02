@@ -1,3 +1,4 @@
+from anvil_consortium_manager.views import WorkspaceAutocompleteByType
 from django.urls import include, path
 
 from . import views
@@ -44,6 +45,24 @@ workspace_report_patterns = (
         path("workspaces/", views.WorkspaceReport.as_view(), name="workspace"),
     ],
     "reports",
+)
+
+release_workspace_update_patterns = (
+    [
+        path(
+            "contributing_workspaces/",
+            views.ReleaseWorkspaceUpdateContributingWorkspaces.as_view(),
+            name="contributing_workspaces",
+        ),
+    ],
+    "update",
+)
+
+release_workspace_patterns = (
+    [
+        path("<slug:billing_project_slug>/<slug:workspace_slug>/update/", include(release_workspace_update_patterns)),
+    ],
+    "release_workspaces",
 )
 
 upload_workspace_sharing_audit_patterns = (
@@ -201,6 +220,37 @@ audit_patterns = (
     "audit",
 )
 
+# Needed to prevent circular imports when using with DAL in forms.
+autocomplete_workspace_patterns = (
+    [
+        path(
+            "dcc_processed_data/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "dcc_processed_data"},
+            name="dcc_processed_data",
+        ),
+        path(
+            "upload/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "upload"},
+            name="upload",
+        ),
+        path(
+            "partner_upload/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "partner_upload"},
+            name="partner_upload",
+        ),
+    ],
+    "workspaces",
+)
+autocomplete_patterns = (
+    [
+        path("workspaces/", include(autocomplete_workspace_patterns)),
+    ],
+    "autocomplete",
+)
+
 urlpatterns = [
     # path("", views.Index.as_view(), name="index"),
     path("research_centers/", include(research_center_patterns)),
@@ -209,4 +259,6 @@ urlpatterns = [
     path("upload_cycles/", include(upload_cycle_patterns)),
     path("reports/", include(workspace_report_patterns)),
     path("audit/", include(audit_patterns)),
+    path("release_workspaces/", include(release_workspace_patterns)),
+    path("autocomplete/", include(autocomplete_patterns)),
 ]
