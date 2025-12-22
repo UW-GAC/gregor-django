@@ -6,50 +6,50 @@
 #
 asgiref==3.10.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   django
 certifi==2024.7.4
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 charset-normalizer==3.3.2
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 coverage[toml]==7.10.6
     # via
-    #   -r test-requirements.in
+    #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
 django==4.2.26
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   django-coverage-plugin
 django-coverage-plugin==3.2.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 django-test-migrations==1.5.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
 freezegun==1.5.5
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 idna==3.7
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 iniconfig==2.0.0
     # via pytest
 marshmallow==3.26.2
     # via marshmallow-jsonapi
 marshmallow-jsonapi==0.24.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 packaging==23.2
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   marshmallow
     #   pytest
 pluggy==1.5.0
@@ -60,19 +60,19 @@ pygments==2.19.1
     # via pytest
 pytest==9.0.1
     # via
-    #   -r test-requirements.in
+    #   -r requirements/test-requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
 pytest-cov==7.0.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 pytest-django==4.11.1
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 pytest-sugar==1.1.1
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 pytest-xdist==3.8.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via
     #   faker
@@ -81,27 +81,27 @@ pyyaml==6.0.1
     # via responses
 requests==2.32.4
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   responses
 responses==0.25.8
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 six==1.16.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   python-dateutil
 sqlparse==0.5.1
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   django
 termcolor==2.4.0
     # via pytest-sugar
 types-requests==2.32.4.20250913
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 typing-extensions==4.15.0
     # via django-test-migrations
 urllib3==2.5.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
     #   responses
     #   types-requests
