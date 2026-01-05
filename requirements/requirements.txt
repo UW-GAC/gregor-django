@@ -81,7 +81,7 @@ django-maintenance-mode==0.22.0
     # via -r requirements/requirements.in
 django-model-utils==5.0.0
     # via -r requirements/requirements.in
-django-picklefield==3.3
+django-picklefield==3.4.0
     # via -r requirements/requirements.in
 django-simple-history==3.11.0
     # via
