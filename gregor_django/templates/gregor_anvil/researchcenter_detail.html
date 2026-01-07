@@ -81,15 +81,15 @@
     <div class="accordion-item">
       <h2 class="accordion-header" id="headingResearchCenterUsersOne">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResearchCenterUsersOne" aria-expanded="false" aria-controls="collapseResearchCenterUsersOne">
-          <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
-          Partner Group members
+          <span class="fa-solid fa-users mx-2"></span>
+          Research Center members
           <span class="badge mx-2 bg-secondary pill"> {{ tables.0.rows|length }}</span>
         </button>
       </h2>
       <div id="collapseResearchCenterUsersOne" class="accordion-collapse collapse" aria-labelledby="headingResearchCenterUsersOne" data-bs-parent="#accordionResearchCenterUsers">
         <div class="accordion-body">
           <p>
-            This table shows users who are associated with this Partner Group.
+            This table shows users who are members of this Research Center.
           </p>
         {% render_table tables.0 %}
         </div>
