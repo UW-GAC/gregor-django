@@ -50,7 +50,7 @@ django==4.2.26
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.13.0
+django-allauth==65.13.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
     # via -r requirements/requirements.in
@@ -73,7 +73,7 @@ django-extensions==4.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.26.0
+django-htmx==1.27.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
@@ -81,9 +81,9 @@ django-maintenance-mode==0.22.0
     # via -r requirements/requirements.in
 django-model-utils==5.0.0
     # via -r requirements/requirements.in
-django-picklefield==3.3
+django-picklefield==3.4.0
     # via -r requirements/requirements.in
-django-simple-history==3.10.1
+django-simple-history==3.11.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
