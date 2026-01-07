@@ -95,7 +95,7 @@ sqlparse==0.5.1
     #   django
 termcolor==2.4.0
     # via pytest-sugar
-types-requests==2.32.4.20250913
+types-requests==2.32.4.20260107
     # via -r requirements/test-requirements.in
 typing-extensions==4.15.0
     # via django-test-migrations
