@@ -83,7 +83,7 @@ django-model-utils==5.0.0
     # via -r requirements/requirements.in
 django-picklefield==3.3
     # via -r requirements/requirements.in
-django-simple-history==3.10.1
+django-simple-history==3.11.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
