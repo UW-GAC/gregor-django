@@ -43,7 +43,7 @@ idna==3.7
     #   requests
 iniconfig==2.0.0
     # via pytest
-marshmallow==3.21.2
+marshmallow==3.26.2
     # via marshmallow-jsonapi
 marshmallow-jsonapi==0.24.0
     # via -r requirements/test-requirements.in
