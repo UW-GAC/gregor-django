@@ -66,7 +66,7 @@ docutils==0.22.4
     # via sphinx
 executing==2.0.1
     # via stack-data
-filelock==3.13.1
+filelock==3.20.1
     # via virtualenv
 h11==0.16.0
     # via uvicorn
