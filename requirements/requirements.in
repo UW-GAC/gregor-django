@@ -9,11 +9,11 @@ cryptography # https://github.com/pyca/cryptography
 pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
 requests>=2.32.4
-urllib3>=2.5.0
+urllib3>=2.6.0
 # Password hashing
 argon2-cffi # https://github.com/hynek/argon2_cffi
 
-django>=4.2.15,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
+django>=4.2.27,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
 # Read from .env files
 # Note that django-environ 0.11+ introduces a bug where secret keys are truncated if they have a #
 # https://github.com/joke2k/django-environ/issues/497
