@@ -21,7 +21,7 @@ coverage[toml]==7.10.6
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
-django==4.2.26
+django==4.2.27
     # via
     #   -c requirements/requirements.txt
     #   django-coverage-plugin
@@ -99,7 +99,7 @@ types-requests==2.32.4.20260107
     # via -r requirements/test-requirements.in
 typing-extensions==4.15.0
     # via django-test-migrations
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -c requirements/requirements.txt
     #   requests

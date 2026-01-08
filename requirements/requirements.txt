@@ -34,7 +34,7 @@ crispy-bootstrap5==2025.6
     #   django-anvil-consortium-manager
 cryptography==46.0.3
     # via -r requirements/requirements.in
-django==4.2.26
+django==4.2.27
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -155,7 +155,7 @@ tenacity==8.2.3
     # via
     #   jsonapi-requests
     #   plotly
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r requirements/requirements.in
     #   requests
