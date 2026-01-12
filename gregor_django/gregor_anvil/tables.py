@@ -40,12 +40,16 @@ class BooleanIconColumn(tables.BooleanColumn):
         value = self._get_bool_value(record, value, bound_column)
         if value:
             rendered_value = format_html(
-                f"""<i class="bi bi-{self.true_icon} bi-align-center px-2" style="color: {self.true_color};"></i>"""
+                """<i class="bi bi-{icon} bi-align-center px-2" style="color: {color};"></i>""",
+                icon=self.true_icon,
+                color=self.true_color,
             )
         else:
             if self.show_false_icon:
                 rendered_value = format_html(
-                    f"""<i class="bi bi-{self.false_icon} bi-align-center px-2" style="color: {self.false_color};"></i>"""  # noqa: E501
+                    """<i class="bi bi-{icon} bi-align-center px-2" style="color: {color};"></i>""",
+                    icon=self.false_icon,
+                    color=self.false_color,
                 )
             else:
                 rendered_value = ""
@@ -157,7 +161,11 @@ class WorkspaceConsortiumAccessTable(tables.Table):
         if has_consortium_access:
             icon = "check-circle-fill"
             color = "green"
-            value = format_html("""<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color))
+            value = format_html(
+                """<i class="bi bi-{}" style="color: {};"></i>""",
+                icon,
+                color,
+            )
         else:
             value = ""
         return value
