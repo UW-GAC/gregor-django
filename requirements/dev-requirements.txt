@@ -49,7 +49,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==5.2.5
+django==5.2.10
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
