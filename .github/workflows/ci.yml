@@ -56,10 +56,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -104,7 +104,7 @@ jobs:
         run: ls -lhta
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: coverage-data-${{ strategy.job-index }}
           path: coverage-${{ strategy.job-index }}
@@ -116,10 +116,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.10'
 
@@ -129,7 +129,7 @@ jobs:
           pip install --upgrade coverage "django<4" django-coverage-plugin
 
       - name: Download coverage data
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           path: ./artifacts/
 
@@ -145,6 +145,6 @@ jobs:
           python -m coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
