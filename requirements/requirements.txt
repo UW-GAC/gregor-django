@@ -52,7 +52,7 @@ django==5.2.10
     #   django-tables2
 django-allauth==65.13.1
     # via -r requirements/requirements.in
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@f8f567550f6808924b8d8b224561c22af0e2241a
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
