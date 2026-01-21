@@ -107,7 +107,7 @@ class AccountAdapter(BaseAccountAdapter):
                 membership = GroupAccountMembership(
                     group=group,
                     account=account,
-                    role=GroupAccountMembership.MEMBER,
+                    role=GroupAccountMembership.RoleChoices.MEMBER,
                 )
                 membership.full_clean()
                 membership._change_reason = self.after_account_verification_change_reason
@@ -138,7 +138,7 @@ class ManagedGroupAdapter(BaseManagedGroupAdapter):
         membership = GroupGroupMembership.objects.create(
             parent_group=managed_group,
             child_group=admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         membership.anvil_create()
 

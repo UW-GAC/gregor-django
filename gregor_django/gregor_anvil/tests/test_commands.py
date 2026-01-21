@@ -195,7 +195,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group__name=settings.ANVIL_DCC_ADMINS_GROUP_NAME,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", stdout=out)
@@ -239,7 +239,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", stdout=out)
@@ -274,7 +274,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=dcc_admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -318,7 +318,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -358,7 +358,7 @@ class RunUploadWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_upload_workspace_audit", "--no-color", stdout=out)
@@ -535,7 +535,7 @@ class RunCombinedWorkspaceAuditTestCase(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group__name=settings.ANVIL_DCC_ADMINS_GROUP_NAME,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_combined_workspace_audit", "--no-color", stdout=out)
@@ -574,7 +574,7 @@ class RunCombinedWorkspaceAuditTestCase(TestCase):
         workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_combined_workspace_audit", "--no-color", stdout=out)
@@ -596,7 +596,7 @@ class RunCombinedWorkspaceAuditTestCase(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group__name="GREGOR_ALL",
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         out = StringIO()
         call_command("run_combined_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -622,7 +622,7 @@ class RunCombinedWorkspaceAuditTestCase(TestCase):
         workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_combined_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -841,7 +841,7 @@ class RunDCCProcessedDataWorkspaceAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=dcc_processed_data_workspace.workspace.authorization_domains.first(),
             child_group__name=settings.ANVIL_DCC_ADMINS_GROUP_NAME,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_dcc_processed_data_workspace_audit", "--no-color", stdout=out)
@@ -885,7 +885,7 @@ class RunDCCProcessedDataWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=dcc_processed_data_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_dcc_processed_data_workspace_audit", "--no-color", stdout=out)
@@ -920,7 +920,7 @@ class RunDCCProcessedDataWorkspaceAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=dcc_processed_data_workspace.workspace.authorization_domains.first(),
             child_group=dcc_admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_dcc_processed_data_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -964,7 +964,7 @@ class RunDCCProcessedDataWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=dcc_processed_data_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_dcc_processed_data_workspace_audit", "--no-color", email="test@example.com", stdout=out)
@@ -1004,7 +1004,7 @@ class RunDCCProcessedDataWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=dcc_processed_data_workspace.workspace.authorization_domains.first(),
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         out = StringIO()
         call_command("run_dcc_processed_data_workspace_audit", "--no-color", stdout=out)

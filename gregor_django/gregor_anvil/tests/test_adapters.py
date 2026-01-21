@@ -107,7 +107,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_two_rcs(self):
         # Create an account whose user is linked to two RCs.
@@ -135,9 +135,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_one_rc_no_members_group(self):
         """A user is linked to an RC with no members group."""
@@ -192,7 +192,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_two_partners(self):
         user = UserFactory.create()
@@ -219,9 +219,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_one_partner_no_members_group(self):
         """A user is linked to a PartnerGroup with no members group."""
@@ -281,9 +281,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_group_account_membership_already_exists(self):
         member_group = ManagedGroupFactory.create()
@@ -296,7 +296,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         GroupAccountMembershipFactory.create(
             group=member_group,
             account=account,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         # No API response - group will not be changed.
         # Run the adapter method.
@@ -306,7 +306,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_after_account_verification_history_change_reason(self):
         member_group = ManagedGroupFactory.create()
@@ -641,7 +641,7 @@ class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, managed_group)
         self.assertEqual(membership.child_group, admins_group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_DCC_ADMINS_GROUP_NAME="foobar")
     def test_after_anvil_create_different_admins_group(self):
@@ -660,7 +660,7 @@ class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, managed_group)
         self.assertEqual(membership.child_group, admins_group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_after_anvil_create_no_admins_group(self):
         managed_group = ManagedGroupFactory.create(name="test-group")
