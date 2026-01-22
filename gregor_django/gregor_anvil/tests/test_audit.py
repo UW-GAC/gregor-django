@@ -678,7 +678,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
             membership = GroupGroupMembershipFactory.create(
                 parent_group=workspace.authorization_domains.first(),
                 child_group=group,
-                role=GroupGroupMembership.MEMBER,
+                role=GroupGroupMembership.RoleChoices.MEMBER,
             )
         instance = workspace_auth_domain_audit_results.VerifiedMember(
             workspace=workspace,
@@ -693,7 +693,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
 
@@ -704,7 +704,9 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         date_created = timezone.now() - timedelta(days=1)
         with freeze_time(date_created):
             membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.authorization_domains.first(), child_group=group, role=GroupGroupMembership.ADMIN
+                parent_group=workspace.authorization_domains.first(),
+                child_group=group,
+                role=GroupGroupMembership.RoleChoices.ADMIN,
             )
         instance = workspace_auth_domain_audit_results.VerifiedAdmin(
             workspace=workspace,
@@ -719,7 +721,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
 
@@ -762,7 +764,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_handle_add_admin(self):
         workspace = WorkspaceFactory.create(name="test-ws")
@@ -788,7 +790,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_handle_change_to_member(self):
         workspace = WorkspaceFactory.create(name="test-ws")
@@ -799,7 +801,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
             membership = GroupGroupMembershipFactory.create(
                 parent_group=workspace.authorization_domains.first(),
                 child_group=group,
-                role=GroupGroupMembership.ADMIN,
+                role=GroupGroupMembership.RoleChoices.ADMIN,
             )
         instance = workspace_auth_domain_audit_results.ChangeToMember(
             workspace=workspace,
@@ -826,7 +828,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         self.assertGreater(membership.modified, date_created)
 
     def test_handle_change_to_admin(self):
@@ -838,7 +840,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
             membership = GroupGroupMembershipFactory.create(
                 parent_group=workspace.authorization_domains.first(),
                 child_group=group,
-                role=GroupGroupMembership.MEMBER,
+                role=GroupGroupMembership.RoleChoices.MEMBER,
             )
         instance = workspace_auth_domain_audit_results.ChangeToAdmin(
             workspace=workspace,
@@ -865,7 +867,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
         self.assertGreater(membership.modified, date_created)
 
     def test_handle_remove(self):
@@ -875,7 +877,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         instance = workspace_auth_domain_audit_results.Remove(
             workspace=workspace,
@@ -912,7 +914,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
             workspace=upload_workspace.workspace,
@@ -921,7 +923,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
             note="foo",
         )
         table_dictionary = instance.get_table_dictionary()
-        self.assertEqual(table_dictionary["role"], membership.ADMIN)
+        self.assertEqual(table_dictionary["role"], membership.RoleChoices.ADMIN)
 
     def test_member_as_member(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
@@ -929,7 +931,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         instance = workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult(
             workspace=upload_workspace.workspace,
@@ -938,7 +940,7 @@ class WorkspaceAuthDomainAuditResultTest(AnVILAPIMockTestMixin, TestCase):
             note="foo",
         )
         table_dictionary = instance.get_table_dictionary()
-        self.assertEqual(table_dictionary["role"], membership.MEMBER)
+        self.assertEqual(table_dictionary["role"], membership.RoleChoices.MEMBER)
 
     def test_not_member(self):
         upload_workspace = factories.UploadWorkspaceFactory.create(upload_cycle__is_future=True)
@@ -4688,13 +4690,13 @@ class UploadWorkspaceAuthDomainAuditTableTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         data = [
             {
                 "workspace": upload_workspace.workspace,
                 "managed_group": group,
-                "role": GroupGroupMembership.MEMBER,
+                "role": GroupGroupMembership.RoleChoices.MEMBER,
                 "note": "a note",
                 "action": "",
             },
@@ -4711,13 +4713,13 @@ class UploadWorkspaceAuthDomainAuditTableTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group_1,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         data = [
             {
                 "workspace": upload_workspace.workspace,
                 "managed_group": group_1,
-                "role": GroupGroupMembership.MEMBER,
+                "role": GroupGroupMembership.RoleChoices.MEMBER,
                 "note": "a note",
                 "action": "",
             },
@@ -4858,7 +4860,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
@@ -4877,7 +4879,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
@@ -4895,7 +4897,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
@@ -4909,7 +4911,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
@@ -4936,7 +4938,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.run_audit()
@@ -4964,7 +4966,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=upload_workspace_1.workspace.authorization_domains.first(),
             child_group=admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         upload_workspace_2 = factories.UploadWorkspaceFactory.create()
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
@@ -4992,7 +4994,7 @@ class UploadWorkspaceAuthDomainAuditTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=upload_workspace_1.workspace.authorization_domains.first(),
             child_group=admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         upload_workspace_2 = factories.UploadWorkspaceFactory.create()
         # First application
@@ -5076,7 +5078,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -5094,7 +5096,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -5125,7 +5127,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -5143,7 +5145,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -5174,7 +5176,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -5192,7 +5194,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -5223,7 +5225,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -5241,7 +5243,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -5287,7 +5289,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -5305,7 +5307,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -5336,7 +5338,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -5354,7 +5356,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -5385,7 +5387,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -5403,7 +5405,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -5434,7 +5436,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -5452,7 +5454,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -5477,7 +5479,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -5489,7 +5491,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -5508,7 +5510,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -5520,7 +5522,7 @@ class UploadWorkspaceAuthDomainAuditFutureCycleTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -5573,7 +5575,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -5591,7 +5593,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -5622,7 +5624,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -5640,7 +5642,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -5671,7 +5673,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -5689,7 +5691,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -5720,7 +5722,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -5738,7 +5740,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -5784,7 +5786,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -5802,7 +5804,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -5833,7 +5835,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -5851,7 +5853,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -5882,7 +5884,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -5900,7 +5902,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -5931,7 +5933,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -5949,7 +5951,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -5974,7 +5976,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -5986,7 +5988,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -6005,7 +6007,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -6017,7 +6019,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleBeforeComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -6072,7 +6074,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -6090,7 +6092,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -6121,7 +6123,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -6139,7 +6141,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -6170,7 +6172,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -6188,7 +6190,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -6219,7 +6221,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -6237,7 +6239,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -6283,7 +6285,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -6301,7 +6303,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -6332,7 +6334,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -6350,7 +6352,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -6381,7 +6383,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -6399,7 +6401,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -6430,7 +6432,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -6448,7 +6450,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -6473,7 +6475,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -6485,7 +6487,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -6504,7 +6506,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -6516,7 +6518,7 @@ class UploadWorkspaceAuthDomainAuditCurrentCycleAfterComputeTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -6573,7 +6575,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -6591,7 +6593,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -6622,7 +6624,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -6640,7 +6642,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -6671,7 +6673,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -6689,7 +6691,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -6720,7 +6722,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -6738,7 +6740,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -6784,7 +6786,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -6802,7 +6804,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -6833,7 +6835,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -6851,7 +6853,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -6882,7 +6884,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -6900,7 +6902,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -6931,7 +6933,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -6949,7 +6951,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -6974,7 +6976,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -6986,7 +6988,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -7005,7 +7007,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -7017,7 +7019,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleBeforeQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -7075,7 +7077,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -7093,7 +7095,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -7124,7 +7126,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -7142,7 +7144,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -7173,7 +7175,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -7191,7 +7193,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -7222,7 +7224,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -7240,7 +7242,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -7286,7 +7288,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -7304,7 +7306,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -7335,7 +7337,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -7353,7 +7355,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -7384,7 +7386,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -7402,7 +7404,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -7433,7 +7435,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -7451,7 +7453,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -7476,7 +7478,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -7488,7 +7490,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -7507,7 +7509,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -7519,7 +7521,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterQCCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -7580,7 +7582,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -7598,7 +7600,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_uploader_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_uploader_group)
@@ -7629,7 +7631,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -7647,7 +7649,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_member_group)
@@ -7678,7 +7680,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -7696,7 +7698,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.rc_non_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.rc_non_member_group)
@@ -7727,7 +7729,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -7745,7 +7747,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_admin_group)
@@ -7791,7 +7793,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -7809,7 +7811,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_writer_group)
@@ -7840,7 +7842,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -7858,7 +7860,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.dcc_member_group)
@@ -7889,7 +7891,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -7907,7 +7909,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.gregor_all_group)
@@ -7938,7 +7940,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -7956,7 +7958,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.other_group)
@@ -7981,7 +7983,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -7993,7 +7995,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_admins)
@@ -8012,7 +8014,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -8024,7 +8026,7 @@ class UploadWorkspaceAuthDomainAuditPastCycleAfterCombinedWorkspaceSharedTest(Te
         GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = upload_workspace_audit.UploadWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.upload_workspace, self.anvil_devs)
@@ -8148,7 +8150,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=combined_workspace_1.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
@@ -8174,7 +8176,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=combined_workspace_1.workspace.authorization_domains.first(),
             child_group=group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
         # First application
@@ -8236,7 +8238,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.dcc_admin_group)
@@ -8256,7 +8258,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.dcc_admin_group)
@@ -8308,7 +8310,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.gregor_all_group)
@@ -8329,7 +8331,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.gregor_all_group)
@@ -8371,7 +8373,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_admins)
@@ -8383,7 +8385,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_admins)
@@ -8402,7 +8404,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_devs)
@@ -8414,7 +8416,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_devs)
@@ -8426,7 +8428,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.other_group)
@@ -8447,7 +8449,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditBeforeCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.other_group)
@@ -8501,7 +8503,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.dcc_admin_group)
@@ -8521,7 +8523,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.dcc_admin_group)
@@ -8573,7 +8575,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.gregor_all_group)
@@ -8594,7 +8596,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.gregor_all_group)
@@ -8636,7 +8638,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_admins)
@@ -8648,7 +8650,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_admins)
@@ -8667,7 +8669,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_devs)
@@ -8679,7 +8681,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.anvil_devs)
@@ -8691,7 +8693,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.other_group)
@@ -8712,7 +8714,7 @@ class CombinedConsortiumWorkspaceAuthDomainAuditAfterCompleteTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.combined_workspace.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.combined_workspace, self.other_group)
@@ -12077,7 +12079,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12098,7 +12100,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12154,7 +12156,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -12176,7 +12178,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -12215,7 +12217,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -12237,7 +12239,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -12266,7 +12268,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -12278,7 +12280,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -12297,7 +12299,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -12309,7 +12311,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -12338,7 +12340,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -12360,7 +12362,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -12398,7 +12400,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)
@@ -12419,7 +12421,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)
@@ -12472,7 +12474,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12493,7 +12495,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12549,7 +12551,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -12571,7 +12573,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -12610,7 +12612,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -12632,7 +12634,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -12661,7 +12663,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -12673,7 +12675,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -12692,7 +12694,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -12704,7 +12706,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -12733,7 +12735,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -12755,7 +12757,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -12793,7 +12795,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)
@@ -12814,7 +12816,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)
@@ -12873,7 +12875,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12894,7 +12896,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_admin_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_admin_group)
@@ -12950,7 +12952,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -12972,7 +12974,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_writer_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_writer_group)
@@ -13011,7 +13013,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -13033,7 +13035,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.dcc_member_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.dcc_member_group)
@@ -13062,7 +13064,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -13074,7 +13076,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_admins,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_admins)
@@ -13093,7 +13095,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -13105,7 +13107,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.anvil_devs,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.anvil_devs)
@@ -13134,7 +13136,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -13156,7 +13158,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.gregor_all_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.gregor_all_group)
@@ -13194,7 +13196,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)
@@ -13215,7 +13217,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         membership = GroupGroupMembershipFactory.create(
             parent_group=self.workspace_data.workspace.authorization_domains.first(),
             child_group=self.other_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         audit = dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit()
         audit.audit_workspace_and_group(self.workspace_data, self.other_group)

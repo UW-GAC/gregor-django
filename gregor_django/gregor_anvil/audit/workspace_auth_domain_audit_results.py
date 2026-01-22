@@ -81,7 +81,7 @@ class AddMember(WorkspaceAuthDomainAuditResult):
         membership = GroupGroupMembership(
             parent_group=self.workspace.authorization_domains.first(),
             child_group=self.managed_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         membership.full_clean()
         membership.save()
@@ -101,7 +101,7 @@ class AddAdmin(WorkspaceAuthDomainAuditResult):
         membership = GroupGroupMembership(
             parent_group=self.workspace.authorization_domains.first(),
             child_group=self.managed_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         membership.full_clean()
         membership.save()
@@ -119,7 +119,7 @@ class ChangeToMember(WorkspaceAuthDomainAuditResult):
 
     def _handle(self):
         self.current_membership_instance.anvil_delete()
-        self.current_membership_instance.role = GroupGroupMembership.MEMBER
+        self.current_membership_instance.role = GroupGroupMembership.RoleChoices.MEMBER
         self.current_membership_instance.full_clean()
         self.current_membership_instance.save()
         self.current_membership_instance.anvil_create()
@@ -136,7 +136,7 @@ class ChangeToAdmin(WorkspaceAuthDomainAuditResult):
 
     def _handle(self):
         self.current_membership_instance.anvil_delete()
-        self.current_membership_instance.role = GroupGroupMembership.ADMIN
+        self.current_membership_instance.role = GroupGroupMembership.RoleChoices.ADMIN
         self.current_membership_instance.full_clean()
         self.current_membership_instance.save()
         self.current_membership_instance.anvil_create()

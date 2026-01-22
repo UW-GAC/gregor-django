@@ -350,7 +350,7 @@ class TestUserDataAudit(TestCase):
         GroupGroupMembershipFactory.create(
             parent_group=gregor_all_group,
             child_group=pg_member_group,
-            role=GroupGroupMembership.MEMBER,
+            role=GroupGroupMembership.RoleChoices.MEMBER,
         )
         pg2 = PartnerGroup.objects.create(
             drupal_node_id=pg2_nid_id,
@@ -606,7 +606,7 @@ class TestUserDataAudit(TestCase):
         GroupAccountMembership.objects.create(
             group=new_anvil_managed_group,
             account=new_anvil_account,
-            role=GroupAccountMembership.MEMBER,
+            role=GroupAccountMembership.RoleChoices.MEMBER,
         )
 
         with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):

@@ -32,12 +32,12 @@ rc = factories.ResearchCenterFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=combined_auth_domain,
     child_group=gregor_all_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=combined_auth_domain,
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 
 
@@ -100,32 +100,32 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_nonmember_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_uploader_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 # DCC processed data workspace.
 workspace = factories.DCCProcessedDataWorkspaceFactory.create(
@@ -158,17 +158,17 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 
 
@@ -217,32 +217,32 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_nonmember_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_uploader_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 # DCC processed data workspace.
 workspace = factories.DCCProcessedDataWorkspaceFactory.create(
@@ -275,17 +275,17 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 
 # Create a past upload cycle before qc is completed.
@@ -332,32 +332,32 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_nonmember_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_uploader_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 # DCC processed data workspace.
 workspace = factories.DCCProcessedDataWorkspaceFactory.create(
@@ -390,17 +390,17 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 
 ## Past upload cycle after QC is completed; combined workspace is not complete.
@@ -440,32 +440,32 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_nonmember_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_uploader_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 # Create the combined workspace and its records.
 combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
@@ -507,17 +507,17 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 
 
@@ -551,32 +551,32 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_nonmember_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=rc_1_uploader_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 # Create the combined workspace and its records.
 combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(
@@ -637,15 +637,15 @@ WorkspaceGroupSharingFactory.create(
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_admin_group,
-    role=GroupGroupMembership.ADMIN,
+    role=GroupGroupMembership.RoleChoices.ADMIN,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_writer_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
 GroupGroupMembershipFactory.create(
     parent_group=workspace.workspace.authorization_domains.first(),
     child_group=dcc_member_group,
-    role=GroupGroupMembership.MEMBER,
+    role=GroupGroupMembership.RoleChoices.MEMBER,
 )
