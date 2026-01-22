@@ -156,7 +156,9 @@ class WorkspaceConsortiumAccessTable(tables.Table):
         except ManagedGroup.DoesNotExist:
             has_consortium_access = False
         else:
-            has_consortium_access = record.is_in_authorization_domain(group) and record.is_shared(group)
+            has_consortium_access = record.has_group_in_authorization_domain(group) and record.is_shared_with_group(
+                group
+            )
 
         if has_consortium_access:
             icon = "check-circle-fill"

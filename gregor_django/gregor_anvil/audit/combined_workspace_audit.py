@@ -94,9 +94,9 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
             "note": self.DCC_ADMIN_AS_ADMIN,
         }
 
-        if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+        if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
             self.verified.append(workspace_auth_domain_audit_results.VerifiedAdmin(**audit_result_args))
-        elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+        elif current_membership and current_membership.role == GroupGroupMembership.RoleChoices.MEMBER:
             self.needs_action.append(workspace_auth_domain_audit_results.ChangeToAdmin(**audit_result_args))
         else:
             self.needs_action.append(workspace_auth_domain_audit_results.AddAdmin(**audit_result_args))
@@ -117,7 +117,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
 
         if not current_membership:
             self.needs_action.append(workspace_auth_domain_audit_results.AddMember(**audit_result_args))
-        elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+        elif current_membership and current_membership.role == GroupGroupMembership.RoleChoices.MEMBER:
             self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(**audit_result_args))
         else:
             self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(**audit_result_args))

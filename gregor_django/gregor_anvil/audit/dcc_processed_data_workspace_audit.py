@@ -115,9 +115,9 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
             "note": self.DCC_ADMINS,
         }
 
-        if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+        if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
             self.verified.append(workspace_auth_domain_audit_results.VerifiedAdmin(**audit_result_args))
-        elif current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+        elif current_membership and current_membership.role == GroupGroupMembership.RoleChoices.MEMBER:
             self.needs_action.append(workspace_auth_domain_audit_results.ChangeToAdmin(**audit_result_args))
         else:
             self.needs_action.append(workspace_auth_domain_audit_results.AddAdmin(**audit_result_args))
@@ -138,14 +138,14 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
         }
         if not combined_workspace or combined_workspace.date_completed is None:
             note = self.GREGOR_ALL_BEFORE_COMBINED_COMPLETE
-            if current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+            if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.MEMBER:
                 self.needs_action.append(
                     workspace_auth_domain_audit_results.Remove(
                         note=note,
                         **audit_result_args,
                     )
                 )
-            elif current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+            elif current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(
                     workspace_auth_domain_audit_results.Remove(
                         note=note,
@@ -161,7 +161,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
                 )
         elif combined_workspace and combined_workspace.date_completed:
             note = self.GREGOR_ALL_AFTER_COMBINED_COMPLETE
-            if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+            if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(
                     workspace_auth_domain_audit_results.ChangeToMember(
                         note=note,
@@ -202,14 +202,14 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
 
         if not combined_workspace or combined_workspace.date_completed is None:
             note = self.DCC_BEFORE_COMBINED_COMPLETE
-            if current_membership and current_membership.role == GroupGroupMembership.MEMBER:
+            if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.MEMBER:
                 self.verified.append(
                     workspace_auth_domain_audit_results.VerifiedMember(
                         note=note,
                         **audit_result_args,
                     )
                 )
-            elif current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+            elif current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(
                     workspace_auth_domain_audit_results.ChangeToMember(
                         note=note,
@@ -225,7 +225,7 @@ class DCCProcessedDataWorkspaceAuthDomainAudit(GREGoRAudit):
                 )
         elif combined_workspace and combined_workspace.date_completed:
             note = self.DCC_AFTER_COMBINED_COMPLETE
-            if current_membership and current_membership.role == GroupGroupMembership.ADMIN:
+            if current_membership and current_membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(
                     workspace_auth_domain_audit_results.Remove(
                         note=note,
