@@ -3812,7 +3812,7 @@ class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):
         membership = acm_models.GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, new_group)
         self.assertEqual(membership.child_group, self.admins_group)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
 
 class UploadWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase):
@@ -6069,7 +6069,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6083,7 +6083,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -6176,7 +6176,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6190,7 +6190,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED,
@@ -6204,7 +6204,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6218,7 +6218,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -6232,7 +6232,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6246,7 +6246,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED,
@@ -6260,7 +6260,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6274,7 +6274,7 @@ class UploadWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -6414,7 +6414,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6433,7 +6433,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -6543,7 +6543,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6562,7 +6562,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED,
@@ -6575,7 +6575,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6594,7 +6594,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -6607,7 +6607,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6626,7 +6626,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED,
@@ -6639,7 +6639,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6658,7 +6658,7 @@ class UploadWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMixin, TestC
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -6799,7 +6799,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6813,7 +6813,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -6912,7 +6912,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6926,7 +6926,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED,
@@ -6940,7 +6940,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6954,7 +6954,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -6968,7 +6968,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -6982,7 +6982,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED,
@@ -6996,7 +6996,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -7010,7 +7010,7 @@ class UploadWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTestMixin, Tes
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), upload_workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             upload_workspace_audit.UploadWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -7149,7 +7149,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -7169,7 +7169,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -7234,7 +7234,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -7254,7 +7254,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -7324,7 +7324,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -7345,7 +7345,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -7391,7 +7391,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_add_admin(self):
         """Get request with AddAdmin result."""
@@ -7416,7 +7416,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_change_to_member(self):
         """Get request with ChangeToMember result."""
@@ -7429,7 +7429,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7452,7 +7452,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_change_to_admin(self):
         """Get request with ChangeToMember result."""
@@ -7465,7 +7465,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7488,7 +7488,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_remove_admin(self):
         """Post request with Remove result for an admin membership."""
@@ -7499,7 +7499,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -7522,7 +7522,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -7545,7 +7545,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -7568,7 +7568,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -7620,7 +7620,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_htmx_add_admin(self):
         """Get request with AddAdmin result."""
@@ -7647,7 +7647,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_htmx_change_to_member(self):
         """Get request with ChangeToMember result."""
@@ -7660,7 +7660,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7685,7 +7685,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_htmx_change_to_admin(self):
         """Get request with ChangeToMember result."""
@@ -7698,7 +7698,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7723,7 +7723,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_htmx_remove_admin(self):
         """Post request with Remove result for an admin membership."""
@@ -7734,7 +7734,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -7759,7 +7759,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=upload_workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -7838,7 +7838,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7863,7 +7863,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -7880,7 +7880,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7900,7 +7900,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -7917,7 +7917,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7937,7 +7937,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -7954,7 +7954,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -7979,7 +7979,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -7996,7 +7996,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -8014,7 +8014,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -8031,7 +8031,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -8049,7 +8049,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -8120,7 +8120,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -8147,7 +8147,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -8163,7 +8163,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -8185,7 +8185,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -8201,7 +8201,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -8223,7 +8223,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -8239,7 +8239,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -8266,7 +8266,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -8282,7 +8282,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -8302,7 +8302,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -8318,7 +8318,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=upload_workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -8338,7 +8338,7 @@ class UploadWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin, TestCase)
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -10491,7 +10491,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10505,7 +10505,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.DCC_ADMIN_AS_ADMIN,
@@ -10565,7 +10565,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10579,7 +10579,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -10593,7 +10593,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10607,7 +10607,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.GREGOR_ALL_AS_MEMBER,
@@ -10621,7 +10621,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10635,7 +10635,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, 
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.DCC_ADMIN_AS_ADMIN,
@@ -10764,7 +10764,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10783,7 +10783,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.DCC_ADMIN_AS_ADMIN,
@@ -10850,7 +10850,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10869,7 +10869,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -10882,7 +10882,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10901,7 +10901,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.GREGOR_ALL_AS_MEMBER,
@@ -10914,7 +10914,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -10933,7 +10933,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMock
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             combined_workspace_audit.CombinedConsortiumDataWorkspaceAuthDomainAudit.DCC_ADMIN_AS_ADMIN,
@@ -11074,7 +11074,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -11101,7 +11101,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -11194,7 +11194,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -11221,7 +11221,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -11248,7 +11248,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -11307,7 +11307,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -11328,7 +11328,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -11372,7 +11372,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_add_admin(self):
         """Get request with AddAdmin result."""
@@ -11395,7 +11395,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_change_to_member(self):
         """Get request with ChangeToMember result."""
@@ -11406,7 +11406,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11429,7 +11429,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_change_to_admin(self):
         """Get request with ChangeToMember result."""
@@ -11440,7 +11440,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11463,7 +11463,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_remove_admin(self):
         """Post request with Remove result for an admin membership."""
@@ -11474,7 +11474,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11497,7 +11497,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11520,7 +11520,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -11542,7 +11542,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -11589,7 +11589,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_add_admin_htmx(self):
         """Get request with AddAdmin result."""
@@ -11613,7 +11613,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_change_to_member_htmx(self):
         """Get request with ChangeToMember result."""
@@ -11624,7 +11624,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11648,7 +11648,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_change_to_admin_htmx(self):
         """Get request with ChangeToMember result."""
@@ -11659,7 +11659,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11683,7 +11683,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_remove_admin_htmx(self):
         """Post request with Remove result for an admin membership."""
@@ -11694,7 +11694,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11718,7 +11718,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11790,7 +11790,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11815,7 +11815,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -11830,7 +11830,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11850,7 +11850,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -11865,7 +11865,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11885,7 +11885,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -11900,7 +11900,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -11925,7 +11925,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -11940,7 +11940,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11958,7 +11958,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -11973,7 +11973,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -11991,7 +11991,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -12055,7 +12055,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -12081,7 +12081,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -12095,7 +12095,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -12116,7 +12116,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -12130,7 +12130,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -12150,7 +12150,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -12164,7 +12164,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -12189,7 +12189,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -12203,7 +12203,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -12221,7 +12221,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -12235,7 +12235,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -12253,7 +12253,7 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTest
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -14275,7 +14275,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14289,7 +14289,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -14382,7 +14382,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14396,7 +14396,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
@@ -14410,7 +14410,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14424,7 +14424,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -14438,7 +14438,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14452,7 +14452,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
@@ -14466,7 +14466,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14480,7 +14480,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -14494,7 +14494,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14504,7 +14504,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(AnVILAPIMockTestMixin, TestCa
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -14652,7 +14652,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14671,7 +14671,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -14781,7 +14781,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14800,7 +14800,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
@@ -14813,7 +14813,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14832,7 +14832,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -14845,7 +14845,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14864,7 +14864,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
@@ -14877,7 +14877,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14896,7 +14896,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -14909,7 +14909,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=self.workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -14924,7 +14924,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByWorkspaceTest(AnVILAPIMockTestMi
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -15073,7 +15073,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15087,7 +15087,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -15186,7 +15186,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15200,7 +15200,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_AFTER_COMBINED_COMPLETE,
@@ -15214,7 +15214,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15228,7 +15228,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -15242,7 +15242,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15256,7 +15256,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_BEFORE_COMBINED_COMPLETE,
@@ -15270,7 +15270,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15284,7 +15284,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.DCC_ADMINS,
@@ -15298,7 +15298,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -15308,7 +15308,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditByUploadCycleTest(AnVILAPIMockTest
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace.workspace)
         self.assertEqual(table.rows[0].get_cell_value("managed_group"), group)
-        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(table.rows[0].get_cell_value("role"), acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
             dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.OTHER_GROUP,
@@ -15455,7 +15455,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -15478,7 +15478,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -15555,7 +15555,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -15578,7 +15578,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -15654,7 +15654,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -15675,7 +15675,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -15721,7 +15721,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_add_admin(self):
         """Get request with AddAdmin result."""
@@ -15746,7 +15746,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_change_to_member(self):
         """Get request with ChangeToMember result."""
@@ -15759,7 +15759,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -15781,7 +15781,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_change_to_admin(self):
         """Get request with ChangeToMember result."""
@@ -15794,7 +15794,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -15817,7 +15817,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_remove_admin(self):
         """Post request with Remove result for an admin membership."""
@@ -15828,7 +15828,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -15851,7 +15851,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -15874,7 +15874,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -15897,7 +15897,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
@@ -15949,7 +15949,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_htmx_add_admin(self):
         """Get request with AddAdmin result."""
@@ -15976,7 +15976,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
         )
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_htmx_change_to_member(self):
         """Get request with ChangeToMember result."""
@@ -15989,7 +15989,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16014,7 +16014,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_htmx_change_to_admin(self):
         """Get request with ChangeToMember result."""
@@ -16027,7 +16027,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16052,7 +16052,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         self.assertEqual(acm_models.GroupGroupMembership.objects.count(), 1)
         membership.refresh_from_db()
         self.assertGreater(membership.modified, membership.created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_post_htmx_remove_admin(self):
         """Post request with Remove result for an admin membership."""
@@ -16063,7 +16063,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.ADMIN,
+            role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16088,7 +16088,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         acm_factories.GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,
-            role=acm_models.GroupGroupMembership.MEMBER,
+            role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16167,7 +16167,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16192,7 +16192,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16209,7 +16209,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16229,7 +16229,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16246,7 +16246,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16266,7 +16266,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16283,7 +16283,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16308,7 +16308,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16325,7 +16325,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16343,7 +16343,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16360,7 +16360,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16378,7 +16378,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # Error message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -16449,7 +16449,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16476,7 +16476,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -16492,7 +16492,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16514,7 +16514,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -16530,7 +16530,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16552,7 +16552,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -16568,7 +16568,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         # Add the mocked API responses - one to create and one to delete.
         # Note that the auth domain group is created automatically by the factory using the workspace name.
@@ -16595,7 +16595,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -16611,7 +16611,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.ADMIN,
+                role=acm_models.GroupGroupMembership.RoleChoices.ADMIN,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16631,7 +16631,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
@@ -16647,7 +16647,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
             membership = acm_factories.GroupGroupMembershipFactory.create(
                 parent_group=workspace.workspace.authorization_domains.first(),
                 child_group=group,
-                role=acm_models.GroupGroupMembership.MEMBER,
+                role=acm_models.GroupGroupMembership.RoleChoices.MEMBER,
             )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -16667,7 +16667,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditResolveTest(AnVILAPIMockTestMixin,
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.MEMBER)
         # No messages
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)

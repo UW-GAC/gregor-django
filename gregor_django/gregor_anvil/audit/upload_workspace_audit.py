@@ -155,7 +155,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         # Otherwise, proceed with other checks.
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             elif membership:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
@@ -163,7 +163,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **result_kwargs))
         elif upload_workspace.upload_cycle.is_current:
             note = self.RC_UPLOADERS_BEFORE_QC
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **result_kwargs))
@@ -171,7 +171,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.needs_action.append(workspace_auth_domain_audit_results.AddMember(note=note, **result_kwargs))
         elif upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.RC_UPLOADERS_BEFORE_QC
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **result_kwargs))
@@ -179,7 +179,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.needs_action.append(workspace_auth_domain_audit_results.AddMember(note=note, **result_kwargs))
         else:
             note = self.RC_UPLOADERS_AFTER_QC
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             elif membership:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
@@ -197,7 +197,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             elif membership:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
@@ -205,7 +205,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **result_kwargs))
         elif not combined_workspace:
             note = self.RC_MEMBERS_BEFORE_COMBINED
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **result_kwargs))
@@ -213,7 +213,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.needs_action.append(workspace_auth_domain_audit_results.AddMember(note=note, **result_kwargs))
         else:
             note = self.RC_MEMBERS_AFTER_COMBINED
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             elif membership:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
@@ -230,7 +230,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
 
         if upload_workspace.upload_cycle.is_future:
             note = self.RC_FUTURE_CYCLE
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             elif membership:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
@@ -238,7 +238,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **result_kwargs))
         else:
             note = self.RC_NON_MEMBERS_AFTER_START
-            if membership and membership.role == GroupGroupMembership.ADMIN:
+            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
             elif membership:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **result_kwargs))
@@ -256,7 +256,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                     current_membership_instance=membership,
                 )
             )
-        elif membership.role == GroupGroupMembership.ADMIN:
+        elif membership.role == GroupGroupMembership.RoleChoices.ADMIN:
             self.verified.append(
                 workspace_auth_domain_audit_results.VerifiedAdmin(
                     workspace=upload_workspace.workspace,
@@ -292,14 +292,14 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         if not combined_workspace and not membership:
             self.needs_action.append(workspace_auth_domain_audit_results.AddMember(**result_kwargs))
         elif not combined_workspace and membership:
-            if membership.role == GroupGroupMembership.MEMBER:
+            if membership.role == GroupGroupMembership.RoleChoices.MEMBER:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(**result_kwargs))
             else:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(**result_kwargs))
         elif combined_workspace and not membership:
             self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(**result_kwargs))
         elif combined_workspace and membership:
-            if membership.role == GroupGroupMembership.ADMIN:
+            if membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.Remove(**result_kwargs))
             else:
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(**result_kwargs))
@@ -325,7 +325,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         elif combined_workspace and not membership:
             self.needs_action.append(workspace_auth_domain_audit_results.AddMember(**result_kwargs))
         elif combined_workspace and membership:
-            if membership.role == GroupGroupMembership.MEMBER:
+            if membership.role == GroupGroupMembership.RoleChoices.MEMBER:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(**result_kwargs))
             else:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(**result_kwargs))
