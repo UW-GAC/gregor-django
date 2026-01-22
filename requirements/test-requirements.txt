@@ -47,7 +47,7 @@ marshmallow==3.26.2
     # via marshmallow-jsonapi
 marshmallow-jsonapi==0.24.0
     # via -r requirements/test-requirements.in
-packaging==23.2
+packaging==26.0
     # via
     #   -c requirements/requirements.txt
     #   marshmallow
