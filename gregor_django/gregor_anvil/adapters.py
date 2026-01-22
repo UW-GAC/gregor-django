@@ -1,10 +1,15 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
+from anvil_consortium_manager.adapters.mixins import (
+    GroupGroupMembershipAdapterMixin,
+    GroupGroupMembershipRole,
+    WorkspaceSharingAdapterMixin,
+    WorkspaceSharingPermission,
+)
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 from anvil_consortium_manager.models import (
     GroupAccountMembership,
-    GroupGroupMembership,
     ManagedGroup,
     Workspace,
     WorkspaceGroupSharing,
@@ -15,53 +20,11 @@ from django.db.models import Q
 
 from . import filters, forms, models, tables
 
-
-class WorkspaceAdminSharingAdapterMixin:
-    """Helper class to share workspaces with the GREGOR_DCC_ADMINs group."""
-
-    def after_anvil_create(self, workspace):
-        super().after_anvil_create(workspace)
-        # Share the workspace with the ADMINs group as an owner.
-        try:
-            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
-        except ManagedGroup.DoesNotExist:
-            return
-        sharing = WorkspaceGroupSharing.objects.create(
-            workspace=workspace,
-            group=admins_group,
-            access=WorkspaceGroupSharing.OWNER,
-            can_compute=True,
-        )
-        sharing.anvil_create_or_update()
-
-    def after_anvil_import(self, workspace):
-        super().after_anvil_import(workspace)
-        # # Check if the workspace is already shared with the ADMINs group.
-        try:
-            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
-        except ManagedGroup.DoesNotExist:
-            return
-        try:
-            sharing = WorkspaceGroupSharing.objects.get(
-                workspace=workspace,
-                group=admins_group,
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            sharing = WorkspaceGroupSharing.objects.create(
-                workspace=workspace,
-                group=admins_group,
-                access=WorkspaceGroupSharing.OWNER,
-                can_compute=True,
-            )
-            sharing.save()
-            sharing.anvil_create_or_update()
-        else:
-            # If the existing sharing record exists, make sure it has the correct permissions.
-            if not sharing.can_compute or sharing.access != WorkspaceGroupSharing.OWNER:
-                sharing.can_compute = True
-                sharing.access = WorkspaceGroupSharing.OWNER
-                sharing.save()
-                sharing.anvil_create_or_update()
+workspace_admin_sharing_permission = WorkspaceSharingPermission(
+    group_name=settings.ANVIL_DCC_ADMINS_GROUP_NAME,
+    access=WorkspaceGroupSharing.OWNER,
+    can_compute=True,
+)
 
 
 class AccountAdapter(BaseAccountAdapter):
@@ -123,27 +86,21 @@ class AccountAdapter(BaseAccountAdapter):
         return context
 
 
-class ManagedGroupAdapter(BaseManagedGroupAdapter):
+class ManagedGroupAdapter(GroupGroupMembershipAdapterMixin, BaseManagedGroupAdapter):
     """Adapter for ManagedGroups."""
 
     list_table_class = ManagedGroupStaffTable
-
-    def after_anvil_create(self, managed_group):
-        super().after_anvil_create(managed_group)
-        # Add the ADMINs group as an admin of the auth domain.
-        try:
-            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_DCC_ADMINS_GROUP_NAME)
-        except ManagedGroup.DoesNotExist:
-            return
-        membership = GroupGroupMembership.objects.create(
-            parent_group=managed_group,
-            child_group=admins_group,
-            role=GroupGroupMembership.RoleChoices.ADMIN,
+    membership_roles = [
+        GroupGroupMembershipRole(
+            # Name of the group to add as a member.
+            child_group_name=settings.ANVIL_DCC_ADMINS_GROUP_NAME,
+            # Role that this group should have.
+            role="ADMIN",
         )
-        membership.anvil_create()
+    ]
 
 
-class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class UploadWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for UploadWorkspaces."""
 
     type = "upload"
@@ -156,6 +113,7 @@ class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAda
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/uploadworkspace_detail.html"
     workspace_list_template_name = "gregor_anvil/uploadworkspace_list.html"
+    share_permissions = [workspace_admin_sharing_permission]
 
     def get_autocomplete_queryset(self, queryset, q, forwarded={}):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
@@ -173,7 +131,7 @@ class UploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAda
         return queryset
 
 
-class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class PartnerUploadWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for PartnerUploadWorkspaces."""
 
     type = "partner_upload"
@@ -186,9 +144,10 @@ class PartnerUploadWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorks
     workspace_data_form_class = forms.PartnerUploadWorkspaceForm
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/partneruploadworkspace_detail.html"
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
@@ -202,9 +161,10 @@ class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_data_form_class = forms.ResourceWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/resourceworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class TemplateWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExampleWorkspaces."""
 
     type = "template"
@@ -216,9 +176,10 @@ class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_data_form_class = forms.TemplateWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/templateworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class CombinedConsortiumDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for CombinedConsortiumDataWorkspace."""
 
     type = "combined_consortium"
@@ -231,9 +192,10 @@ class CombinedConsortiumDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, 
     workspace_detail_template_name = "gregor_anvil/combinedconsortiumdataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
     workspace_list_template_name = "gregor_anvil/combinedconsortiumdataworkspace_list.html"
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class ReleaseWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ReleaseWorkspace."""
 
     type = "release"
@@ -245,6 +207,7 @@ class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAd
     workspace_data_form_class = forms.ReleaseWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/releaseworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    share_permissions = [workspace_admin_sharing_permission]
 
     def get_extra_detail_context_data(self, workspace, request):
         """Get extra context data for the release workspace detail view."""
@@ -272,7 +235,7 @@ class ReleaseWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAd
         return context
 
 
-class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class DCCProcessingWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessingWorkspace."""
 
     type = "dcc_processing"
@@ -284,9 +247,10 @@ class DCCProcessingWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorks
     workspace_data_form_class = forms.DCCProcessingWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/dccprocessingworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class DCCProcessedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class DCCProcessedDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DCCProcessedDataWorkspace."""
 
     type = "dcc_processed_data"
@@ -298,9 +262,10 @@ class DCCProcessedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWo
     workspace_data_form_class = forms.DCCProcessedDataWorkspaceForm
     workspace_detail_template_name = "gregor_anvil/dccprocesseddataworkspace_detail.html"
     workspace_form_class = WorkspaceForm
+    share_permissions = [workspace_admin_sharing_permission]
 
 
-class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class ExchangeWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ExchangeWorkspaces."""
 
     type = "exchange"
@@ -313,3 +278,4 @@ class ExchangeWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_form_class = WorkspaceForm
     workspace_detail_template_name = "gregor_anvil/exchangeworkspace_detail.html"
     workspace_list_template_name = "gregor_anvil/exchangeworkspace_list.html"
+    share_permissions = [workspace_admin_sharing_permission]
