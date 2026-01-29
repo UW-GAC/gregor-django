@@ -13,9 +13,10 @@ jobs:
 
     steps:
       - name: Checkout Code Repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
         with:
           ref: ${{ github.head_ref }}
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v6.1.0

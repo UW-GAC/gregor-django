@@ -49,7 +49,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.26
+django==5.2.10
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -66,7 +66,7 @@ docutils==0.22.4
     # via sphinx
 executing==2.0.1
     # via stack-data
-filelock==3.20.1
+filelock==3.20.3
     # via virtualenv
 h11==0.16.0
     # via uvicorn
@@ -155,7 +155,7 @@ requests==2.32.4
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.14.3
+ruff==0.14.10
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -209,14 +209,14 @@ typing-extensions==4.15.0
     #   django-stubs-ext
     #   mypy
     #   starlette
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   requests
 uvicorn==0.30.5
     # via sphinx-autobuild
-virtualenv==20.26.6
+virtualenv==20.36.1
     # via pre-commit
 watchfiles==0.22.0
     # via sphinx-autobuild
@@ -224,7 +224,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via sphinx-autobuild
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via -r requirements/dev-requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:

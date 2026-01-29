@@ -9,11 +9,11 @@ cryptography # https://github.com/pyca/cryptography
 pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
 requests>=2.32.4
-urllib3>=2.5.0
+urllib3>=2.6.0
 # Password hashing
 argon2-cffi # https://github.com/hynek/argon2_cffi
 
-django>=4.2.15,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
+django>=5.2,<6.0  # https://www.djangoproject.com/
 # Read from .env files
 # Note that django-environ 0.11+ introduces a bug where secret keys are truncated if they have a #
 # https://github.com/joke2k/django-environ/issues/497
@@ -37,7 +37,7 @@ django-extensions  # https://github.com/django-extensions/django-extensions
 # Bootstrap5 templates for crispy-forms
 crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5
 
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.34.0
 # Simple history - model history tracking
 django-simple-history
 
