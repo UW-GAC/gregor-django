@@ -32,7 +32,7 @@ crispy-bootstrap5==2025.6
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==46.0.3
+cryptography==46.0.4
     # via -r requirements/requirements.in
 django==5.2.10
     # via
@@ -63,7 +63,7 @@ django-crispy-forms==2.5
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==5.1.1
+django-dbbackup==5.1.2
     # via -r requirements/requirements.in
 django-environ==0.12.0
     # via -r requirements/requirements.in
@@ -107,10 +107,11 @@ oauthlib==3.3.1
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
-packaging==23.2
+packaging==26.0
     # via
     #   build
     #   plotly
+    #   wheel
 pip-tools==7.5.2
     # via -r requirements/requirements.in
 plotly==5.19.0
@@ -157,7 +158,7 @@ urllib3==2.6.3
     # via
     #   -r requirements/requirements.in
     #   requests
-wheel==0.42.0
+wheel==0.46.2
     # via pip-tools
 whitenoise==6.11.0
     # via -r requirements/requirements.in
