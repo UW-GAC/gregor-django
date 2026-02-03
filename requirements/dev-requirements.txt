@@ -155,7 +155,7 @@ requests==2.32.4
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.14.14
+ruff==0.15.0
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
