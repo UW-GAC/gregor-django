@@ -32,7 +32,7 @@ crispy-bootstrap5==2025.6
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==46.0.4
+cryptography==46.0.5
     # via -r requirements/requirements.in
 django==5.2.10
     # via
@@ -50,7 +50,7 @@ django==5.2.10
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.13.1
+django-allauth==65.14.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.34.0
     # via -r requirements/requirements.in
@@ -63,7 +63,7 @@ django-crispy-forms==2.5
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==5.1.2
+django-dbbackup==5.2.0
     # via -r requirements/requirements.in
 django-environ==0.12.0
     # via -r requirements/requirements.in
@@ -97,7 +97,7 @@ idna==3.7
     # via requests
 jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
-mysqlclient==2.2.7
+mysqlclient==2.2.8
     # via -r requirements/requirements.in
 networkx==3.1
     # via django-anvil-consortium-manager
@@ -112,7 +112,7 @@ packaging==26.0
     #   build
     #   plotly
     #   wheel
-pip-tools==7.5.2
+pip-tools==7.5.3
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
@@ -124,7 +124,7 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via -r requirements/requirements.in
 pyproject-hooks==1.0.0
     # via
