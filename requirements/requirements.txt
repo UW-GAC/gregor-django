@@ -50,7 +50,7 @@ django==5.2.10
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.13.1
+django-allauth==65.14.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.34.0
     # via -r requirements/requirements.in
