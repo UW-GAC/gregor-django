@@ -124,7 +124,7 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via -r requirements/requirements.in
 pyproject-hooks==1.0.0
     # via
