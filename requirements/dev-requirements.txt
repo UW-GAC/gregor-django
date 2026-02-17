@@ -49,18 +49,18 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==5.2.10
+django==5.2.11
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==6.1.0
+django-debug-toolbar==6.2.0
     # via -r requirements/dev-requirements.in
-django-stubs==5.2.8
+django-stubs==5.2.9
     # via -r requirements/dev-requirements.in
-django-stubs-ext==5.2.8
+django-stubs-ext==5.2.9
     # via django-stubs
 docutils==0.22.4
     # via sphinx
@@ -106,7 +106,7 @@ mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
     # via pre-commit
-packaging==23.2
+packaging==26.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -155,7 +155,7 @@ requests==2.32.4
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.14.10
+ruff==0.15.0
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -184,7 +184,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sqlparse==0.5.1
+sqlparse==0.5.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
