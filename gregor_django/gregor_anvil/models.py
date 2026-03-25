@@ -448,3 +448,28 @@ class ExchangeWorkspace(TimeStampedModel, BaseWorkspaceData):
         on_delete=models.PROTECT,
         help_text="The ResearchCenter associated with this workspace.",
     )
+
+
+class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A workspace to store data reprocessed by RCs, split by consent."""
+
+    research_center = models.ForeignKey(
+        ResearchCenter,
+        on_delete=models.PROTECT,
+        help_text="ResearchCenter associated with this workspace.",
+    )
+    consent_group = models.ForeignKey(
+        ConsentGroup,
+        help_text="Consent group associated with this data.",
+        on_delete=models.PROTECT,
+    )
+
+    date_completed = models.DateField(
+        help_text="The date when uploads to this workspace and data validation were completed.",
+        null=True,
+        blank=True,
+        validators=[validate_not_future_date],
+    )
+
+    def __str__(self):
+        return self.workspace.name
