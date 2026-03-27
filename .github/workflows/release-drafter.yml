@@ -104,7 +104,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - uses: release-drafter/release-drafter@v6
+    - uses: release-drafter/release-drafter@v7
       with:
         commitish: deploy/production
         tag: ${{ steps.get-version.outputs.version }}
