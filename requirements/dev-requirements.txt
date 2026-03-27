@@ -58,9 +58,9 @@ django==5.2.11
     #   django-stubs-ext
 django-debug-toolbar==6.2.0
     # via -r requirements/dev-requirements.in
-django-stubs==5.2.9
+django-stubs==6.0.1
     # via -r requirements/dev-requirements.in
-django-stubs-ext==5.2.9
+django-stubs-ext==6.0.1
     # via django-stubs
 docutils==0.22.4
     # via sphinx
@@ -155,7 +155,7 @@ requests==2.32.4
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.15.4
+ruff==0.15.8
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -224,7 +224,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via sphinx-autobuild
-werkzeug==3.1.5
+werkzeug==3.1.7
     # via -r requirements/dev-requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
