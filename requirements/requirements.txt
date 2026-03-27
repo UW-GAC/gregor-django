@@ -28,13 +28,13 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via pip-tools
-crispy-bootstrap5==2025.6
+crispy-bootstrap5==2026.3
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==46.0.5
+cryptography==46.0.6
     # via -r requirements/requirements.in
-django==5.2.11
+django==5.2.12
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -50,22 +50,22 @@ django==5.2.11
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.14.1
+django-allauth==65.15.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.35.0
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.3.4
+django-constance==4.3.5
     # via -r requirements/requirements.in
-django-crispy-forms==2.5
+django-crispy-forms==2.6
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
 django-dbbackup==5.2.0
     # via -r requirements/requirements.in
-django-environ==0.12.0
+django-environ==0.13.0
     # via -r requirements/requirements.in
 django-extensions==4.1
     # via
@@ -116,7 +116,7 @@ pip-tools==7.5.3
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pyasn1==0.4.8
+pyasn1==0.5.1
     # via
     #   pyasn1-modules
     #   rsa
@@ -124,7 +124,7 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via -r requirements/requirements.in
 pyproject-hooks==1.0.0
     # via
@@ -134,7 +134,7 @@ python-fsutil==0.13.1
     # via django-maintenance-mode
 pytz==2023.4
     # via django-anvil-consortium-manager
-requests==2.32.4
+requests==2.33.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
@@ -160,7 +160,7 @@ urllib3==2.6.3
     #   requests
 wheel==0.46.2
     # via pip-tools
-whitenoise==6.11.0
+whitenoise==6.12.0
     # via -r requirements/requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
