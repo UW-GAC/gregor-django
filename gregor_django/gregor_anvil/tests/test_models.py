@@ -1405,3 +1405,18 @@ class RCProcessedDataWorkspace(TestCase):
         instance.full_clean()
         instance.save()
         self.assertEqual(instance.date_completed, timezone.localdate())
+
+    def test_cannot_set_date_completed_in_future(self):
+        """Cannot set date_completed on RCProcessedDataWorkspace to a future date."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance = factories.RCProcessedDataWorkspaceFactory.create(
+            upload_cycle=upload_cycle,
+            date_completed=None,
+        )
+        instance.date_completed = timezone.localdate() + timedelta(days=1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("date_completed", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["date_completed"]), 1)
+        self.assertIn("Date cannot be in the future", e.exception.message_dict["date_completed"][0])

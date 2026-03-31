@@ -467,6 +467,8 @@ class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         validators=[MinValueValidator(1)],
         help_text="The version of this workspace for this ResearchCenter and ConsentGroup.",
     )
+
+    # Optional fields.
     upload_cycle = models.ForeignKey(
         UploadCycle,
         on_delete=models.PROTECT,
@@ -474,7 +476,6 @@ class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         blank=True,
         help_text="Upload cycle associated with this workspace.",
     )
-
     date_completed = models.DateField(
         help_text="The date when uploads to this workspace and data validation were completed.",
         null=True,

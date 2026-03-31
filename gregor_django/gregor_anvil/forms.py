@@ -258,3 +258,21 @@ class ExchangeWorkspaceForm(forms.ModelForm):
             "research_center",
             "workspace",
         )
+
+
+class RCProcessedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a RCProcessedDataWorkspace object."""
+
+    class Meta:
+        model = models.RCProcessedDataWorkspace
+        fields = (
+            "research_center",
+            "consent_group",
+            "version",
+            "upload_cycle",
+            "date_completed",
+            "workspace",
+        )
+        widgets = {
+            "date_completed": CustomDateInput(),
+        }
