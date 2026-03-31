@@ -463,6 +463,17 @@ class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="Consent group associated with this data.",
         on_delete=models.PROTECT,
     )
+    version = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The version of this workspace for this ResearchCenter and ConsentGroup.",
+    )
+    upload_cycle = models.ForeignKey(
+        UploadCycle,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Upload cycle associated with this workspace.",
+    )
 
     date_completed = models.DateField(
         help_text="The date when uploads to this workspace and data validation were completed.",
@@ -471,5 +482,20 @@ class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         validators=[validate_not_future_date],
     )
 
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_rc_processed_data_workspace",
+                fields=["research_center", "consent_group", "version"],
+            ),
+        ]
+
     def __str__(self):
         return self.workspace.name
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_completed is not set if upload_cycle is not set.
+        if self.date_completed and not self.upload_cycle:
+            raise ValidationError("date_completed cannot be set if upload_cycle is not set.")

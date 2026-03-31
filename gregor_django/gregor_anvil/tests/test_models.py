@@ -1312,3 +1312,96 @@ class ExchangeWorkspaceTest(TestCase):
             instance_2.full_clean()
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+
+class RCProcessedDataWorkspace(TestCase):
+    """Tests for the RCProcessedDataWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        research_center = factories.ResearchCenterFactory.create()
+        consent_group = factories.ConsentGroupFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance = models.RCProcessedDataWorkspace(
+            research_center=research_center,
+            consent_group=consent_group,
+            workspace=workspace,
+            version=1,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.RCProcessedDataWorkspace)
+        # Defaults that don't need to be set.
+        self.assertIsNone(instance.date_completed)
+        self.assertIsNone(instance.upload_cycle)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.RCProcessedDataWorkspaceFactory.create()
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), instance.workspace.name)
+
+    def test_unique_constraint(self):
+        """Cannot save two instances with the same ResearchCenter, ConsentGroup, and version."""
+        instance_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.RCProcessedDataWorkspaceFactory.build(
+            research_center=instance_1.research_center,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            version=instance_1.version,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance_2.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("already exists", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+        with self.assertRaises(IntegrityError):
+            instance_2.save()
+
+    def test_same_research_center_consent_group_different_version(self):
+        """Can save multiple UploadWorkspace models with the same ResearchCenter and consent group."""
+        instance_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        workspace = WorkspaceFactory.create()
+        instance_2 = factories.RCProcessedDataWorkspaceFactory.build(
+            research_center=instance_1.research_center,
+            consent_group=instance_1.consent_group,
+            workspace=workspace,
+            version=instance_1.version + 1,
+        )
+        instance_2.full_clean()
+        instance_2.save()
+        self.assertEqual(models.RCProcessedDataWorkspace.objects.count(), 2)
+
+    def test_can_set_upload_cycle(self):
+        """Can set upload cycle on RCProcessedDataWorkspace."""
+        instance = factories.RCProcessedDataWorkspaceFactory.create(upload_cycle=None)
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance.upload_cycle = upload_cycle
+        instance.full_clean()
+        instance.save()
+        self.assertEqual(instance.upload_cycle, upload_cycle)
+
+    def test_cannot_set_date_completed_without_upload_cycle(self):
+        """Cannot set date_completed on RCProcessedDataWorkspace without upload_cycle."""
+        instance = factories.RCProcessedDataWorkspaceFactory.create(upload_cycle=None, date_completed=None)
+        instance.date_completed = timezone.localdate()
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("upload_cycle is not set", str(e.exception.error_dict[NON_FIELD_ERRORS][0]))
+
+    def test_can_set_date_completed_with_upload_cycle(self):
+        """Can set date_completed on RCProcessedDataWorkspace."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        instance = factories.RCProcessedDataWorkspaceFactory.create(
+            upload_cycle=upload_cycle,
+            date_completed=None,
+        )
+        instance.date_completed = timezone.localdate()
+        instance.full_clean()
+        instance.save()
+        self.assertEqual(instance.date_completed, timezone.localdate())
