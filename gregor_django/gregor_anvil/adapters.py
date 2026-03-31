@@ -287,8 +287,8 @@ class RCProcessedDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspac
     type = "rc_processed_data"
     name = "RC processed data workspace"
     description = "Workspaces that contain data that was reprocessed and uploaded by an RC"
-    list_table_class_view = tables.DefaultWorkspaceTable
-    list_table_class_staff_view = tables.DefaultWorkspaceStaffTable
+    list_table_class_view = tables.RCProcessedDataWorkspaceTable
+    list_table_class_staff_view = tables.RCProcessedDataWorkspaceStaffTable
     workspace_data_model = models.RCProcessedDataWorkspace
     workspace_data_form_class = forms.RCProcessedDataWorkspaceForm
     workspace_form_class = WorkspaceForm
