@@ -854,7 +854,25 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
                 id__in=most_recent_workspaces,
             )
             initial["contributing_partner_upload_workspaces"] = qs_partner
-        return initial
+            # For RCProcessedDataWorkspaces, follow the same procedure as partner workspaces.
+            most_recent_workspaces = []
+            for research_center in models.ResearchCenter.objects.all():
+                latest_workspace = (
+                    models.RCProcessedDataWorkspace.objects.filter(
+                        consent_group=self.object.consent_group,
+                        research_center=research_center,
+                        date_completed__isnull=False,
+                    )
+                    .order_by("-version")
+                    .first()
+                )
+                if latest_workspace:
+                    most_recent_workspaces.append(latest_workspace.id)
+            qs_rc = models.RCProcessedDataWorkspace.objects.filter(
+                id__in=most_recent_workspaces,
+            )
+            initial["contributing_rc_processed_data_workspaces"] = qs_rc
+            return initial
 
     def get_form(self, form_class=None):
         """Get the form for the view."""

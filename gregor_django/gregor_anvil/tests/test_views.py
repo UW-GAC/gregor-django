@@ -2622,6 +2622,60 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         self.assertIn(partner_upload_workspace_1, self.release_workspace.contributing_partner_upload_workspaces.all())
         self.assertIn(partner_upload_workspace_2, self.release_workspace.contributing_partner_upload_workspaces.all())
 
+    def test_can_update_one_rc_processed_data_workspace(self):
+        """Posting valid data to the form adds one workspace."""
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
+                "contributing_rc_processed_data_workspaces": [rc_processed_data_workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_rc_processed_data_workspaces.count(), 1)
+        self.assertIn(
+            rc_processed_data_workspace, self.release_workspace.contributing_rc_processed_data_workspaces.all()
+        )
+        # History is added.
+        self.assertEqual(self.release_workspace.history.count(), 2)
+        self.assertEqual(self.release_workspace.history.latest().history_type, "~")
+
+    def test_can_update_two_rc_processed_data_workspaces(self):
+        """Posting valid data to the form adds two RC processed data workspaces."""
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+        )
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
+                "contributing_rc_processed_data_workspaces": [
+                    rc_processed_data_workspace_1.pk,
+                    rc_processed_data_workspace_2.pk,
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ReleaseWorkspace.objects.count(), 1)
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_rc_processed_data_workspaces.count(), 2)
+        self.assertIn(
+            rc_processed_data_workspace_1, self.release_workspace.contributing_rc_processed_data_workspaces.all()
+        )
+        self.assertIn(
+            rc_processed_data_workspace_2, self.release_workspace.contributing_rc_processed_data_workspaces.all()
+        )
+
     def test_success_message(self):
         """Response includes a success message if successful."""
         self.client.force_login(self.user)
@@ -2780,6 +2834,28 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         self.release_workspace.refresh_from_db()
         self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
         self.assertEqual(self.release_workspace.contributing_partner_upload_workspaces.count(), 0)
+
+    def test_invalid_rc_processed_data_workspace_wrong_consent_group(self):
+        """Cannot add a workspace with a different consent group."""
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+            {
+                "contributing_upload_workspaces": [self.upload_workspace.pk],
+                "contributing_rc_processed_data_workspaces": [rc_processed_data_workspace.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("contributing_rc_processed_data_workspaces", form.errors.keys())
+        self.assertEqual(len(form.errors["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn(form.ERROR_DIFFERENT_CONSENT_GROUP, form.errors["contributing_rc_processed_data_workspaces"][0])
+        self.release_workspace.refresh_from_db()
+        self.assertEqual(self.release_workspace.contributing_upload_workspaces.count(), 0)
+        self.assertEqual(self.release_workspace.contributing_rc_processed_data_workspaces.count(), 0)
 
     def test_initial_no_contributing_workspaces_suggests_upload_workspace(self):
         """Initial is set when release workspace has no contributing workspaces saved."""
@@ -3010,6 +3086,114 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         self.assertIn(partner_upload_workspace_1, form.initial["contributing_partner_upload_workspaces"])
         self.assertIn(partner_upload_workspace_2, form.initial["contributing_partner_upload_workspaces"])
 
+    def test_initial_no_contributing_workspaces_suggests_rc_processed_data(self):
+        """Initial suggests RC processed data workspaces."""
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_rc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn(rc_processed_data_workspace, form.initial["contributing_rc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_rc_processed_data_workspace_same_consent_group(self):
+        """Only suggests partner workspaces with the same consent group."""
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_rc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 0)
+        self.assertNotIn(rc_processed_data_workspace, form.initial["contributing_rc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_rc_processed_data_same_only_completed(self):
+        """Only suggests RC processed data workspaces that are completed."""
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            date_completed=None,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_rc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 0)
+        self.assertNotIn(rc_processed_data_workspace, form.initial["contributing_rc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_rc_processed_data_highest_version(self):
+        """Only suggests the most highest version of all completed RC processed data workspaces for a given RC."""
+        research_center = factories.ResearchCenterFactory.create()
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=self.release_workspace.consent_group,
+            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            version=1,
+        )
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=self.release_workspace.consent_group,
+            # Date is earlier but version is higher.
+            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            version=2,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_rc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertNotIn(rc_processed_data_workspace_1, form.initial["contributing_rc_processed_data_workspaces"])
+        self.assertIn(rc_processed_data_workspace_2, form.initial["contributing_rc_processed_data_workspaces"])
+
+    def test_initial_no_contributing_workspaces_suggests_rc_processed_data_workspaces_two_rcs(self):
+        research_center_1 = factories.ResearchCenterFactory.create()
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center_1,
+            consent_group=self.release_workspace.consent_group,
+            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+        )
+        research_center_2 = factories.ResearchCenterFactory.create()
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center_2,
+            consent_group=self.release_workspace.consent_group,
+            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertIn("contributing_rc_processed_data_workspaces", form.initial)
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 2)
+        self.assertIn(rc_processed_data_workspace_1, form.initial["contributing_rc_processed_data_workspaces"])
+        self.assertIn(rc_processed_data_workspace_2, form.initial["contributing_rc_processed_data_workspaces"])
+
     def test_initial_with_contributing_workspaces_upload_not_set(self):
         """Initial is not set when workspace already has contributing workspaces saved."""
         contributing_workspace = factories.UploadWorkspaceFactory.create()
@@ -3072,6 +3256,28 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         self.assertNotIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
         self.assertEqual(len(form.initial["contributing_partner_upload_workspaces"]), 0)
         self.assertNotIn(partner_upload_workspace, form.initial["contributing_partner_upload_workspaces"])
+
+    def test_initial_with_contributing_workspaces_rc_processed_data_not_set(self):
+        """Initial is not set when workspace already has contributing workspaces saved."""
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.release_workspace.consent_group,
+            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+        )
+        self.release_workspace.contributing_upload_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.release_workspace.workspace.billing_project.name, self.release_workspace.workspace.name),
+        )
+        self.assertEqual(response.status_code, 200)
+        # Check that the form's initial data is set correctly.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertEqual(len(form.initial["contributing_upload_workspaces"]), 1)
+        self.assertIn(contributing_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertNotIn(self.upload_workspace, form.initial["contributing_upload_workspaces"])
+        self.assertEqual(len(form.initial["contributing_rc_processed_data_workspaces"]), 0)
+        self.assertNotIn(rc_processed_data_workspace, form.initial["contributing_rc_processed_data_workspaces"])
 
 
 class WorkspaceReportTest(TestCase):
