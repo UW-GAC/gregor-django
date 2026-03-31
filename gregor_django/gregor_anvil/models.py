@@ -385,6 +385,12 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         related_name="release_workspaces",
         blank=True,
     )
+    contributing_rc_processed_data_workspaces = models.ManyToManyField(
+        "RCProcessedDataWorkspace",
+        help_text="RCProcessedDataWorkspaces with data tables contributing to this release.",
+        related_name="release_workspaces",
+        blank=True,
+    )
 
     date_released = models.DateField(
         null=True,

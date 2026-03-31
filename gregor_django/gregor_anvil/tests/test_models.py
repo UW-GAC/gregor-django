@@ -1189,6 +1189,25 @@ class ReleaseWorkspaceTest(TestCase):
         self.assertIn(partner_upload_workspace_1, instance.contributing_partner_upload_workspaces.all())
         self.assertIn(partner_upload_workspace_2, instance.contributing_partner_upload_workspaces.all())
 
+    def test_one_contributing_rc_processed_data_workspace(self):
+        """Can have one contributing RCProcessedDataWorkspace."""
+        instance = factories.ReleaseWorkspaceFactory.create()
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace)
+        self.assertEqual(instance.contributing_rc_processed_data_workspaces.count(), 1)
+        self.assertIn(rc_processed_data_workspace, instance.contributing_rc_processed_data_workspaces.all())
+
+    def test_two_contributing_rc_processed_data_workspaces(self):
+        """Can have two contributing RCProcessedDataWorkspaces."""
+        instance = factories.ReleaseWorkspaceFactory.create()
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create()
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace_1)
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace_2)
+        self.assertEqual(instance.contributing_rc_processed_data_workspaces.count(), 2)
+        self.assertIn(rc_processed_data_workspace_1, instance.contributing_rc_processed_data_workspaces.all())
+        self.assertIn(rc_processed_data_workspace_2, instance.contributing_rc_processed_data_workspaces.all())
+
 
 class DCCProcessingWorkspaceTest(TestCase):
     """Tests for the DCCProcessingWorkspace model."""
