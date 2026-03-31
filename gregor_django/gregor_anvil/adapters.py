@@ -292,7 +292,7 @@ class RCProcessedDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspac
     workspace_data_model = models.RCProcessedDataWorkspace
     workspace_data_form_class = forms.RCProcessedDataWorkspaceForm
     workspace_form_class = WorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = "gregor_anvil/rcprocesseddataworkspace_detail.html"
     share_permissions = [workspace_admin_sharing_permission]
 
     # def get_autocomplete_queryset(self, queryset, q, forwarded={}):
