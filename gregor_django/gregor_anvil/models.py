@@ -412,6 +412,67 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{p}".format(phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set)
 
+    def suggest_contributing_upload_workspaces(self):
+        """Return a queryset of suggested contributing UploadWorkspaces for this ReleaseWorkspace."""
+        qs = UploadWorkspace.objects.filter(
+            consent_group=self.consent_group,
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_dcc_processed_data_workspaces(self):
+        """Return a queryset of suggested contributing DCCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        qs = DCCProcessedDataWorkspace.objects.filter(
+            consent_group=self.consent_group,
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_partner_upload_workspaces(self):
+        """Suggest contributing PartnerUploadWorkspaces for this ReleaseWorkspace."""
+        # For partner workspaces, this is more difficult because we can't do a direct groupby-max.
+        # Instead, get the id of the latest completed workspace for each partner group.
+        # Then do a query to get those ids.
+        # Start with a slow for loop, and then we can make it better if needed.
+        most_recent_workspaces = []
+        for partner_group in PartnerGroup.objects.all():
+            latest_workspace = (
+                PartnerUploadWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    partner_group=partner_group,
+                    date_completed__isnull=False,
+                )
+                .order_by("-version")
+                .first()
+            )
+            if latest_workspace:
+                most_recent_workspaces.append(latest_workspace.id)
+        qs = PartnerUploadWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
+
+    def suggest_contributing_rc_processed_data_workspaces(self):
+        """Suggest contributing RCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        # For RCProcessedDataWorkspaces, follow the same procedure as partner workspaces.
+        most_recent_workspaces = []
+        for research_center in ResearchCenter.objects.all():
+            latest_workspace = (
+                RCProcessedDataWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    research_center=research_center,
+                    date_completed__isnull=False,
+                )
+                .order_by("-version")
+                .first()
+            )
+            if latest_workspace:
+                most_recent_workspaces.append(latest_workspace.id)
+        qs = RCProcessedDataWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
+
 
 class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
     upload_cycle = models.ForeignKey(
