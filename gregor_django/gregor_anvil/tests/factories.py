@@ -223,3 +223,27 @@ class ExchangeWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.ExchangeWorkspace
+
+
+class RCProcessedDataWorkspaceFactory(DjangoModelFactory):
+    """A factory for the RCProcessedDataWorkspace model."""
+
+    research_center = SubFactory(ResearchCenterFactory)
+    consent_group = SubFactory(ConsentGroupFactory)
+    workspace = SubFactory(WorkspaceFactory, workspace_type="rc_processed_data")
+    version = Faker("random_int", min=1)
+
+    class Meta:
+        model = models.RCProcessedDataWorkspace
+        skip_postgeneration_save = True
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
+        self.workspace.authorization_domains.add(auth_domain)

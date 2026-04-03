@@ -414,6 +414,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "gregor_django.gregor_anvil.adapters.PartnerUploadWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.DCCProcessingWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.DCCProcessedDataWorkspaceAdapter",
+    "gregor_django.gregor_anvil.adapters.RCProcessedDataWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.ReleaseWorkspaceAdapter",
     "gregor_django.gregor_anvil.adapters.TemplateWorkspaceAdapter",
 ]

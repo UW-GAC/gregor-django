@@ -279,3 +279,33 @@ class ExchangeWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapte
     workspace_detail_template_name = "gregor_anvil/exchangeworkspace_detail.html"
     workspace_list_template_name = "gregor_anvil/exchangeworkspace_list.html"
     share_permissions = [workspace_admin_sharing_permission]
+
+
+class RCProcessedDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
+    """Adapter for RCProcessedDataWorkspaces."""
+
+    type = "rc_processed_data"
+    name = "RC processed data workspace"
+    description = "Workspaces that contain data that was reprocessed and uploaded by an RC"
+    list_table_class_view = tables.RCProcessedDataWorkspaceTable
+    list_table_class_staff_view = tables.RCProcessedDataWorkspaceStaffTable
+    workspace_data_model = models.RCProcessedDataWorkspace
+    workspace_data_form_class = forms.RCProcessedDataWorkspaceForm
+    workspace_form_class = WorkspaceForm
+    workspace_detail_template_name = "gregor_anvil/rcprocesseddataworkspace_detail.html"
+    share_permissions = [workspace_admin_sharing_permission]
+
+    # def get_autocomplete_queryset(self, queryset, q, forwarded={}):
+    #     """Filter to Accounts where the email or the associated user name matches the query `q`."""
+    #     consent_group = forwarded.get("consent_group", None)
+    #     if consent_group:
+    #         queryset = queryset.filter(consent_group=consent_group)
+
+    #     upload_cycle = forwarded.get("upload_cycle", None)
+    #     if upload_cycle:
+    #         queryset = queryset.filter(upload_cycle=upload_cycle)
+
+    #     if q:
+    #         queryset = queryset.filter(workspace__name__icontains=q)
+
+    #     return queryset

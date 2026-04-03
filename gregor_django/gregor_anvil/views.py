@@ -823,38 +823,17 @@ class ReleaseWorkspaceUpdateContributingWorkspaces(
         # Only suggest workspaces if there are no contributing upload workspaces already set.
         # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
         if self.object.contributing_upload_workspaces.count() == 0:
-            qs_upload = models.UploadWorkspace.objects.filter(
-                consent_group=self.object.consent_group,
-                upload_cycle=self.object.upload_cycle,
+            initial["contributing_upload_workspaces"] = self.object.suggest_contributing_upload_workspaces()
+            initial["contributing_dcc_processed_data_workspaces"] = (
+                self.object.suggest_contributing_dcc_processed_data_workspaces()
             )
-            initial["contributing_upload_workspaces"] = qs_upload
-            qs_dcc = models.DCCProcessedDataWorkspace.objects.filter(
-                consent_group=self.object.consent_group,
-                upload_cycle=self.object.upload_cycle,
+            initial["contributing_partner_upload_workspaces"] = (
+                self.object.suggest_contributing_partner_upload_workspaces()
             )
-            initial["contributing_dcc_processed_data_workspaces"] = qs_dcc
-            # For partner workspaces, this is more difficult because we can't do a direct groupby-max.
-            # Instead, get the id of the latest completed workspace for each partner group.
-            # Then do a query to get those ids.
-            # Start with a slow for loop, and then we can make it better if needed.
-            most_recent_workspaces = []
-            for partner_group in models.PartnerGroup.objects.all():
-                latest_workspace = (
-                    models.PartnerUploadWorkspace.objects.filter(
-                        consent_group=self.object.consent_group,
-                        partner_group=partner_group,
-                        date_completed__isnull=False,
-                    )
-                    .order_by("-version")
-                    .first()
-                )
-                if latest_workspace:
-                    most_recent_workspaces.append(latest_workspace.id)
-            qs_partner = models.PartnerUploadWorkspace.objects.filter(
-                id__in=most_recent_workspaces,
+            initial["contributing_rc_processed_data_workspaces"] = (
+                self.object.suggest_contributing_rc_processed_data_workspaces()
             )
-            initial["contributing_partner_upload_workspaces"] = qs_partner
-        return initial
+            return initial
 
     def get_form(self, form_class=None):
         """Get the form for the view."""

@@ -385,6 +385,12 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         related_name="release_workspaces",
         blank=True,
     )
+    contributing_rc_processed_data_workspaces = models.ManyToManyField(
+        "RCProcessedDataWorkspace",
+        help_text="RCProcessedDataWorkspaces with data tables contributing to this release.",
+        related_name="release_workspaces",
+        blank=True,
+    )
 
     date_released = models.DateField(
         null=True,
@@ -405,6 +411,67 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
 
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{p}".format(phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set)
+
+    def suggest_contributing_upload_workspaces(self):
+        """Return a queryset of suggested contributing UploadWorkspaces for this ReleaseWorkspace."""
+        qs = UploadWorkspace.objects.filter(
+            consent_group=self.consent_group,
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_dcc_processed_data_workspaces(self):
+        """Return a queryset of suggested contributing DCCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        qs = DCCProcessedDataWorkspace.objects.filter(
+            consent_group=self.consent_group,
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_partner_upload_workspaces(self):
+        """Suggest contributing PartnerUploadWorkspaces for this ReleaseWorkspace."""
+        # For partner workspaces, this is more difficult because we can't do a direct groupby-max.
+        # Instead, get the id of the latest completed workspace for each partner group.
+        # Then do a query to get those ids.
+        # Start with a slow for loop, and then we can make it better if needed.
+        most_recent_workspaces = []
+        for partner_group in PartnerGroup.objects.all():
+            latest_workspace = (
+                PartnerUploadWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    partner_group=partner_group,
+                    date_completed__isnull=False,
+                )
+                .order_by("-version")
+                .first()
+            )
+            if latest_workspace:
+                most_recent_workspaces.append(latest_workspace.id)
+        qs = PartnerUploadWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
+
+    def suggest_contributing_rc_processed_data_workspaces(self):
+        """Suggest contributing RCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        # For RCProcessedDataWorkspaces, follow the same procedure as partner workspaces.
+        most_recent_workspaces = []
+        for research_center in ResearchCenter.objects.all():
+            latest_workspace = (
+                RCProcessedDataWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    research_center=research_center,
+                    date_completed__isnull=False,
+                )
+                .order_by("-version")
+                .first()
+            )
+            if latest_workspace:
+                most_recent_workspaces.append(latest_workspace.id)
+        qs = RCProcessedDataWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
 
 
 class DCCProcessingWorkspace(TimeStampedModel, BaseWorkspaceData):
@@ -448,3 +515,55 @@ class ExchangeWorkspace(TimeStampedModel, BaseWorkspaceData):
         on_delete=models.PROTECT,
         help_text="The ResearchCenter associated with this workspace.",
     )
+
+
+class RCProcessedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A workspace to store data reprocessed by RCs, split by consent."""
+
+    research_center = models.ForeignKey(
+        ResearchCenter,
+        on_delete=models.PROTECT,
+        help_text="ResearchCenter associated with this workspace.",
+    )
+    consent_group = models.ForeignKey(
+        ConsentGroup,
+        help_text="Consent group associated with this data.",
+        on_delete=models.PROTECT,
+    )
+    version = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The version of this workspace for this ResearchCenter and ConsentGroup.",
+    )
+
+    # Optional fields.
+    upload_cycle = models.ForeignKey(
+        UploadCycle,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Upload cycle associated with this workspace.",
+    )
+    date_completed = models.DateField(
+        help_text="The date when uploads to this workspace and data validation were completed.",
+        null=True,
+        blank=True,
+        validators=[validate_not_future_date],
+    )
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_rc_processed_data_workspace",
+                fields=["research_center", "consent_group", "version"],
+            ),
+        ]
+
+    def __str__(self):
+        return self.workspace.name
+
+    def clean(self):
+        """Custom cleaning methods."""
+        # Check that date_completed is not set if upload_cycle is not set.
+        if self.date_completed and not self.upload_cycle:
+            raise ValidationError("date_completed cannot be set if upload_cycle is not set.")

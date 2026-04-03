@@ -363,3 +363,27 @@ class ExchangeWorkspaceStaffTable(ExchangeWorkspaceTable):
 
     billing_project = tables.Column(linkify=True)
     exchangeworkspace__research_center = tables.Column(linkify=True)
+
+
+class RCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
+    """A table for Workspaces that includes fields from RCProcessedDataWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__research_center = tables.columns.Column()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "rcprocesseddataworkspace__research_center",
+            "rcprocesseddataworkspace__consent_group",
+            "rcprocesseddataworkspace__version",
+            "rcprocesseddataworkspace__date_completed",
+            "consortium_access",
+        )
+
+
+class RCProcessedDataWorkspaceStaffTable(RCProcessedDataWorkspaceTable):
+    """A table for Workspaces that includes fields from RCProcessedDataWorkspace."""
+
+    rcprocesseddataworkspace__research_center = tables.columns.Column(linkify=True)
