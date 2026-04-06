@@ -378,6 +378,7 @@ class RCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table
             "rcprocesseddataworkspace__research_center",
             "rcprocesseddataworkspace__consent_group",
             "rcprocesseddataworkspace__version",
+            "rcprocesseddataworkspace__upload_cycle",
             "rcprocesseddataworkspace__date_completed",
             "consortium_access",
         )
@@ -387,3 +388,5 @@ class RCProcessedDataWorkspaceStaffTable(RCProcessedDataWorkspaceTable):
     """A table for Workspaces that includes fields from RCProcessedDataWorkspace."""
 
     rcprocesseddataworkspace__research_center = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__consent_group = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__upload_cycle = tables.columns.Column(linkify=True)
