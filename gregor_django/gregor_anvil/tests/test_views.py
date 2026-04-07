@@ -3731,6 +3731,64 @@ class RCProcessedDataWorkspaceDetailTest(TestCase):
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
         self.assertEqual(response.status_code, 200)
 
+    def test_links_view_user_no_upload_cycle(self):
+        user = self.user
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # self.assertContains(response, self.object.upload_cycle.get_absolute_url())
+        self.assertNotContains(response, self.object.research_center.get_absolute_url())
+        self.assertNotContains(response, self.object.consent_group.get_absolute_url())
+
+    def test_links_view_user_upload_cycle(self):
+        upload_cycle = factories.UploadCycleFactory.create()
+        self.object.upload_cycle = upload_cycle
+        self.object.save()
+        user = self.user
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, upload_cycle.get_absolute_url())
+        self.assertNotContains(response, self.object.research_center.get_absolute_url())
+        self.assertNotContains(response, self.object.consent_group.get_absolute_url())
+
+    def test_links_staff_view_user(self):
+        upload_cycle = factories.UploadCycleFactory.create()
+        self.object.upload_cycle = upload_cycle
+        self.object.save()
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        # Links to other resources
+        self.assertContains(response, upload_cycle.get_absolute_url())
+        self.assertContains(response, self.object.research_center.get_absolute_url())
+        self.assertContains(response, self.object.consent_group.get_absolute_url())
+
+    def test_links_staff_edit_user(self):
+        upload_cycle = factories.UploadCycleFactory.create()
+        self.object.upload_cycle = upload_cycle
+        self.object.save()
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, upload_cycle.get_absolute_url())
+        self.assertContains(response, self.object.research_center.get_absolute_url())
+        self.assertContains(response, self.object.consent_group.get_absolute_url())
+
+    def test_part_of_release_workspace(self):
+        release_workspace = factories.ReleaseWorkspaceFactory.create()
+        release_workspace.contributing_rc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, release_workspace.get_absolute_url())
+
 
 class RCProcessedDataWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
