@@ -134,6 +134,7 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
         tables.DCCProcessingWorkspaceTable,
         tables.DCCProcessedDataWorkspaceTable,
         tables.PartnerUploadWorkspaceTable,
+        tables.RCProcessedDataWorkspaceTable,
     ]
 
     def get_tables_data(self):
@@ -148,6 +149,10 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
         )
         partner_workspaces = self.object.get_partner_upload_workspaces()
         partner_workspace_qs = Workspace.objects.filter(partneruploadworkspace__in=partner_workspaces)
+        rc_processed_data_workspaces = self.object.get_rc_processed_data_workspaces()
+        rc_processed_data_workspace_qs = Workspace.objects.filter(
+            rcprocesseddataworkspace__in=rc_processed_data_workspaces,
+        )
         return [
             upload_workspace_qs,
             combined_workspace_qs,
@@ -155,6 +160,7 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
             dcc_processing_workspace_qs,
             dcc_processed_data_workspace_qs,
             partner_workspace_qs,
+            rc_processed_data_workspace_qs,
         ]
 
 

@@ -1057,7 +1057,7 @@ class UploadCycleDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         self.assertIn("tables", response.context_data)
-        self.assertEqual(len(response.context_data["tables"]), 6)
+        self.assertEqual(len(response.context_data["tables"]), 7)
         self.assertIsInstance(response.context_data["tables"][0], tables.UploadWorkspaceTable)
         self.assertIsInstance(
             response.context_data["tables"][1],
@@ -1067,6 +1067,7 @@ class UploadCycleDetailTest(TestCase):
         self.assertIsInstance(response.context_data["tables"][3], tables.DCCProcessingWorkspaceTable)
         self.assertIsInstance(response.context_data["tables"][4], tables.DCCProcessedDataWorkspaceTable)
         self.assertIsInstance(response.context_data["tables"][5], tables.PartnerUploadWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][6], tables.RCProcessedDataWorkspaceTable)
 
     def test_upload_workspace_table(self):
         """Contains a table of UploadWorkspaces from this upload cycle."""
@@ -1140,6 +1141,22 @@ class UploadCycleDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         table = response.context_data["tables"][5]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_rc_processed_data_workspace_table(self):
+        """Contains a table of RCProcessedDataWorkspaces for this upload cycle."""
+        obj = self.model_factory.create()
+        obj.end_date
+        # Make sure the RC processed data workspace has an end date before the end of this upload cycle.
+        workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
+        other_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            date_completed=None,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][6]
         self.assertEqual(len(table.rows), 1)
         self.assertIn(workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)

@@ -448,6 +448,153 @@ class UploadCycleTest(TestCase):
         self.assertIn(workspace_3, included_workspaces)
         self.assertNotIn(workspace_4, included_workspaces)
 
+    def test_get_rc_processed_data_workspaces_no_date_completed(self):
+        """RCProcessedDataWorkspace with no date_completed is not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        factories.RCProcessedDataWorkspaceFactory.create(date_completed=None)
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 0)
+
+    def test_get_rc_processed_data_workspaces_with_date_completed(self):
+        """RCProcessedDataWorkspace with date_completed before UploadCycle end_date is included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_with_date_completed_after_end_date(self):
+        """RCProcessedDataWorkspace with date_completed after UploadCycle end_date is not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        factories.PartnerUploadWorkspaceFactory.create(date_completed=upload_cycle.end_date + timedelta(days=4))
+        included_workspaces = upload_cycle.get_partner_upload_workspaces()
+        self.assertEqual(included_workspaces.count(), 0)
+
+    def test_get_rc_processed_data_workspaces_with_date_completed_equal_to_end_date(self):
+        """RCProcessedDataWorkspace with date_completed equal to UploadCycle end_date is included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=upload_cycle.end_date)
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_higher_versions_with_date_completed(self):
+        """Only the highest version is included when two RCProcessedDataWorkspaces have date_completed."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=workspace_1.research_center,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertNotIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_higher_version_no_date_completed(self):
+        """RCProcessedDataWorkspaces with higher versions and no date_completed are not included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=workspace_1.research_center,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=None,
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace_1, included_workspaces)
+        self.assertNotIn(workspace_2, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_different_research_centers(self):
+        """RCProcessedDataWorkspaces with different Research Centers are both included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=factories.ResearchCenterFactory.create(),
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 2)
+        self.assertIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_different_consent_groups(self):
+        """RCProcessedDataWorkspaces with different ConsentGroups are both included."""
+        upload_cycle = factories.UploadCycleFactory.create()
+        research_center = factories.ResearchCenterFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=factories.ConsentGroupFactory.create(),
+            version=1,
+            date_completed=upload_cycle.end_date - timedelta(days=4),
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=factories.ConsentGroupFactory.create(),
+            version=1,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 2)
+        self.assertIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_full_test(self):
+        upload_cycle = factories.UploadCycleFactory.create()
+        # Date before end of upload cycle, lower version.
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=4)
+        )
+        # Date before end of upload cycle, higher version.
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=workspace_1.research_center,
+            consent_group=workspace_1.consent_group,
+            version=2,
+            date_completed=upload_cycle.end_date - timedelta(days=3),
+        )
+        # Date before end of upload cycle, different RC and consent group.
+        workspace_3 = factories.RCProcessedDataWorkspaceFactory.create(
+            version=1, date_completed=upload_cycle.end_date - timedelta(days=2)
+        )
+        # Same RC and consent group as previous, higher version, no date completed.
+        workspace_4 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=workspace_3.research_center,
+            consent_group=workspace_3.consent_group,
+            version=2,
+            date_completed=None,
+        )
+        included_workspaces = upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 2)
+        self.assertNotIn(workspace_1, included_workspaces)
+        self.assertIn(workspace_2, included_workspaces)
+        self.assertIn(workspace_3, included_workspaces)
+        self.assertNotIn(workspace_4, included_workspaces)
+
+    def test_get_rc_processed_data_workspaces_earlier_upload_cycle(self):
+        """RCProcessedDataWorkspaces associated with an earlier upload cycle are included."""
+        earlier_upload_cycle = factories.UploadCycleFactory.create(is_past=True)
+        current_upload_cycle = factories.UploadCycleFactory.create(is_current=True)
+        workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            upload_cycle=earlier_upload_cycle,
+            date_completed=timezone.localdate() - timedelta(days=1),
+        )
+        included_workspaces = current_upload_cycle.get_rc_processed_data_workspaces()
+        self.assertEqual(included_workspaces.count(), 1)
+        self.assertIn(workspace, included_workspaces)
+
     def test_date_ready_for_compute(self):
         """UploadCycle is ready for compute if all PartnerUploadWorkspaces have date_completed."""
         upload_cycle = factories.UploadCycleFactory.create()
