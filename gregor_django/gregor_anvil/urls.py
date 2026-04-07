@@ -241,6 +241,12 @@ autocomplete_workspace_patterns = (
             kwargs={"workspace_type": "partner_upload"},
             name="partner_upload",
         ),
+        path(
+            "rc_processed_data/",
+            WorkspaceAutocompleteByType.as_view(),
+            kwargs={"workspace_type": "rc_processed_data"},
+            name="rc_processed_data",
+        ),
     ],
     "workspaces",
 )

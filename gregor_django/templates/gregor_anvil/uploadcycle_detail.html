@@ -142,7 +142,26 @@
     </h2>
     <div id="collapsePartner" class="accordion-collapse collapse show" data-bs-parent="#accordionPartner">
       <div class="accordion-body">
+        <p>The following table shows Partner Upload Workspaces that have been completed with a date before the end of this upload cycle.</p>
         {% render_table tables.5 %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="accordion mb-3" id="accordionRCProcessedData">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRCProcessedData" aria-expanded="true" aria-controls="collapseRCProcessedData">
+        <span class="fa-solid fa-handshake mx-2"></span>
+        RC processed data workspaces
+        <span class="badge mx-2 {% if tables.6.rows|length %}bg-primary{% else %}bg-secondary{% endif %} pill"> {{ tables.6.rows|length }}</span>
+      </button>
+    </h2>
+    <div id="collapseRCProcessedData" class="accordion-collapse collapse show" data-bs-parent="#accordionRCProcessedData">
+      <div class="accordion-body">
+        <p>The following table shows RC Processed Data Workspaces that have been completed with a date before the end of this upload cycle.</p>
+        {% render_table tables.6 %}
       </div>
     </div>
   </div>
