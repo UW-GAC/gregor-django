@@ -198,3 +198,26 @@ class ExchangeWorkspaceAdmin(SimpleHistoryAdmin):
         "workspace",
         "research_center",
     )
+
+
+@admin.register(models.RCProcessedDataWorkspace)
+class RCProcessedDataWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the RCProcessedDataWorkspace model."""
+
+    list_display = (
+        "id",
+        "workspace",
+        "research_center",
+        "consent_group",
+        "upload_cycle",
+        "date_completed",
+    )
+    list_filter = (
+        "research_center",
+        "consent_group",
+    )
+    sortable_by = (
+        "id",
+        "workspace",
+        "version",
+    )
