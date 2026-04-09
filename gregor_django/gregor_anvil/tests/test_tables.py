@@ -267,6 +267,15 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
 
+    def test_is_shared_one_auth_domain_not_managed_by_app(self):
+        """GREGOR_ALL is in auth domain, auth domain is not managed by the app, and workspace is shared."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__is_managed_by_app=False)
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertIn("question-circle-fill", table.render_consortium_access(workspace))
+
 
 class DefaultWorkspaceTableTest(TestCase):
     model = Workspace
