@@ -25,7 +25,7 @@ django==5.2.12
     # via
     #   -c requirements/requirements.txt
     #   django-coverage-plugin
-django-coverage-plugin==3.2.0
+django-coverage-plugin==3.2.2
     # via -r requirements/test-requirements.in
 django-test-migrations==1.5.0
     # via -r requirements/test-requirements.in
@@ -58,7 +58,7 @@ pluggy==1.5.0
     #   pytest-cov
 pygments==2.19.1
     # via pytest
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
@@ -95,7 +95,7 @@ sqlparse==0.5.4
     #   django
 termcolor==2.4.0
     # via pytest-sugar
-types-requests==2.33.0.20260327
+types-requests==2.33.0.20260408
     # via -r requirements/test-requirements.in
 typing-extensions==4.15.0
     # via django-test-migrations
