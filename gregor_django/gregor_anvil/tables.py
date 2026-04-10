@@ -1,5 +1,8 @@
 import django_tables2 as tables
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
+from anvil_consortium_manager.exceptions import (
+    WorkspaceAccessAuthorizationDomainUnknownError,
+)
 from anvil_consortium_manager.models import Account, ManagedGroup, Workspace
 from django.utils.html import format_html
 
@@ -156,11 +159,24 @@ class WorkspaceConsortiumAccessTable(tables.Table):
         except ManagedGroup.DoesNotExist:
             has_consortium_access = False
         else:
-            has_consortium_access = record.has_group_in_authorization_domain(group) and record.is_shared_with_group(
-                group
-            )
+            try:
+                has_consortium_access = record.has_group_in_authorization_domain(group) and record.is_shared_with_group(
+                    group
+                )
+            except WorkspaceAccessAuthorizationDomainUnknownError:
+                has_consortium_access = None
 
-        if has_consortium_access:
+        if has_consortium_access is None:
+            icon = "question-circle-fill"
+            color = "#F5B027"
+            tooltip = "App does not manage this workspace and/or its auth domain"
+            value = format_html(
+                """<i class="bi bi-{}" data-bs-toggle="tooltip" data-bs-placement="top" title="{}" style="color: {};"></i>""",  # noqa: E501
+                icon,
+                tooltip,
+                color,
+            )
+        elif has_consortium_access:
             icon = "check-circle-fill"
             color = "green"
             value = format_html(
@@ -363,3 +379,30 @@ class ExchangeWorkspaceStaffTable(ExchangeWorkspaceTable):
 
     billing_project = tables.Column(linkify=True)
     exchangeworkspace__research_center = tables.Column(linkify=True)
+
+
+class RCProcessedDataWorkspaceTable(WorkspaceConsortiumAccessTable, tables.Table):
+    """A table for Workspaces that includes fields from RCProcessedDataWorkspace."""
+
+    name = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__research_center = tables.columns.Column()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "rcprocesseddataworkspace__research_center",
+            "rcprocesseddataworkspace__consent_group",
+            "rcprocesseddataworkspace__version",
+            "rcprocesseddataworkspace__upload_cycle",
+            "rcprocesseddataworkspace__date_completed",
+            "consortium_access",
+        )
+
+
+class RCProcessedDataWorkspaceStaffTable(RCProcessedDataWorkspaceTable):
+    """A table for Workspaces that includes fields from RCProcessedDataWorkspace."""
+
+    rcprocesseddataworkspace__research_center = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__consent_group = tables.columns.Column(linkify=True)
+    rcprocesseddataworkspace__upload_cycle = tables.columns.Column(linkify=True)

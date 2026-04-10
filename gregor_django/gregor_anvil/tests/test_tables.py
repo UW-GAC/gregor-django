@@ -267,6 +267,15 @@ class WorkspaceConsortiumAccessTableTest(TestCase):
         table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
         self.assertNotIn("check-circle-fill", table.render_consortium_access(workspace))
 
+    def test_is_shared_one_auth_domain_not_managed_by_app(self):
+        """GREGOR_ALL is in auth domain, auth domain is not managed by the app, and workspace is shared."""
+        workspace = WorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(workspace=workspace, group__is_managed_by_app=False)
+        GroupGroupMembershipFactory.create(parent_group=auth_domain.group, child_group=self.gregor_all)
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group=self.gregor_all)
+        table = tables.WorkspaceConsortiumAccessTable(Workspace.objects.all())
+        self.assertIn("question-circle-fill", table.render_consortium_access(workspace))
+
 
 class DefaultWorkspaceTableTest(TestCase):
     model = Workspace
@@ -566,4 +575,46 @@ class ExchangeWorkspaceStaffTableTest(TestCase):
         # These values are coded into the model, so need to create separately.
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+
+class RCProcessedDataWorkspaceTableTest(TestCase):
+    model = Workspace
+    model_factory = factories.RCProcessedDataWorkspaceFactory
+    table_class = tables.RCProcessedDataWorkspaceTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        # These values are coded into the model, so need to create separately.
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
+        self.assertEqual(len(table.rows), 2)
+
+
+class RCProcessedDataWorkspaceStaffTableTest(TestCase):
+    model = Workspace
+    model_factory = factories.RCProcessedDataWorkspaceFactory
+    table_class = tables.RCProcessedDataWorkspaceStaffTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        # These values are coded into the model, so need to create separately.
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.filter(workspace_type="rc_processed_data"))
         self.assertEqual(len(table.rows), 2)
