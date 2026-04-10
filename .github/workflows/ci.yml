@@ -129,7 +129,7 @@ jobs:
           pip install --upgrade coverage "django<4" django-coverage-plugin
 
       - name: Download coverage data
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           path: ./artifacts/
 
