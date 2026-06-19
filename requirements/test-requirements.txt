@@ -60,7 +60,7 @@ pygments==2.20.0
     # via
     #   -r requirements/test-requirements.in
     #   pytest
-pytest==9.0.3
+pytest==9.1.1
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
