@@ -2225,6 +2225,96 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         )
         self.assertContains(response, url)
 
+    def test_contributing_workspaces_no_upload(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertIsInstance(response.context_data["contributing_upload_workspace_table"], tables.UploadWorkspaceTable)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_upload(self):
+        contributing_workspace = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.object.contributing_upload_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data
+        )
+        self.assertNotIn(other_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data)
+
+    def test_contributing_workspaces_two_upload(self):
+        contributing_workspace_1 = factories.UploadWorkspaceFactory.create()
+        contributing_workspace_2 = factories.UploadWorkspaceFactory.create()
+        other_workspace = factories.UploadWorkspaceFactory.create()
+        self.object.contributing_upload_workspaces.add(contributing_workspace_1)
+        self.object.contributing_upload_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_upload_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace, response.context_data["contributing_upload_workspace_table"].data
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace, response.context_data["contributing_upload_workspace_table"].data
+        )
+        self.assertNotIn(other_workspace.workspace, response.context_data["contributing_upload_workspace_table"].data)
+
+    def test_contributing_workspaces_no_dcc_processed_data(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["contributing_dcc_processed_data_workspace_table"],
+            tables.DCCProcessedDataWorkspaceTable,
+        )
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_dcc_processed_data(self):
+        contributing_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+        self.assertNotIn(
+            other_workspace.workspace, response.context_data["contributing_dcc_processed_data_workspace_table"].data
+        )
+
+    def test_contributing_workspaces_no_partner_upload(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_partner_upload_workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["contributing_partner_upload_workspace_table"],
+            tables.PartnerUploadWorkspaceTable,
+        )
+        self.assertEqual(len(response.context_data["contributing_partner_upload_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_partner_upload(self):
+        contributing_workspace = factories.PartnerUploadWorkspaceFactory.create()
+        other_workspace = factories.PartnerUploadWorkspaceFactory.create()
+        self.object.contributing_partner_upload_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_partner_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_partner_upload_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace,
+            response.context_data["contributing_partner_upload_workspace_table"].data,
+        )
+        self.assertNotIn(
+            other_workspace.workspace, response.context_data["contributing_partner_upload_workspace_table"].data
+        )
+
 
 class ReleaseWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
