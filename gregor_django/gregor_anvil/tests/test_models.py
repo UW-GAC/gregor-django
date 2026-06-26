@@ -1129,6 +1129,72 @@ class CombinedConsortiumDataWorkspaceTest(TestCase):
         self.assertEqual(len(e.exception.error_dict), 1, f"More than one error: {e.exception.error_dict}")
         self.assertIn("Date cannot be in the future", e.exception.message_dict["date_completed"][0])
 
+    def test_one_contributing_upload_workspace(self):
+        """Can have one contributing workspace."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        upload_workspace = factories.UploadWorkspaceFactory.create()
+        factories.UploadWorkspaceFactory.create()  # Create another to ensure only one is added
+        instance.contributing_upload_workspaces.add(upload_workspace)
+        self.assertEqual(instance.contributing_upload_workspaces.count(), 1)
+        self.assertIn(upload_workspace, instance.contributing_upload_workspaces.all())
+
+    def test_two_contributing_upload_workspaces(self):
+        """Can have one contributing workspace."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create()
+        instance.contributing_upload_workspaces.add(upload_workspace_1)
+        instance.contributing_upload_workspaces.add(upload_workspace_2)
+        self.assertEqual(instance.contributing_upload_workspaces.count(), 2)
+        self.assertIn(upload_workspace_1, instance.contributing_upload_workspaces.all())
+        self.assertIn(upload_workspace_2, instance.contributing_upload_workspaces.all())
+
+    def test_one_contributing_dcc_processed_data_workspace(self):
+        """Can have one contributing DCCProcessedDataWorkspace."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create()
+        instance.contributing_dcc_processed_data_workspaces.add(dcc_processed_data_workspace)
+        self.assertEqual(instance.contributing_dcc_processed_data_workspaces.count(), 1)
+        self.assertIn(dcc_processed_data_workspace, instance.contributing_dcc_processed_data_workspaces.all())
+
+    def test_one_contributing_partner_upload_workspace(self):
+        """Can have one contributing PartnerUploadWorkspace."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create()
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace)
+        self.assertEqual(instance.contributing_partner_upload_workspaces.count(), 1)
+        self.assertIn(partner_upload_workspace, instance.contributing_partner_upload_workspaces.all())
+
+    def test_two_contributing_partner_upload_workspaces(self):
+        """Can have two contributing PartnerUploadWorkspaces."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        partner_upload_workspace_1 = factories.PartnerUploadWorkspaceFactory.create()
+        partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create()
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace_1)
+        instance.contributing_partner_upload_workspaces.add(partner_upload_workspace_2)
+        self.assertEqual(instance.contributing_partner_upload_workspaces.count(), 2)
+        self.assertIn(partner_upload_workspace_1, instance.contributing_partner_upload_workspaces.all())
+        self.assertIn(partner_upload_workspace_2, instance.contributing_partner_upload_workspaces.all())
+
+    def test_one_contributing_rc_processed_data_workspace(self):
+        """Can have one contributing RCProcessedDataWorkspace."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace)
+        self.assertEqual(instance.contributing_rc_processed_data_workspaces.count(), 1)
+        self.assertIn(rc_processed_data_workspace, instance.contributing_rc_processed_data_workspaces.all())
+
+    def test_two_contributing_rc_processed_data_workspaces(self):
+        """Can have two contributing RCProcessedDataWorkspaces."""
+        instance = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create()
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace_1)
+        instance.contributing_rc_processed_data_workspaces.add(rc_processed_data_workspace_2)
+        self.assertEqual(instance.contributing_rc_processed_data_workspaces.count(), 2)
+        self.assertIn(rc_processed_data_workspace_1, instance.contributing_rc_processed_data_workspaces.all())
+        self.assertIn(rc_processed_data_workspace_2, instance.contributing_rc_processed_data_workspaces.all())
+
 
 class ReleaseWorkspaceTest(TestCase):
     """Tests for the ReleaseWorkspace model."""

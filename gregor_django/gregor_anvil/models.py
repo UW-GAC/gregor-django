@@ -349,6 +349,33 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         default=None,
         validators=[validate_not_future_date],
     )
+    # Contributing workspaces.
+    contributing_upload_workspaces = models.ManyToManyField(
+        UploadWorkspace,
+        help_text=(
+            "UploadWorkspaces with data tables contributing to this workspace. "
+            "(Note that this does not include workspaces only containing files contributing to this workspace.)"
+        ),
+        related_name="combined_workspaces",
+    )
+    contributing_dcc_processed_data_workspaces = models.ManyToManyField(
+        "DCCProcessedDataWorkspace",
+        help_text="DCCProcessedDataWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
+    contributing_partner_upload_workspaces = models.ManyToManyField(
+        PartnerUploadWorkspace,
+        help_text="PartnerUploadWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
+    contributing_rc_processed_data_workspaces = models.ManyToManyField(
+        "RCProcessedDataWorkspace",
+        help_text="RCProcessedDataWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
 
     def clean(self):
         """Custom cleaning methods."""
