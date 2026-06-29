@@ -2289,6 +2289,24 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             other_workspace.workspace, response.context_data["contributing_dcc_processed_data_workspace_table"].data
         )
 
+    def test_contributing_workspaces_two_dcc_processed_data(self):
+        contributing_workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        contributing_workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace_1)
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+
     def test_contributing_workspaces_no_partner_upload(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
@@ -2313,6 +2331,68 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
         )
         self.assertNotIn(
             other_workspace.workspace, response.context_data["contributing_partner_upload_workspace_table"].data
+        )
+
+    def test_contributing_workspaces_two_partner_upload(self):
+        contributing_workspace_1 = factories.PartnerUploadWorkspaceFactory.create()
+        contributing_workspace_2 = factories.PartnerUploadWorkspaceFactory.create()
+        self.object.contributing_partner_upload_workspaces.add(contributing_workspace_1)
+        self.object.contributing_partner_upload_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_partner_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_partner_upload_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_partner_upload_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_partner_upload_workspace_table"].data,
+        )
+
+    def test_contributing_workspaces_no_rc_processed_data(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["contributing_rc_processed_data_workspace_table"],
+            tables.RCProcessedDataWorkspaceTable,
+        )
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_rc_processed_data(self):
+        contributing_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        other_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
+        )
+        self.assertNotIn(
+            other_workspace.workspace, response.context_data["contributing_rc_processed_data_workspace_table"].data
+        )
+
+    def test_contributing_workspaces_two_rc_processed_data(self):
+        contributing_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        contributing_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace_1)
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
         )
 
 
@@ -2439,6 +2519,24 @@ class ReleaseWorkspaceDetailTest(TestCase):
             other_workspace.workspace, response.context_data["contributing_dcc_processed_data_workspace_table"].data
         )
 
+    def test_contributing_workspaces_two_dcc_processed_data(self):
+        contributing_workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        contributing_workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace_1)
+        self.object.contributing_dcc_processed_data_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_dcc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_dcc_processed_data_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_dcc_processed_data_workspace_table"].data,
+        )
+
     def test_contributing_workspaces_no_partner_upload(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
@@ -2463,6 +2561,68 @@ class ReleaseWorkspaceDetailTest(TestCase):
         )
         self.assertNotIn(
             other_workspace.workspace, response.context_data["contributing_partner_upload_workspace_table"].data
+        )
+
+    def test_contributing_workspaces_two_partner_upload(self):
+        contributing_workspace_1 = factories.PartnerUploadWorkspaceFactory.create()
+        contributing_workspace_2 = factories.PartnerUploadWorkspaceFactory.create()
+        self.object.contributing_partner_upload_workspaces.add(contributing_workspace_1)
+        self.object.contributing_partner_upload_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_partner_upload_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_partner_upload_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_partner_upload_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_partner_upload_workspace_table"].data,
+        )
+
+    def test_contributing_workspaces_no_rc_processed_data(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["contributing_rc_processed_data_workspace_table"],
+            tables.RCProcessedDataWorkspaceTable,
+        )
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 0)
+
+    def test_contributing_workspaces_one_rc_processed_data(self):
+        contributing_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        other_workspace = factories.RCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 1)
+        self.assertIn(
+            contributing_workspace.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
+        )
+        self.assertNotIn(
+            other_workspace.workspace, response.context_data["contributing_rc_processed_data_workspace_table"].data
+        )
+
+    def test_contributing_workspaces_two_rc_processed_data(self):
+        contributing_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        contributing_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create()
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace_1)
+        self.object.contributing_rc_processed_data_workspaces.add(contributing_workspace_2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.object.workspace.billing_project.name, self.object.workspace.name))
+        self.assertIn("contributing_rc_processed_data_workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["contributing_rc_processed_data_workspace_table"].data), 2)
+        self.assertIn(
+            contributing_workspace_1.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
+        )
+        self.assertIn(
+            contributing_workspace_2.workspace,
+            response.context_data["contributing_rc_processed_data_workspace_table"].data,
         )
 
     def test_links_view_user(self):
