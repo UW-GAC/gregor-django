@@ -1524,6 +1524,13 @@ class UploadWorkspaceDetailTest(TestCase):
         response = self.client.get(self.object.get_absolute_url())
         self.assertContains(response, release_workspace.get_absolute_url())
 
+    def test_part_of_combined_workspace(self):
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace.contributing_upload_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace.get_absolute_url())
+
 
 class UploadWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's adapter."""
@@ -3671,6 +3678,13 @@ class DCCProcessedDataWorkspaceDetailTest(TestCase):
         response = self.client.get(self.object.get_absolute_url())
         self.assertContains(response, release_workspace.get_absolute_url())
 
+    def test_part_of_combined_workspace(self):
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace.contributing_dcc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace.get_absolute_url())
+
 
 class ExchangeWorkspaceDetailTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceDetail view using the ExchangeWorkspace adapter."""
@@ -3914,12 +3928,39 @@ class PartnerUploadWorkspaceDetailTest(TestCase):
             response, reverse("gregor_anvil:consent_groups:detail", args=[self.object.consent_group.pk])
         )
 
-    def test_part_of_release_workspace(self):
+    def test_part_of_one_release_workspace(self):
         release_workspace = factories.ReleaseWorkspaceFactory.create()
         release_workspace.contributing_partner_upload_workspaces.add(self.object)
         self.client.force_login(self.user)
         response = self.client.get(self.object.get_absolute_url())
         self.assertContains(response, release_workspace.get_absolute_url())
+
+    def test_part_of_two_release_workspaces(self):
+        release_workspace_1 = factories.ReleaseWorkspaceFactory.create()
+        release_workspace_2 = factories.ReleaseWorkspaceFactory.create()
+        release_workspace_1.contributing_partner_upload_workspaces.add(self.object)
+        release_workspace_2.contributing_partner_upload_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, release_workspace_1.get_absolute_url())
+        self.assertContains(response, release_workspace_2.get_absolute_url())
+
+    def test_part_of_one_combined_workspace(self):
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace.contributing_partner_upload_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace.get_absolute_url())
+
+    def test_part_of_two_combined_workspaces(self):
+        combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace_1.contributing_partner_upload_workspaces.add(self.object)
+        combined_workspace_2.contributing_partner_upload_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace_1.get_absolute_url())
+        self.assertContains(response, combined_workspace_2.get_absolute_url())
 
 
 class PartnerUploadWorkspaceListTest(TestCase):
@@ -4032,12 +4073,39 @@ class RCProcessedDataWorkspaceDetailTest(TestCase):
         self.assertContains(response, self.object.research_center.get_absolute_url())
         self.assertContains(response, self.object.consent_group.get_absolute_url())
 
-    def test_part_of_release_workspace(self):
+    def test_part_of_one_release_workspace(self):
         release_workspace = factories.ReleaseWorkspaceFactory.create()
         release_workspace.contributing_rc_processed_data_workspaces.add(self.object)
         self.client.force_login(self.user)
         response = self.client.get(self.object.get_absolute_url())
         self.assertContains(response, release_workspace.get_absolute_url())
+
+    def test_part_of_two_release_workspaces(self):
+        release_workspace_1 = factories.ReleaseWorkspaceFactory.create()
+        release_workspace_2 = factories.ReleaseWorkspaceFactory.create()
+        release_workspace_1.contributing_rc_processed_data_workspaces.add(self.object)
+        release_workspace_2.contributing_rc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, release_workspace_1.get_absolute_url())
+        self.assertContains(response, release_workspace_2.get_absolute_url())
+
+    def test_part_of_one_combined_workspace(self):
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace.contributing_rc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace.get_absolute_url())
+
+    def test_part_of_two_combined_workspaces(self):
+        combined_workspace_1 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace_2 = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        combined_workspace_1.contributing_rc_processed_data_workspaces.add(self.object)
+        combined_workspace_2.contributing_rc_processed_data_workspaces.add(self.object)
+        self.client.force_login(self.user)
+        response = self.client.get(self.object.get_absolute_url())
+        self.assertContains(response, combined_workspace_1.get_absolute_url())
+        self.assertContains(response, combined_workspace_2.get_absolute_url())
 
 
 class RCProcessedDataWorkspaceListTest(TestCase):
