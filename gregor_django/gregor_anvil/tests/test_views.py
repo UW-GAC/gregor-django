@@ -2147,6 +2147,14 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertNotContains(response, url)
+        # Link to contributing_workspaces button
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:combined_consortium_data_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_links_staff_view_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -2172,6 +2180,14 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
+        # Link to contributing_workspaces button
+        self.assertNotContains(
+            response,
+            reverse(
+                "gregor_anvil:combined_consortium_data_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_links_staff_edit_user(self):
         user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
@@ -2200,6 +2216,14 @@ class ConsortiumCombinedDataWorkspaceDetailTest(TestCase):
             ],
         )
         self.assertContains(response, url)
+        # Link to contributing_workspaces button
+        self.assertContains(
+            response,
+            reverse(
+                "gregor_anvil:combined_consortium_data_workspaces:update:contributing_workspaces",
+                args=[self.object.workspace.billing_project.name, self.object.workspace.name],
+            ),
+        )
 
     def test_contributing_workspaces_no_upload(self):
         self.client.force_login(self.user)
