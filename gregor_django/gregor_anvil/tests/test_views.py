@@ -2844,11 +2844,11 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesTest(TestCase):
     def test_initial_no_contributing_workspaces_suggests_partner_upload_workspaces(self):
         """Initial is set when release workspace has no contributing workspaces saved."""
         partner_upload_workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Different consent group, date completed.
         partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
         )
         # Same consent group, not date completed.
         partner_upload_workspace_3 = factories.PartnerUploadWorkspaceFactory.create(
@@ -2873,11 +2873,11 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesTest(TestCase):
     def test_initial_no_contributing_workspaces_suggests_rc_processed_data(self):
         """Initial suggests RC processed data workspaces."""
         rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Different consent group.
         rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Not completed.
         rc_processed_data_workspace_3 = factories.RCProcessedDataWorkspaceFactory.create(
@@ -2908,10 +2908,10 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesTest(TestCase):
             upload_cycle=self.combined_workspace.upload_cycle,
         )
         factories.RCProcessedDataWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         self.client.force_login(self.user)
         response = self.client.get(
@@ -3711,11 +3711,11 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         """Initial is set when release workspace has no contributing workspaces saved."""
         partner_upload_workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Different consent group, date completed.
         partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
         )
         # Same consent group, not date completed.
         partner_upload_workspace_3 = factories.PartnerUploadWorkspaceFactory.create(
@@ -3740,12 +3740,12 @@ class ReleaseWorkspaceUpdateContributingWorkspacesTest(TestCase):
         """Initial suggests RC processed data workspaces."""
         rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Different consent group.
         rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=factories.ConsentGroupFactory.create(),
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         # Not completed.
         rc_processed_data_workspace_3 = factories.RCProcessedDataWorkspaceFactory.create(

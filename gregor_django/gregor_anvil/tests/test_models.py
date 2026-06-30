@@ -1265,7 +1265,7 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
     def test_partner_upload_workspace(self):
         """Suggests one workspace with the same consent group and date_completed."""
         partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_partner_upload_workspaces()
         self.assertEqual(qs.count(), 1)
@@ -1274,10 +1274,12 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
     def test_partner_upload_workspace_two(self):
         """Suggests two workspaces with the same consent group and date_completed."""
         partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            consent_group__code="CG1",
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            consent_group__code="CG2",
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_partner_upload_workspaces()
         self.assertEqual(qs.count(), 2)
@@ -1297,13 +1299,13 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         partner_group = factories.PartnerGroupFactory.create()
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=workspace_1.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=2,
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_partner_upload_workspaces()
@@ -1316,13 +1318,13 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         partner_group = factories.PartnerGroupFactory.create()
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=workspace_1.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=2,
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_partner_upload_workspaces()
@@ -1335,7 +1337,7 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         partner_group = factories.PartnerGroupFactory.create()
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
@@ -1349,10 +1351,31 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         self.assertIn(workspace_1, qs)
         self.assertNotIn(workspace_2, qs)
 
+    def test_partner_upload_workspace_only_date_completed_before_upload_cycle(self):
+        """Only suggests the version with date completed before the upload cycle end date."""
+        upload_cycle = factories.UploadCycleFactory.create(is_past=True)
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=upload_cycle)
+        partner_group = factories.PartnerGroupFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=partner_group,
+            date_completed=upload_cycle.end_date - timezone.timedelta(days=1),
+            version=1,
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=partner_group,
+            consent_group=workspace_1.consent_group,
+            date_completed=upload_cycle.end_date + timezone.timedelta(days=1),
+            version=2,
+        )
+        qs = combined_workspace.suggest_contributing_partner_upload_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertIn(workspace_1, qs)
+        self.assertNotIn(workspace_2, qs)
+
     def test_rc_processed_data_workspace(self):
         """Suggests one completed workspace."""
         rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_rc_processed_data_workspaces()
         self.assertEqual(qs.count(), 1)
@@ -1371,13 +1394,13 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         research_center = factories.ResearchCenterFactory.create()
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=workspace_1.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=2,
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_rc_processed_data_workspaces()
@@ -1390,13 +1413,13 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         research_center = factories.ResearchCenterFactory.create()
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=workspace_1.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=2,
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_rc_processed_data_workspaces()
@@ -1409,7 +1432,7 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         research_center = factories.ResearchCenterFactory.create()
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
@@ -1423,14 +1446,35 @@ class CombinedConsortiumDataWorkspaceSuggestContributingWorkspacesTest(TestCase)
         self.assertIn(workspace_1, qs)
         self.assertNotIn(workspace_2, qs)
 
+    def test_rc_processed_data_workspace_only_date_completed_before_upload_cycle(self):
+        """Only suggests the version with date completed before the upload cycle end date."""
+        upload_cycle = factories.UploadCycleFactory.create(is_past=True)
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=upload_cycle)
+        research_center = factories.ResearchCenterFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            date_completed=upload_cycle.end_date - timezone.timedelta(days=1),
+            version=1,
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=workspace_1.consent_group,
+            date_completed=upload_cycle.end_date + timezone.timedelta(days=1),
+            version=2,
+        )
+        qs = combined_workspace.suggest_contributing_rc_processed_data_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertIn(workspace_1, qs)
+        self.assertNotIn(workspace_2, qs)
+
     def test_rc_processed_data_workspace_two_workspaces(self):
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group__code="C1",
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group__code="C2",
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.combined_consortium_data_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.combined_consortium_data_workspace.suggest_contributing_rc_processed_data_workspaces()
         self.assertEqual(qs.count(), 2)
@@ -1745,7 +1789,7 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         """Suggests one workspace with the same consent group and date_completed."""
         partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.release_workspace.suggest_contributing_partner_upload_workspaces()
         self.assertEqual(qs.count(), 1)
@@ -1755,11 +1799,11 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         """Suggests two workspaces with the same consent group and date_completed."""
         partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.release_workspace.suggest_contributing_partner_upload_workspaces()
         self.assertEqual(qs.count(), 2)
@@ -1790,13 +1834,13 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=2,
         )
         qs = self.release_workspace.suggest_contributing_partner_upload_workspaces()
@@ -1810,13 +1854,13 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=2,
         )
         qs = self.release_workspace.suggest_contributing_partner_upload_workspaces()
@@ -1830,7 +1874,7 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
             partner_group=partner_group,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
@@ -1844,11 +1888,33 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         self.assertIn(workspace_1, qs)
         self.assertNotIn(workspace_2, qs)
 
+    def test_partner_upload_workspace_only_date_completed_before_upload_cycle(self):
+        """Only suggests the version with date completed before the upload cycle end date."""
+        upload_cycle = factories.UploadCycleFactory.create(is_past=True)
+        release_workspace = factories.ReleaseWorkspaceFactory.create(upload_cycle=upload_cycle)
+        partner_group = factories.PartnerGroupFactory.create()
+        workspace_1 = factories.PartnerUploadWorkspaceFactory.create(
+            consent_group=release_workspace.consent_group,
+            partner_group=partner_group,
+            date_completed=upload_cycle.end_date - timezone.timedelta(days=1),
+            version=1,
+        )
+        workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=partner_group,
+            consent_group=release_workspace.consent_group,
+            date_completed=upload_cycle.end_date + timezone.timedelta(days=1),
+            version=2,
+        )
+        qs = release_workspace.suggest_contributing_partner_upload_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertIn(workspace_1, qs)
+        self.assertNotIn(workspace_2, qs)
+
     def test_rc_processed_data_workspace(self):
         """Suggests one completed workspace with the same consent group."""
         rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.release_workspace.suggest_contributing_rc_processed_data_workspaces()
         self.assertEqual(qs.count(), 1)
@@ -1858,7 +1924,7 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         """Does not suggest workspaces with a different consent group."""
         factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=factories.ConsentGroupFactory.create(),
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.release_workspace.suggest_contributing_rc_processed_data_workspaces()
         self.assertEqual(qs.count(), 0)
@@ -1878,13 +1944,13 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=2,
         )
         qs = self.release_workspace.suggest_contributing_rc_processed_data_workspaces()
@@ -1898,13 +1964,13 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
             version=2,
         )
         qs = self.release_workspace.suggest_contributing_rc_processed_data_workspaces()
@@ -1918,7 +1984,7 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             research_center=research_center,
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
             version=1,
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
@@ -1932,14 +1998,36 @@ class ReleaseWorkspaceSuggestContributingWorkspacesTest(TestCase):
         self.assertIn(workspace_1, qs)
         self.assertNotIn(workspace_2, qs)
 
+    def test_rc_processed_data_workspace_only_date_completed_before_upload_cycle(self):
+        """Only suggests the version with date completed before the upload cycle end date."""
+        upload_cycle = factories.UploadCycleFactory.create(is_past=True)
+        release_workspace = factories.ReleaseWorkspaceFactory.create(upload_cycle=upload_cycle)
+        research_center = factories.ResearchCenterFactory.create()
+        workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=release_workspace.consent_group,
+            date_completed=upload_cycle.end_date - timezone.timedelta(days=1),
+            version=1,
+        )
+        workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=research_center,
+            consent_group=release_workspace.consent_group,
+            date_completed=upload_cycle.end_date + timezone.timedelta(days=1),
+            version=2,
+        )
+        qs = release_workspace.suggest_contributing_rc_processed_data_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertIn(workspace_1, qs)
+        self.assertNotIn(workspace_2, qs)
+
     def test_rc_processed_data_workspace_two_workspaces(self):
         workspace_1 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=2),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=2),
         )
         workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
             consent_group=self.release_workspace.consent_group,
-            date_completed=timezone.now().date() - timezone.timedelta(days=1),
+            date_completed=self.release_workspace.upload_cycle.end_date - timezone.timedelta(days=1),
         )
         qs = self.release_workspace.suggest_contributing_rc_processed_data_workspaces()
         self.assertEqual(qs.count(), 2)

@@ -411,6 +411,7 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
                         partner_group=partner_group,
                         consent_group=consent_group,
                         date_completed__isnull=False,
+                        date_completed__lte=self.upload_cycle.end_date,
                     )
                     .order_by("-version")
                     .first()
@@ -433,6 +434,7 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
                         consent_group=consent_group,
                         research_center=research_center,
                         date_completed__isnull=False,
+                        date_completed__lte=self.upload_cycle.end_date,
                     )
                     .order_by("-version")
                     .first()
@@ -545,6 +547,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
                     consent_group=self.consent_group,
                     partner_group=partner_group,
                     date_completed__isnull=False,
+                    date_completed__lte=self.upload_cycle.end_date,
                 )
                 .order_by("-version")
                 .first()
@@ -566,6 +569,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
                     consent_group=self.consent_group,
                     research_center=research_center,
                     date_completed__isnull=False,
+                    date_completed__lte=self.upload_cycle.end_date,
                 )
                 .order_by("-version")
                 .first()
