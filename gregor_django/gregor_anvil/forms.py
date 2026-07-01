@@ -174,6 +174,43 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesForm(Bootstrap5
             ),
         }
 
+    def clean_contributing_upload_workspaces(self):
+        """Ensure that there is only one upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_upload_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.research_center, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per ResearchCenter and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
+    def clean_contributing_dcc_processed_data_workspaces(self):
+        """Ensure that there is only one dcc processed data workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_dcc_processed_data_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.consent_group
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ConsentGroup.")
+            seen.add(key)
+        return contributing_workspaces
+
+    def clean_contributing_partner_upload_workspaces(self):
+        """Ensure that there is only one partner upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_partner_upload_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.partner_group, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per PartnerGroup and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ReleaseWorkspace object."""
