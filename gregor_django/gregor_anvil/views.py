@@ -147,12 +147,19 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
         dcc_processed_data_workspace_qs = Workspace.objects.filter(
             dccprocesseddataworkspace__upload_cycle=self.object,
         )
-        partner_workspaces = self.object.get_partner_upload_workspaces()
-        partner_workspace_qs = Workspace.objects.filter(partneruploadworkspace__in=partner_workspaces)
-        rc_processed_data_workspaces = self.object.get_rc_processed_data_workspaces()
-        rc_processed_data_workspace_qs = Workspace.objects.filter(
-            rcprocesseddataworkspace__in=rc_processed_data_workspaces,
-        )
+        # Select PartnerUpload and RCProcessedData workspaces based on whether they are part of the combined workspace.
+        if combined_workspace_qs.exists():
+            combined_workspace = combined_workspace_qs.get().combinedconsortiumdataworkspace
+            partner_workspace_qs = Workspace.objects.filter(
+                partneruploadworkspace__combined_workspaces=combined_workspace
+            )
+            rc_processed_data_workspace_qs = Workspace.objects.filter(
+                rcprocesseddataworkspace__combined_workspaces=combined_workspace,
+            )
+        else:
+            partner_workspace_qs = Workspace.objects.none()
+            rc_processed_data_workspace_qs = Workspace.objects.none()
+
         return [
             upload_workspace_qs,
             combined_workspace_qs,

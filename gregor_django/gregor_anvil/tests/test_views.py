@@ -1128,37 +1128,73 @@ class UploadCycleDetailTest(TestCase):
         self.assertIn(workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
 
-    def test_partner_upload_workspace_table(self):
-        """Contains a table of PartnerUploadWorkspaces for this upload cycle."""
+    def test_partner_upload_workspace_table_no_combined_workspace(self):
+        """No partner upload workspaces are listed when there is no combined workspace."""
         obj = self.model_factory.create()
-        obj.end_date
-        # Make sure the partner upload workspace has an end date before the end of this upload cycle.
         workspace = factories.PartnerUploadWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
-        other_workspace = factories.PartnerUploadWorkspaceFactory.create(
-            date_completed=obj.end_date + timedelta(days=1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][5]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(workspace.workspace, table.data)
+
+    def test_partner_upload_workspace_table_combined_workspace_no_contributing(self):
+        """No partner upload workspaces are listed when there is no combined workspace."""
+        obj = self.model_factory.create()
+        workspace = factories.PartnerUploadWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
+        factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=obj)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][5]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(workspace.workspace, table.data)
+
+    def test_partner_upload_workspace_table_combined_workspace_has_contributing_workspace(self):
+        """A partner upload workspace is listed when there is a combined workspace with contributing workspaces."""
+        obj = self.model_factory.create()
+        partner_workspace = factories.PartnerUploadWorkspaceFactory.create(
+            date_completed=obj.end_date - timedelta(days=1)
         )
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=obj)
+        combined_workspace.contributing_partner_upload_workspaces.add(partner_workspace)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         table = response.context_data["tables"][5]
         self.assertEqual(len(table.rows), 1)
-        self.assertIn(workspace.workspace, table.data)
-        self.assertNotIn(other_workspace.workspace, table.data)
+        self.assertIn(partner_workspace.workspace, table.data)
 
-    def test_rc_processed_data_workspace_table(self):
-        """Contains a table of RCProcessedDataWorkspaces for this upload cycle."""
+    def test_rc_processed_data_workspace_table_no_combined_workspace(self):
+        """No RCProcessedDataWorkspaces are listed when there is no combined workspace."""
         obj = self.model_factory.create()
-        obj.end_date
-        # Make sure the RC processed data workspace has an end date before the end of this upload cycle.
-        workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
-        other_workspace = factories.RCProcessedDataWorkspaceFactory.create(
-            date_completed=None,
-        )
+        rc_workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][6]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(rc_workspace.workspace, table.data)
+
+    def test_rc_processed_data_workspace_table_combined_workspace_no_contributing(self):
+        """No RCProcessedDataWorkspaces are listed when there is no combined workspace."""
+        obj = self.model_factory.create()
+        rc_workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
+        factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=obj)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.cycle))
+        table = response.context_data["tables"][6]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(rc_workspace.workspace, table.data)
+
+    def test_rc_processed_data_workspace_table_combined_workspace_has_contributing_workspace(self):
+        """An RCProcessedDataWorkspace is listed when there is a combined workspace with contributing workspaces."""
+        obj = self.model_factory.create()
+        rc_workspace = factories.RCProcessedDataWorkspaceFactory.create(date_completed=obj.end_date - timedelta(days=1))
+        combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create(upload_cycle=obj)
+        combined_workspace.contributing_rc_processed_data_workspaces.add(rc_workspace)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.cycle))
         table = response.context_data["tables"][6]
         self.assertEqual(len(table.rows), 1)
-        self.assertIn(workspace.workspace, table.data)
-        self.assertNotIn(other_workspace.workspace, table.data)
+        self.assertIn(rc_workspace.workspace, table.data)
 
     def test_links_view_user(self):
         user = self.user
