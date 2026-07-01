@@ -680,6 +680,23 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesFormTest(TestCa
         self.assertEqual(len(form.errors["contributing_partner_upload_workspaces"]), 1)
         self.assertIn("only be one contributing workspace", form.errors["contributing_partner_upload_workspaces"][0])
 
+    def test_rc_processed_data_workspace_same_consent_group_and_research_center(self):
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=rc_processed_data_workspace_1.research_center,
+            consent_group=rc_processed_data_workspace_1.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [rc_processed_data_workspace_1, rc_processed_data_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_rc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_rc_processed_data_workspaces"][0])
+
 
 class ReleaseWorkspaceFormTest(TestCase):
     """Tests for the ReleaseWorkspace class."""

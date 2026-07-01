@@ -211,6 +211,19 @@ class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesForm(Bootstrap5
             seen.add(key)
         return contributing_workspaces
 
+    def clean_contributing_rc_processed_data_workspaces(self):
+        """Ensure that there is only one upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_rc_processed_data_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.research_center, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per ResearchCenter and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
 
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ReleaseWorkspace object."""
