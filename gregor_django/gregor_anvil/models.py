@@ -549,19 +549,15 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         # Start with a slow for loop, and then we can make it better if needed.
         most_recent_workspaces = []
         for partner_group in PartnerGroup.objects.all():
-            # We want to select the highest version of workspaces that were completed before the combined workspace.
-            # If the combined workspace is not completed, only check for non-null contributing date_completed.
-            possible_workspaces = PartnerUploadWorkspace.objects.filter(
-                partner_group=partner_group,
-                consent_group=self.consent_group,
-                date_completed__isnull=False,
-            )
-            # If the release workspace is released, subset by that date as well.
-            if self.date_released:
-                possible_workspaces = possible_workspaces.filter(
-                    date_completed__lte=self.date_released,
+            latest_workspace = (
+                PartnerUploadWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    partner_group=partner_group,
+                    date_completed__isnull=False,
                 )
-            latest_workspace = possible_workspaces.order_by("-version").first()
+                .order_by("-version")
+                .first()
+            )
             if latest_workspace:
                 most_recent_workspaces.append(latest_workspace.id)
         qs = PartnerUploadWorkspace.objects.filter(
@@ -574,19 +570,15 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         # For RCProcessedDataWorkspaces, follow the same procedure as partner workspaces.
         most_recent_workspaces = []
         for research_center in ResearchCenter.objects.all():
-            # We want to select the highest version of workspaces that were completed before the combined workspace.
-            # If the combined workspace is not completed, only check for non-null contributing date_completed.
-            possible_workspaces = RCProcessedDataWorkspace.objects.filter(
-                research_center=research_center,
-                consent_group=self.consent_group,
-                date_completed__isnull=False,
-            )
-            # If the combined workspace is completed, subset by that date as well.
-            if self.date_released:
-                possible_workspaces = possible_workspaces.filter(
-                    date_completed__lte=self.date_released,
+            latest_workspace = (
+                RCProcessedDataWorkspace.objects.filter(
+                    consent_group=self.consent_group,
+                    research_center=research_center,
+                    date_completed__isnull=False,
                 )
-            latest_workspace = possible_workspaces.order_by("-version").first()
+                .order_by("-version")
+                .first()
+            )
             if latest_workspace:
                 most_recent_workspaces.append(latest_workspace.id)
         qs = RCProcessedDataWorkspace.objects.filter(
