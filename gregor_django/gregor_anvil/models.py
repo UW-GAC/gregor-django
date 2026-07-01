@@ -208,38 +208,6 @@ class UploadCycle(TimeStampedModel, models.Model):
         if self.end_date and self.date_ready_for_compute and self.end_date < self.date_ready_for_compute:
             raise ValidationError("date_ready_for_compute must be before end_date!")
 
-    def get_partner_upload_workspaces(self):
-        """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
-
-        For a given PartnerGroup and ConsentGroup, the workspace with the highest version that also has a date_completed
-        that is before the end_date of this upload cycle is included.
-        """
-        qs = PartnerUploadWorkspace.objects.filter(date_completed__lte=self.end_date).order_by("-version")
-        # This is not ideal, but we can't use .distinct on fields.
-        pks_to_keep = []
-        for partner_group in PartnerGroup.objects.all():
-            for consent_group in ConsentGroup.objects.all():
-                instance = qs.filter(partner_group=partner_group, consent_group=consent_group).first()
-                if instance:
-                    pks_to_keep.append(instance.pk)
-        return qs.filter(pk__in=pks_to_keep)
-
-    def get_rc_processed_data_workspaces(self):
-        """Return a queryset of RCProcessedDataWorkspace objects that are included in this upload cycle.
-
-        For a given ResearchCenter and ConsentGroup, the workspace with the highest version that also has a
-        date_completed that is before the end_date of this upload cycle is included.
-        """
-        qs = RCProcessedDataWorkspace.objects.filter(date_completed__lte=self.end_date).order_by("-version")
-        # This is not ideal, but we can't use .distinct on fields.
-        pks_to_keep = []
-        for research_center in ResearchCenter.objects.all():
-            for consent_group in ConsentGroup.objects.all():
-                instance = qs.filter(research_center=research_center, consent_group=consent_group).first()
-                if instance:
-                    pks_to_keep.append(instance.pk)
-        return qs.filter(pk__in=pks_to_keep)
-
     @property
     def is_current(self):
         """Return a boolean indicating whether this upload cycle is the current one."""
