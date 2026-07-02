@@ -305,6 +305,13 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
 
+        # Only one contributing workspace per research center.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.research_center
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ResearchCenter.")
+            seen.add(key)
         return contributing_workspaces
 
     def clean_contributing_dcc_processed_data_workspaces(self):
@@ -313,6 +320,10 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         for workspace_data in contributing_workspaces:
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        # Only one contributing workspace.
+        if len(contributing_workspaces) > 1:
+            raise forms.ValidationError("There can only be one contributing workspace for DCC processed data.")
 
         return contributing_workspaces
 
@@ -323,6 +334,13 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
 
+        # Only one contributing workspace per partner group.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.partner_group
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per PartnerGroup.")
+            seen.add(key)
         return contributing_workspaces
 
     def clean_contributing_rc_processed_data_workspaces(self):
@@ -331,6 +349,14 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         for workspace_data in contributing_workspaces:
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        # Only one contributing workspace per research center.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.research_center
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ResearchCenter.")
+            seen.add(key)
 
         return contributing_workspaces
 
