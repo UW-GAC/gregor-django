@@ -147,12 +147,19 @@ class UploadCycleDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Det
         dcc_processed_data_workspace_qs = Workspace.objects.filter(
             dccprocesseddataworkspace__upload_cycle=self.object,
         )
-        partner_workspaces = self.object.get_partner_upload_workspaces()
-        partner_workspace_qs = Workspace.objects.filter(partneruploadworkspace__in=partner_workspaces)
-        rc_processed_data_workspaces = self.object.get_rc_processed_data_workspaces()
-        rc_processed_data_workspace_qs = Workspace.objects.filter(
-            rcprocesseddataworkspace__in=rc_processed_data_workspaces,
-        )
+        # Select PartnerUpload and RCProcessedData workspaces based on whether they are part of the combined workspace.
+        if combined_workspace_qs.exists():
+            combined_workspace = combined_workspace_qs.get().combinedconsortiumdataworkspace
+            partner_workspace_qs = Workspace.objects.filter(
+                partneruploadworkspace__combined_workspaces=combined_workspace
+            )
+            rc_processed_data_workspace_qs = Workspace.objects.filter(
+                rcprocesseddataworkspace__combined_workspaces=combined_workspace,
+            )
+        else:
+            partner_workspace_qs = Workspace.objects.none()
+            rc_processed_data_workspace_qs = Workspace.objects.none()
+
         return [
             upload_workspace_qs,
             combined_workspace_qs,
@@ -584,6 +591,65 @@ class CombinedConsortiumDataWorkspaceAuthDomainAuditResolve(
         # Set to completed, because we are just running this one specific check.
         audit.completed = True
         return audit.get_all_results()[0]
+
+
+class CombinedConsortiumDataWorkspaceUpdateContributingWorkspaces(
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update the contributing workspaces for a CombinedConsortiumDataWorkspace."""
+
+    model = models.CombinedConsortiumDataWorkspace
+    form_class = forms.CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesForm
+    template_name = "gregor_anvil/combinedconsortiumdataworkspace_update_contributing_workspaces.html"
+    success_message = "Successfully updated contributing workspaces."
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # Only suggest workspaces if there are no contributing upload workspaces already set.
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        if self.object.contributing_upload_workspaces.count() == 0:
+            initial["contributing_upload_workspaces"] = self.object.suggest_contributing_upload_workspaces()
+            initial["contributing_dcc_processed_data_workspaces"] = (
+                self.object.suggest_contributing_dcc_processed_data_workspaces()
+            )
+            initial["contributing_partner_upload_workspaces"] = (
+                self.object.suggest_contributing_partner_upload_workspaces()
+            )
+            initial["contributing_rc_processed_data_workspaces"] = (
+                self.object.suggest_contributing_rc_processed_data_workspaces()
+            )
+            return initial
+
+    def get_form(self, form_class=None):
+        """Get the form for the view."""
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(self.object, **self.get_form_kwargs())
+
+    def get_object(self, queryset=None):
+        """Get the object for the view."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = self.model.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add a flag to indicate whether the view will suggest workspaces.
+        # DCCProcessedDataWorkspaces are not required, so they won't factored into whether or not to suggest.
+        context["is_suggesting_workspaces"] = self.object.contributing_upload_workspaces.count() == 0
+        return context
 
 
 class DCCProcessedDataWorkspaceSharingAudit(

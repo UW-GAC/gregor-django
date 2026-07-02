@@ -126,6 +126,105 @@ class CombinedConsortiumDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelF
         }
 
 
+class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update contributing_workspaces in a CombinedConsortiumDataWorkspace object."""
+
+    def __init__(self, release_workspace, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object = release_workspace
+
+    class Meta:
+        model = models.CombinedConsortiumDataWorkspace
+        fields = (
+            "contributing_upload_workspaces",
+            "contributing_dcc_processed_data_workspaces",
+            "contributing_partner_upload_workspaces",
+            "contributing_rc_processed_data_workspaces",
+        )
+        help_texts = {
+            "contributing_upload_workspaces": (
+                "Select the UploadWorkspaces that contributed to this combined workspace."
+            ),
+            "contributing_dcc_processed_data_workspaces": (
+                "Select the DCC processed data workspaces that contributed to this combined workspace."
+            ),
+            "contributing_partner_upload_workspaces": (
+                "Select the PartnerUploadWorkspaces that contributed to this combined workspace."
+            ),
+            "contributing_rc_processed_data_workspaces": (
+                "Select the RC processed data workspaces that contributed to this combined workspace."
+            ),
+        }
+        widgets = {
+            "contributing_upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:upload",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_dcc_processed_data_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:dcc_processed_data",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_partner_upload_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:partner_upload",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "contributing_rc_processed_data_workspaces": autocomplete.ModelSelect2Multiple(
+                url="gregor_anvil:autocomplete:workspaces:rc_processed_data",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+    def clean_contributing_upload_workspaces(self):
+        """Ensure that there is only one upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_upload_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.research_center, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per ResearchCenter and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
+    def clean_contributing_dcc_processed_data_workspaces(self):
+        """Ensure that there is only one dcc processed data workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_dcc_processed_data_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.consent_group
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ConsentGroup.")
+            seen.add(key)
+        return contributing_workspaces
+
+    def clean_contributing_partner_upload_workspaces(self):
+        """Ensure that there is only one partner upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_partner_upload_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.partner_group, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per PartnerGroup and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
+    def clean_contributing_rc_processed_data_workspaces(self):
+        """Ensure that there is only one upload workspace per research center and consent group."""
+        contributing_workspaces = self.cleaned_data.get("contributing_rc_processed_data_workspaces", [])
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = (workspace_data.research_center, workspace_data.consent_group)
+            if key in seen:
+                raise forms.ValidationError(
+                    "There can only be one contributing workspace per ResearchCenter and ConsentGroup."
+                )
+            seen.add(key)
+        return contributing_workspaces
+
+
 class ReleaseWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ReleaseWorkspace object."""
 
@@ -154,10 +253,6 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
 
     ERROR_DIFFERENT_CONSENT_GROUP = (
         "All contributing workspaces must have the same consent group as the release workspace."
-    )
-    ERROR_UPLOAD_CYCLE_TOO_HIGH = (
-        "All contributing workspaces must have an upload cycle that is less than or equal to "
-        "the upload cycle of the release workspace."
     )
 
     def __init__(self, release_workspace, *args, **kwargs):
@@ -210,6 +305,13 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
 
+        # Only one contributing workspace per research center.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.research_center
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ResearchCenter.")
+            seen.add(key)
         return contributing_workspaces
 
     def clean_contributing_dcc_processed_data_workspaces(self):
@@ -218,6 +320,10 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         for workspace_data in contributing_workspaces:
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        # Only one contributing workspace.
+        if len(contributing_workspaces) > 1:
+            raise forms.ValidationError("There can only be one contributing workspace for DCC processed data.")
 
         return contributing_workspaces
 
@@ -228,6 +334,13 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
 
+        # Only one contributing workspace per partner group.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.partner_group
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per PartnerGroup.")
+            seen.add(key)
         return contributing_workspaces
 
     def clean_contributing_rc_processed_data_workspaces(self):
@@ -236,6 +349,14 @@ class ReleaseWorkspaceUpdateContributingWorkspacesForm(Bootstrap5MediaFormMixin,
         for workspace_data in contributing_workspaces:
             if workspace_data.consent_group != self.object.consent_group:
                 raise forms.ValidationError(self.ERROR_DIFFERENT_CONSENT_GROUP)
+
+        # Only one contributing workspace per research center.
+        seen = set()
+        for workspace_data in contributing_workspaces:
+            key = workspace_data.research_center
+            if key in seen:
+                raise forms.ValidationError("There can only be one contributing workspace per ResearchCenter.")
+            seen.add(key)
 
         return contributing_workspaces
 
