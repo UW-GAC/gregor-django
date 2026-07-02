@@ -488,6 +488,216 @@ class CombinedConsortiumDataWorkspaceFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
 
+class CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
+    """Tests for the CombinedConsortiumDataWorkspaceUpdateContributingWorkspaceForm class."""
+
+    form_class = forms.CombinedConsortiumDataWorkspaceUpdateContributingWorkspacesForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.combined_workspace = factories.CombinedConsortiumDataWorkspaceFactory.create()
+        self.upload_workspace_1 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.combined_workspace.upload_cycle,
+        )
+        self.upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            upload_cycle=self.combined_workspace.upload_cycle,
+        )
+        self.dcc_processed_data_workspace = factories.DCCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.combined_workspace.upload_cycle,
+        )
+        self.partner_upload_workspace = factories.PartnerUploadWorkspaceFactory.create()
+        self.rc_processed_data_workspace = factories.RCProcessedDataWorkspaceFactory.create(
+            upload_cycle=self.combined_workspace.upload_cycle,
+        )
+
+    def test_valid_one_upload_workspace(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_upload_workspaces(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1, self.upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_one_dcc_processed_data_workspace(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_dcc_processed_data_workspaces": [self.dcc_processed_data_workspace],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_one_partner_upload_workspace(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_partner_upload_workspaces": [self.partner_upload_workspace],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_one_rc_processed_data_workspace(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [self.rc_processed_data_workspace],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_rc_processed_data_workspaces(self):
+        """Form is valid with necessary input."""
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create()
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [
+                self.rc_processed_data_workspace,
+                rc_processed_data_workspace_2,
+            ],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_contributing_upload_workspaces(self):
+        form_data = {}
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("required", form.errors["contributing_upload_workspaces"][0])
+
+    def test_wrong_workspace_type_upload_workspaces(self):
+        # Need to specify a different pk here.
+        # Otherwise, it will pull pk=1 from the UploadWorkspace even if a different type is specified.
+        # Not sure if this is coming from DAL or the form.
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create(pk=999)
+        form_data = {
+            "contributing_upload_workspaces": [other_workspace],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("valid choice", form.errors["contributing_upload_workspaces"][0])
+
+    def test_wrong_workspace_type_dcc_processed_data_workspaces(self):
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_dcc_processed_data_workspaces": [self.upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_dcc_processed_data_workspaces"]), 1)
+        self.assertIn("valid choice", form.errors["contributing_dcc_processed_data_workspaces"][0])
+
+    def test_wrong_workspace_type_partner_upload_workspaces(self):
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_partner_upload_workspaces": [self.upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_partner_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_partner_upload_workspaces"]), 1)
+        self.assertIn("valid choice", form.errors["contributing_partner_upload_workspaces"][0])
+
+    def test_wrong_workspace_type_rc_processed_data_workspaces(self):
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [self.upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_rc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn("valid choice", form.errors["contributing_rc_processed_data_workspaces"][0])
+
+    def test_upload_workspace_same_consent_group_and_research_center(self):
+        upload_workspace_1 = factories.UploadWorkspaceFactory.create()
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            research_center=upload_workspace_1.research_center,
+            consent_group=upload_workspace_1.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [upload_workspace_1, upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_upload_workspaces"][0])
+
+    def test_dcc_processed_data_workspace_same_consent_group(self):
+        dcc_processed_data_workspace_1 = factories.DCCProcessedDataWorkspaceFactory.create()
+        dcc_processed_data_workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=dcc_processed_data_workspace_1.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_dcc_processed_data_workspaces": [
+                dcc_processed_data_workspace_1,
+                dcc_processed_data_workspace_2,
+            ],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_dcc_processed_data_workspaces"]), 1)
+        self.assertIn(
+            "only be one contributing workspace", form.errors["contributing_dcc_processed_data_workspaces"][0]
+        )
+
+    def test_partner_upload_workspace_same_consent_group_and_partner_group(self):
+        partner_upload_workspace_1 = factories.PartnerUploadWorkspaceFactory.create()
+        partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            partner_group=partner_upload_workspace_1.partner_group,
+            consent_group=partner_upload_workspace_1.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_partner_upload_workspaces": [partner_upload_workspace_1, partner_upload_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_partner_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_partner_upload_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_partner_upload_workspaces"][0])
+
+    def test_rc_processed_data_workspace_same_consent_group_and_research_center(self):
+        rc_processed_data_workspace_1 = factories.RCProcessedDataWorkspaceFactory.create()
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            research_center=rc_processed_data_workspace_1.research_center,
+            consent_group=rc_processed_data_workspace_1.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [rc_processed_data_workspace_1, rc_processed_data_workspace_2],
+        }
+        form = self.form_class(self.combined_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_rc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_rc_processed_data_workspaces"][0])
+
+
 class ReleaseWorkspaceFormTest(TestCase):
     """Tests for the ReleaseWorkspace class."""
 
@@ -559,6 +769,22 @@ class ReleaseWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
         form = self.form_class(self.release_workspace, data=form_data)
         self.assertTrue(form.is_valid())
 
+    def test_invalid_two_upload_workspaces_same_rc(self):
+        """Form is invalid with two workspaces from the same research center."""
+        upload_workspace_2 = factories.UploadWorkspaceFactory.create(
+            consent_group=self.consent_group,
+            research_center=self.upload_workspace_1.research_center,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1, upload_workspace_2],
+        }
+        form = self.form_class(self.release_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_upload_workspaces"][0])
+
     def test_valid_one_dcc_processed_data_workspace(self):
         """Form is valid with necessary input."""
         form_data = {
@@ -568,6 +794,28 @@ class ReleaseWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
         form = self.form_class(self.release_workspace, data=form_data)
         self.assertTrue(form.is_valid())
 
+    def test_invalid_two_dcc_processed_data_workspaces(self):
+        """Form is invalid with two workspaces."""
+        dcc_processed_data_workspace_2 = factories.DCCProcessedDataWorkspaceFactory.create(
+            consent_group=self.consent_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_dcc_processed_data_workspaces": [
+                self.dcc_processed_data_workspace,
+                dcc_processed_data_workspace_2,
+            ],
+        }
+        form = self.form_class(self.release_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_dcc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_dcc_processed_data_workspaces"]), 1)
+        self.assertIn(
+            "only be one contributing workspace",
+            form.errors["contributing_dcc_processed_data_workspaces"][0],
+        )
+
     def test_valid_one_partner_upload_workspace(self):
         """Form is valid with necessary input."""
         form_data = {
@@ -576,6 +824,23 @@ class ReleaseWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
         }
         form = self.form_class(self.release_workspace, data=form_data)
         self.assertTrue(form.is_valid())
+
+    def test_invalid_two_partner_upload_workspace_same_partner(self):
+        """Form is invalid with two workspaces from the same partner."""
+        partner_upload_workspace_2 = factories.PartnerUploadWorkspaceFactory.create(
+            consent_group=self.consent_group,
+            partner_group=self.partner_upload_workspace.partner_group,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_partner_upload_workspaces": [self.partner_upload_workspace, partner_upload_workspace_2],
+        }
+        form = self.form_class(self.release_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_partner_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_partner_upload_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_partner_upload_workspaces"][0])
 
     def test_valid_one_rc_processed_data_workspace(self):
         """Form is valid with necessary input."""
@@ -601,6 +866,26 @@ class ReleaseWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
         form = self.form_class(self.release_workspace, data=form_data)
         self.assertTrue(form.is_valid())
 
+    def test_invalid_two_rc_processed_data_workspaces_same_research_center(self):
+        """Form is invalid with two workspaces from the same research center."""
+        rc_processed_data_workspace_2 = factories.RCProcessedDataWorkspaceFactory.create(
+            consent_group=self.consent_group,
+            research_center=self.rc_processed_data_workspace.research_center,
+        )
+        form_data = {
+            "contributing_upload_workspaces": [self.upload_workspace_1],
+            "contributing_rc_processed_data_workspaces": [
+                self.rc_processed_data_workspace,
+                rc_processed_data_workspace_2,
+            ],
+        }
+        form = self.form_class(self.release_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_rc_processed_data_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_rc_processed_data_workspaces"]), 1)
+        self.assertIn("only be one contributing workspace", form.errors["contributing_rc_processed_data_workspaces"][0])
+
     def test_invalid_missing_contributing_upload_workspaces(self):
         form_data = {}
         form = self.form_class(self.release_workspace, data=form_data)
@@ -621,6 +906,21 @@ class ReleaseWorkspaceUpdateContributingWorkspacesFormTest(TestCase):
         self.assertIn("contributing_upload_workspaces", form.errors)
         self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
         self.assertIn("must have the same consent group", form.errors["contributing_upload_workspaces"][0])
+
+    def test_wrong_workspace_type_upload_workspaces(self):
+        # Need to specify a different pk here.
+        # Otherwise, it will pull pk=1 from the UploadWorkspace even if a different type is specified.
+        # Not sure if this is coming from DAL or the form.
+        other_workspace = factories.DCCProcessedDataWorkspaceFactory.create(pk=999, consent_group=self.consent_group)
+        form_data = {
+            "contributing_upload_workspaces": [other_workspace],
+        }
+        form = self.form_class(self.release_workspace, data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("contributing_upload_workspaces", form.errors)
+        self.assertEqual(len(form.errors["contributing_upload_workspaces"]), 1)
+        self.assertIn("valid choice", form.errors["contributing_upload_workspaces"][0])
 
     def test_invalid_wrong_consent_group_dcc_processed_data_workspace(self):
         workspace_different_consent = factories.DCCProcessedDataWorkspaceFactory.create()

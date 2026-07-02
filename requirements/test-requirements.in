@@ -21,6 +21,8 @@ coverage  # https://github.com/nedbat/coveragepy
 django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
 # Django plugin for pytest
 pytest-django  # https://github.com/pytest-dev/pytest-django
+# pygments
+pygments>=2.20.0
 # Test migrations
 django_test_migrations
 # Mock json api data
