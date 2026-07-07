@@ -208,38 +208,6 @@ class UploadCycle(TimeStampedModel, models.Model):
         if self.end_date and self.date_ready_for_compute and self.end_date < self.date_ready_for_compute:
             raise ValidationError("date_ready_for_compute must be before end_date!")
 
-    def get_partner_upload_workspaces(self):
-        """Return a queryset of PartnerUploadWorkspace objects that are included in this upload cycle.
-
-        For a given PartnerGroup and ConsentGroup, the workspace with the highest version that also has a date_completed
-        that is before the end_date of this upload cycle is included.
-        """
-        qs = PartnerUploadWorkspace.objects.filter(date_completed__lte=self.end_date).order_by("-version")
-        # This is not ideal, but we can't use .distinct on fields.
-        pks_to_keep = []
-        for partner_group in PartnerGroup.objects.all():
-            for consent_group in ConsentGroup.objects.all():
-                instance = qs.filter(partner_group=partner_group, consent_group=consent_group).first()
-                if instance:
-                    pks_to_keep.append(instance.pk)
-        return qs.filter(pk__in=pks_to_keep)
-
-    def get_rc_processed_data_workspaces(self):
-        """Return a queryset of RCProcessedDataWorkspace objects that are included in this upload cycle.
-
-        For a given ResearchCenter and ConsentGroup, the workspace with the highest version that also has a
-        date_completed that is before the end_date of this upload cycle is included.
-        """
-        qs = RCProcessedDataWorkspace.objects.filter(date_completed__lte=self.end_date).order_by("-version")
-        # This is not ideal, but we can't use .distinct on fields.
-        pks_to_keep = []
-        for research_center in ResearchCenter.objects.all():
-            for consent_group in ConsentGroup.objects.all():
-                instance = qs.filter(research_center=research_center, consent_group=consent_group).first()
-                if instance:
-                    pks_to_keep.append(instance.pk)
-        return qs.filter(pk__in=pks_to_keep)
-
     @property
     def is_current(self):
         """Return a boolean indicating whether this upload cycle is the current one."""
@@ -349,12 +317,109 @@ class CombinedConsortiumDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         default=None,
         validators=[validate_not_future_date],
     )
+    # Contributing workspaces.
+    contributing_upload_workspaces = models.ManyToManyField(
+        UploadWorkspace,
+        help_text=(
+            "UploadWorkspaces with data tables contributing to this workspace. "
+            "(Note that this does not include workspaces only containing files contributing to this workspace.)"
+        ),
+        related_name="combined_workspaces",
+    )
+    contributing_dcc_processed_data_workspaces = models.ManyToManyField(
+        "DCCProcessedDataWorkspace",
+        help_text="DCCProcessedDataWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
+    contributing_partner_upload_workspaces = models.ManyToManyField(
+        PartnerUploadWorkspace,
+        help_text="PartnerUploadWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
+    contributing_rc_processed_data_workspaces = models.ManyToManyField(
+        "RCProcessedDataWorkspace",
+        help_text="RCProcessedDataWorkspaces with data tables contributing to this workspace.",
+        related_name="combined_workspaces",
+        blank=True,
+    )
 
     def clean(self):
         """Custom cleaning methods."""
         # Check that date_qc_completed is after the upload cycle end date.
         if self.date_completed and self.upload_cycle.end_date > self.date_completed:
             raise ValidationError("date_completed must after end_date of associated upload_cycle.")
+
+    def suggest_contributing_upload_workspaces(self):
+        """Return a queryset of suggested contributing UploadWorkspaces for this ReleaseWorkspace."""
+        qs = UploadWorkspace.objects.filter(
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_dcc_processed_data_workspaces(self):
+        """Return a queryset of suggested contributing DCCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        qs = DCCProcessedDataWorkspace.objects.filter(
+            upload_cycle=self.upload_cycle,
+        )
+        return qs
+
+    def suggest_contributing_partner_upload_workspaces(self):
+        """Suggest contributing PartnerUploadWorkspaces for this ReleaseWorkspace."""
+        # For partner workspaces, this is more difficult because we can't do a direct groupby-max.
+        # Instead, get the id of the latest completed workspace for each partner group and consent group.
+        # Then do a query to get those ids.
+        # Start with a slow for loop, and then we can make it better if needed.
+        # For combined workspaces iwth date_completed, select the most recent
+        most_recent_workspaces = []
+        for partner_group in PartnerGroup.objects.all():
+            for consent_group in ConsentGroup.objects.filter(partneruploadworkspace__partner_group=partner_group):
+                # We want to select the highest version of workspaces that were completed before the combined workspace.
+                # If the combined workspace is not completed, only check for non-null contributing date_completed.
+                possible_workspaces = PartnerUploadWorkspace.objects.filter(
+                    partner_group=partner_group,
+                    consent_group=consent_group,
+                    date_completed__isnull=False,
+                )
+                # If the combined workspace is completed, subset by that date as well.
+                if self.date_completed:
+                    possible_workspaces = possible_workspaces.filter(
+                        date_completed__lte=self.date_completed,
+                    )
+                latest_workspace = possible_workspaces.order_by("-version").first()
+                if latest_workspace:
+                    most_recent_workspaces.append(latest_workspace.id)
+        qs = PartnerUploadWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
+
+    def suggest_contributing_rc_processed_data_workspaces(self):
+        """Suggest contributing RCProcessedDataWorkspaces for this ReleaseWorkspace."""
+        # For RCProcessedDataWorkspaces, follow the same procedure as partner workspaces.
+        most_recent_workspaces = []
+        for research_center in ResearchCenter.objects.all():
+            for consent_group in ConsentGroup.objects.filter(rcprocesseddataworkspace__research_center=research_center):
+                # We want to select the highest version of workspaces that were completed before the combined workspace.
+                # If the combined workspace is not completed, only check for non-null contributing date_completed.
+                possible_workspaces = RCProcessedDataWorkspace.objects.filter(
+                    research_center=research_center,
+                    consent_group=consent_group,
+                    date_completed__isnull=False,
+                )
+                # If the combined workspace is completed, subset by that date as well.
+                if self.date_completed:
+                    possible_workspaces = possible_workspaces.filter(
+                        date_completed__lte=self.date_completed,
+                    )
+                latest_workspace = possible_workspaces.order_by("-version").first()
+                if latest_workspace:
+                    most_recent_workspaces.append(latest_workspace.id)
+        qs = RCProcessedDataWorkspace.objects.filter(
+            id__in=most_recent_workspaces,
+        )
+        return qs
 
 
 class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):

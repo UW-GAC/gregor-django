@@ -65,6 +65,28 @@ release_workspace_patterns = (
     "release_workspaces",
 )
 
+combined_consortium_data_workspace_update_patterns = (
+    [
+        path(
+            "contributing_workspaces/",
+            views.CombinedConsortiumDataWorkspaceUpdateContributingWorkspaces.as_view(),
+            name="contributing_workspaces",
+        ),
+    ],
+    "update",
+)
+
+combined_consortium_data_workspace_patterns = (
+    [
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/update/",
+            include(combined_consortium_data_workspace_update_patterns),
+        ),
+    ],
+    "combined_consortium_data_workspaces",
+)
+
+
 upload_workspace_sharing_audit_patterns = (
     [
         path("all/", views.UploadWorkspaceSharingAudit.as_view(), name="all"),
@@ -266,5 +288,6 @@ urlpatterns = [
     path("reports/", include(workspace_report_patterns)),
     path("audit/", include(audit_patterns)),
     path("release_workspaces/", include(release_workspace_patterns)),
+    path("combined_consortium_data_workspaces/", include(combined_consortium_data_workspace_patterns)),
     path("autocomplete/", include(autocomplete_patterns)),
 ]

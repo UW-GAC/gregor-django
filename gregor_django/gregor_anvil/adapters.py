@@ -194,6 +194,40 @@ class CombinedConsortiumDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseW
     workspace_list_template_name = "gregor_anvil/combinedconsortiumdataworkspace_list.html"
     share_permissions = [workspace_admin_sharing_permission]
 
+    def get_extra_detail_context_data(self, workspace, request):
+        """Get extra context data for the release workspace detail view."""
+        context = super().get_extra_detail_context_data(workspace, request)
+        # Add the list of upload workspaces associated with this release workspace.
+        context["contributing_upload_workspace_table"] = tables.UploadWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.combinedconsortiumdataworkspace.contributing_upload_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        context["contributing_dcc_processed_data_workspace_table"] = tables.DCCProcessedDataWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.combinedconsortiumdataworkspace.contributing_dcc_processed_data_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        context["contributing_partner_upload_workspace_table"] = tables.PartnerUploadWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.combinedconsortiumdataworkspace.contributing_partner_upload_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        context["contributing_rc_processed_data_workspace_table"] = tables.RCProcessedDataWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.combinedconsortiumdataworkspace.contributing_rc_processed_data_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        return context
+
 
 class ReleaseWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ReleaseWorkspace."""
@@ -228,6 +262,13 @@ class ReleaseWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter
         context["contributing_partner_upload_workspace_table"] = tables.PartnerUploadWorkspaceTable(
             Workspace.objects.filter(
                 pk__in=workspace.releaseworkspace.contributing_partner_upload_workspaces.values_list(
+                    "workspace__pk", flat=True
+                )
+            ),
+        )
+        context["contributing_rc_processed_data_workspace_table"] = tables.RCProcessedDataWorkspaceTable(
+            Workspace.objects.filter(
+                pk__in=workspace.releaseworkspace.contributing_rc_processed_data_workspaces.values_list(
                     "workspace__pk", flat=True
                 )
             ),
