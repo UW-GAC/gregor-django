@@ -20,7 +20,7 @@ django>=5.2.15,<6.0  # https://www.djangoproject.com/
 django-environ<0.15.0  # https://github.com/joke2k/django-environ
 # Turn on and off maintenance mode
 # 0.21.1 fixes a bug with permissions of the maintenance mode file.
-django-maintenance-mode>=0.21.1 # https://github.com/fabiocaccamo/django-maintenance-mode
+django-maintenance-mode>=0.23.0 # https://github.com/fabiocaccamo/django-maintenance-mode
 # Model utilities
 django-model-utils  # https://github.com/jazzband/django-model-utils
 # login/auth via Drupal or other Social Application
