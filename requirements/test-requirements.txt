@@ -27,7 +27,7 @@ django==5.2.16
     #   django-coverage-plugin
 django-coverage-plugin==3.2.2
     # via -r requirements/test-requirements.in
-django-test-migrations==1.5.0
+django-test-migrations==1.6.0
     # via -r requirements/test-requirements.in
 execnet==2.1.1
     # via pytest-xdist
@@ -99,7 +99,7 @@ termcolor==2.4.0
     # via pytest-sugar
 types-requests==2.33.0.20260712
     # via -r requirements/test-requirements.in
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via django-test-migrations
 urllib3==2.7.0
     # via
