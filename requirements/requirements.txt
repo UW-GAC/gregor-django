@@ -32,9 +32,9 @@ crispy-bootstrap5==2026.3
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==48.0.1
+cryptography==50.0.0
     # via -r requirements/requirements.in
-django==5.2.14
+django==5.2.16
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -46,11 +46,12 @@ django==5.2.14
     #   django-extensions
     #   django-filter
     #   django-htmx
+    #   django-maintenance-mode
     #   django-model-utils
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.18.0
+django-allauth==65.19.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.36.0
     # via -r requirements/requirements.in
@@ -58,14 +59,14 @@ django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-constance==4.3.5
     # via -r requirements/requirements.in
-django-crispy-forms==2.6
+django-crispy-forms==2.7
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
 django-dbbackup==5.3.0
     # via -r requirements/requirements.in
-django-environ==0.13.0
+django-environ==0.14.0
     # via -r requirements/requirements.in
 django-extensions==4.1
     # via
@@ -73,17 +74,17 @@ django-extensions==4.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.27.0
+django-htmx==1.29.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
-django-maintenance-mode==0.22.0
+django-maintenance-mode==0.23.0
     # via -r requirements/requirements.in
 django-model-utils==5.0.0
     # via -r requirements/requirements.in
 django-picklefield==3.4.0
     # via -r requirements/requirements.in
-django-simple-history==3.11.0
+django-simple-history==3.13.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
@@ -93,7 +94,7 @@ fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
 google-auth==2.11.0
     # via django-anvil-consortium-manager
-idna==3.7
+idna==3.15
     # via requests
 jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
@@ -112,11 +113,11 @@ packaging==26.0
     #   build
     #   plotly
     #   wheel
-pip-tools==7.5.3
+pip-tools==7.6.0
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pyasn1==0.6.3
+pyasn1==0.6.4
     # via
     #   pyasn1-modules
     #   rsa
@@ -130,7 +131,7 @@ pyproject-hooks==1.0.0
     # via
     #   build
     #   pip-tools
-python-fsutil==0.13.1
+python-fsutil==0.17.0
     # via django-maintenance-mode
 pytz==2023.4
     # via django-anvil-consortium-manager
@@ -148,7 +149,7 @@ six==1.16.0
     # via google-auth
 sqlparse==0.5.4
     # via django
-tablib==3.9.0
+tablib==3.10.0
     # via -r requirements/requirements.in
 tenacity==8.2.3
     # via
