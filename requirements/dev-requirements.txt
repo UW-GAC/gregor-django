@@ -133,7 +133,7 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   -c requirements/test-requirements.txt
     #   ipython
