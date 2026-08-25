@@ -58,9 +58,9 @@ django==5.2.16
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==7.0.0
+django-debug-toolbar==7.1.1
     # via -r requirements/dev-requirements.in
-django-stubs==6.0.9
+django-stubs==6.1.0
     # via -r requirements/dev-requirements.in
 django-stubs-ext==6.0.2
     # via django-stubs
@@ -102,7 +102,7 @@ matplotlib-inline==0.1.6
     # via ipython
 mccabe==0.7.0
     # via pylint
-mypy==2.3.0
+mypy==2.3.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -125,7 +125,7 @@ platformdirs==4.2.0
     # via
     #   pylint
     #   virtualenv
-pre-commit==4.6.1
+pre-commit==4.6.2
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -133,7 +133,7 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   -c requirements/test-requirements.txt
     #   ipython
@@ -157,7 +157,7 @@ requests==2.33.0
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.16.2
+ruff==0.16.3
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
