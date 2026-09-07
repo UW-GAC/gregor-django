@@ -190,7 +190,7 @@ class UploadCycle(TimeStampedModel, models.Model):
         ]
 
     def __str__(self):
-        return "U{cycle:02d}".format(cycle=self.cycle)
+        return f"U{self.cycle:02d}"
 
     def get_absolute_url(self):
         """Return the absolute url for this object."""
@@ -491,7 +491,7 @@ class ReleaseWorkspace(TimeStampedModel, BaseWorkspaceData):
         verbose_name = "release prep workspace"
 
     def get_dbgap_accession(self):
-        return "phs{phs:06d}.v{v}.p{p}".format(phs=self.phs, v=self.dbgap_version, p=self.dbgap_participant_set)
+        return f"phs{self.phs:06d}.v{self.dbgap_version}.p{self.dbgap_participant_set}"
 
     def suggest_contributing_upload_workspaces(self):
         """Return a queryset of suggested contributing UploadWorkspaces for this ReleaseWorkspace."""

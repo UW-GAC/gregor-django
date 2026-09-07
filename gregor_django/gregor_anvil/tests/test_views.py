@@ -3876,7 +3876,7 @@ class WorkspaceReportTest(TestCase):
             self.get_view()(request)
 
     def test_workspace_count_table_no_workspaces(self):
-        """Workspace table has no rows when there are no workspaces."""  # noqa: E501
+        """Workspace table has no rows when there are no workspaces."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         # workspace table
@@ -3898,7 +3898,7 @@ class WorkspaceReportTest(TestCase):
         self.assertIn({"workspace_type": "upload", "n_total": 1, "n_shared": 0}, table.data)
 
     def test_workspace_count_table_one_workspace_type_some_shared(self):
-        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
+        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         # Workspaces that won't be shared.
         factories.UploadWorkspaceFactory.create_batch(2)
@@ -3913,7 +3913,7 @@ class WorkspaceReportTest(TestCase):
         self.assertIn({"workspace_type": "upload", "n_total": 3, "n_shared": 1}, table.data)
 
     def test_workspace_count_table_two_workspace_types_some_shared(self):
-        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""  # noqa: E501
+        """Workspace table includes correct values for one workspace type where only some workspaces are shared."""
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         factories.UploadWorkspaceFactory.create_batch(2)
         example_workspace_1 = factories.ResourceWorkspaceFactory.create()
@@ -3933,7 +3933,7 @@ class WorkspaceReportTest(TestCase):
         self.assertIn({"workspace_type": "resource", "n_total": 5, "n_shared": 2}, table.data)
 
     def test_workspace_count_table_one_workspace_shared_twice(self):
-        """Workspace table includes correct values for one workspace  that has been shared twice."""  # noqa: E501
+        """Workspace table includes correct values for one workspace  that has been shared twice."""
         upload_workspace_1 = factories.UploadWorkspaceFactory.create()
         # Create the sharing record with GREGOR_ALL.
         acm_factories.WorkspaceGroupSharingFactory.create(
@@ -13360,7 +13360,7 @@ class DCCProcessedDataWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase)
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -13430,7 +13430,7 @@ class DCCProcessedDataWorkspaceSharingAuditTest(AnVILAPIMockTestMixin, TestCase)
         self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -13713,7 +13713,7 @@ class DCCProcessedDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -13791,7 +13791,7 @@ class DCCProcessedDataWorkspaceSharingAuditByWorkspaceTest(AnVILAPIMockTestMixin
         self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -14072,7 +14072,7 @@ class DCCProcessedDataWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMix
         self.assertIsNone(table.rows[0].get_cell_value("access"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -14144,7 +14144,7 @@ class DCCProcessedDataWorkspaceSharingAuditByUploadCycleTest(AnVILAPIMockTestMix
         self.assertEqual(table.rows[0].get_cell_value("access"), "WRITER")
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
         self.assertNotEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -14413,7 +14413,7 @@ class DCCProcessedDataWorkspaceSharingAuditResolveTest(AnVILAPIMockTestMixin, Te
         self.assertEqual(audit_result.managed_group, group)
         self.assertEqual(
             audit_result.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_get_share_as_owner(self):

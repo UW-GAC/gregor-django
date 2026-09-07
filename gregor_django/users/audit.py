@@ -23,7 +23,7 @@ from gregor_django.gregor_anvil.models import PartnerGroup, ResearchCenter
 logger = logging.getLogger(__name__)
 
 
-class TextTable(object):
+class TextTable:
     def render_to_text(self):
         self.gregor_is_export = True
         return TableExport(export_format=TableExport.CSV, table=self).export()

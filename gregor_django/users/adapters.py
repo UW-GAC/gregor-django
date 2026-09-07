@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
@@ -23,7 +23,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest, sociallogin: Any):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
-    def update_user_info(self, user, extra_data: Dict):
+    def update_user_info(self, user, extra_data: dict):
         drupal_username = extra_data.get("preferred_username")
         drupal_email = extra_data.get("email")
         first_name = extra_data.get("first_name")
@@ -54,7 +54,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         if user_changed is True:
             user.save()
 
-    def update_user_partner_groups(self, user, extra_data: Dict):
+    def update_user_partner_groups(self, user, extra_data: dict):
         partner_groups = extra_data.get("partner_group", [])
         logger.debug(f"partner groups: {partner_groups} for user {user}")
         partner_group_object_list = []
@@ -97,7 +97,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     f"[SocialAccountAdapter:update_user_partner_groups] removing pg {existing_pg} for user {user}"
                 )
 
-    def update_user_research_centers(self, user, extra_data: Dict):
+    def update_user_research_centers(self, user, extra_data: dict):
         # Get list of research centers in domain table
 
         research_center_or_site = extra_data.get("research_center_or_site", [])
@@ -142,7 +142,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     f"[SocialAccountAdatpter:update_user_research_centers] removing rc {existing_rc} for user {user}"
                 )
 
-    def update_user_groups(self, user, extra_data: Dict):
+    def update_user_groups(self, user, extra_data: dict):
         managed_scope_status = extra_data.get("managed_scope_status")
         if managed_scope_status:
             added_groups = []
