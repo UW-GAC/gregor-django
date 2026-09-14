@@ -184,4 +184,3 @@ class StopSharing(WorkspaceSharingAuditResult):
 class Error(WorkspaceSharingAuditResult):
     """Audit results class for when an error has been detected (e.g., shared and never should have been)."""
 
-    pass
