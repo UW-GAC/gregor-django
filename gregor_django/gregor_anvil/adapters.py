@@ -51,7 +51,7 @@ class AccountAdapter(BaseAccountAdapter):
             name = account.user.name
         else:
             name = "---"
-        return "{} ({})".format(name, account.email)
+        return f"{name} ({account.email})"
 
     def after_account_verification(self, account):
         """Add the user to appropriate MEMBERS groups."""
@@ -153,7 +153,7 @@ class ResourceWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapte
     type = "resource"
     name = "Resource workspace"
     description = (
-        "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
+        "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"
     )
     list_table_class_view = tables.DefaultWorkspaceTable
     list_table_class_staff_view = tables.DefaultWorkspaceStaffTable
