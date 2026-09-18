@@ -12,8 +12,8 @@ anyio==4.14.2
     #   watchfiles
 asgiref==3.10.0
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
 ast-serialize==0.6.0
     # via mypy
@@ -27,19 +27,19 @@ backcall==0.2.0
     # via ipython
 certifi==2024.7.4
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.3.2
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 click==8.1.7
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   uvicorn
 colorama==0.4.6
     # via sphinx-autobuild
@@ -53,15 +53,15 @@ distlib==0.3.8
     # via virtualenv
 django==5.2.16
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
 django-debug-toolbar==8.0.0
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 django-stubs==6.1.1
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 django-stubs-ext==6.0.2
     # via django-stubs
 docutils==0.22.4
@@ -76,14 +76,14 @@ identify==2.5.35
     # via pre-commit
 idna==3.15
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   anyio
     #   requests
 imagesize==1.4.1
     # via sphinx
 ipdb==0.13.13
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 ipython==8.12.3
     # via ipdb
 isort==5.13.2
@@ -103,15 +103,15 @@ matplotlib-inline==0.1.6
 mccabe==0.7.0
     # via pylint
 mypy==2.3.1
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
     # via pre-commit
 packaging==26.0
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   sphinx
 parso==0.8.3
     # via jedi
@@ -126,7 +126,7 @@ platformdirs==4.2.0
     #   pylint
     #   virtualenv
 pre-commit==4.6.2
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
 ptyprocess==0.7.0
@@ -135,7 +135,7 @@ pure-eval==0.2.2
     # via stack-data
 pygments==2.21.0
     # via
-    #   -c test-requirements.txt
+    #   -c requirements/test-requirements.txt
     #   ipython
     #   sphinx
 pylint==3.1.0
@@ -143,35 +143,35 @@ pylint==3.1.0
     #   pylint-django
     #   pylint-plugin-utils
 pylint-django==2.8.0
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
 pyyaml==6.0.1
     # via
-    #   -c test-requirements.txt
+    #   -c requirements/test-requirements.txt
     #   pre-commit
 requests==2.33.0
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
 ruff==0.16.7
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   asttokens
 snowballstemmer==2.2.0
     # via sphinx
 sphinx==9.1.0
     # via
-    #   -r dev-requirements.in
+    #   -r requirements/dev-requirements.in
     #   sphinx-autobuild
 sphinx-autobuild==2025.8.25
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -186,8 +186,8 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sqlparse==0.5.4
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
     #   django-debug-toolbar
 stack-data==0.6.3
@@ -204,7 +204,7 @@ types-pyyaml==6.0.12.12
     # via django-stubs
 typing-extensions==4.16.0
     # via
-    #   -c test-requirements.txt
+    #   -c requirements/test-requirements.txt
     #   anyio
     #   django-stubs
     #   django-stubs-ext
@@ -212,8 +212,8 @@ typing-extensions==4.16.0
     #   starlette
 urllib3==2.7.0
     # via
-    #   -c requirements.txt
-    #   -c test-requirements.txt
+    #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   requests
 uvicorn==0.30.5
     # via sphinx-autobuild
@@ -226,7 +226,7 @@ wcwidth==0.2.13
 websockets==12.0
     # via sphinx-autobuild
 werkzeug==3.1.8
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
