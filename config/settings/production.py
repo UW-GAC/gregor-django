@@ -3,7 +3,7 @@ import os
 # default to using dotenv files for all production environements
 os.environ["DJANGO_READ_DOT_ENV_FILE"] = "True"
 from .base import *  # noqa
-from .base import CACHES, SILENCED_SYSTEM_CHECKS, env  # noqa
+from .base import CACHES, SILENCED_SYSTEM_CHECKS, env
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # Anymail
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-# INSTALLED_APPS += ["anymail"]  # noqa F405
+# INSTALLED_APPS += ["anymail"]
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps
