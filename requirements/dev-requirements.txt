@@ -204,7 +204,6 @@ types-pyyaml==6.0.12.12
     # via django-stubs
 typing-extensions==4.16.0
     # via
-    #   -c requirements/test-requirements.txt
     #   anyio
     #   django-stubs
     #   django-stubs-ext
