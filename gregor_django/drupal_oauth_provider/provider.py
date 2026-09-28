@@ -42,7 +42,7 @@ class CustomProvider(OAuth2Provider):
         return str(data["sub"])
 
     def extract_common_fields(self, data):
-        extra_common = super(CustomProvider, self).extract_common_fields(data)
+        extra_common = super().extract_common_fields(data)
 
         first_name = data.get("first_name")
         last_name = data.get("last_name")
