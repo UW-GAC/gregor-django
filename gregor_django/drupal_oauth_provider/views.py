@@ -23,17 +23,17 @@ class CustomAdapter(OAuth2Adapter):
     api_url = provider_settings.get("API_URL")
 
     # Fetched programmatically, must be reachable from container
-    access_token_url = "{}/oauth/token".format(api_url)
-    profile_url = "{}/oauth/userinfo".format(api_url)
-    public_key_url = "{}/oauth/jwks".format(api_url)
+    access_token_url = f"{api_url}/oauth/token"
+    profile_url = f"{api_url}/oauth/userinfo"
+    public_key_url = f"{api_url}/oauth/jwks"
 
     # Accessed by the user browser, must be reachable by the host
-    authorize_url = "{}/oauth/authorize".format(api_url)
+    authorize_url = f"{api_url}/oauth/authorize"
 
     # debug_url is not currently in use. Left here as documenation of available
     # endpoint sometimes used with drupal oauth.
     # requires additional debug permissions for users
-    debug_url = "{}/oauth/debug?_format=json".format(api_url)
+    debug_url = f"{api_url}/oauth/debug?_format=json"
 
     def _get_public_key_jwk(self, headers):
         response = requests.get(self.public_key_url, headers=headers)
@@ -86,7 +86,7 @@ class CustomAdapter(OAuth2Adapter):
         return scopes
 
     def complete_login(self, request, app, token, **kwargs):
-        headers = {"Authorization": "Bearer {0}".format(token.token)}
+        headers = {"Authorization": f"Bearer {token.token}"}
 
         scopes_granted = self.get_scopes_from_token(token, headers)
         managed_scope_status = self.get_provider().get_provider_managed_scope_status(scopes_granted)
