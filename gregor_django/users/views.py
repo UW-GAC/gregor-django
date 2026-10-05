@@ -57,7 +57,7 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
     """View to provide autocompletion for User."""
 
     def get_result_label(self, item):
-        return "{} ({})".format(item.name, item.username)
+        return f"{item.name} ({item.username})"
 
     def get_queryset(self):
         qs = User.objects.all().order_by("username")
