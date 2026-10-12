@@ -99,7 +99,7 @@ class SocialAccountAdapterTest(TestCase):
         new_email = "newemail@example.com"
         new_username = "newusername"
         setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
-        setattr(user, "name", "Old Name")
+        user.name = "Old Name"
         setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
 
         user.save()
