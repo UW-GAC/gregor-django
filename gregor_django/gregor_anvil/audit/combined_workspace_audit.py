@@ -126,7 +126,6 @@ class CombinedConsortiumDataWorkspaceAuthDomainAudit(GREGoRAudit):
         """Audit the auth domain membership for a specific workspace and the AnVIL admins/devs groups.
 
         We do not want to make any assumptions about the access of these groups."""
-        pass
 
     def _audit_workspace_and_other_group(self, combined_workspace, managed_group):
         """Audit the auth domain membership for a specific workspace and any other group.

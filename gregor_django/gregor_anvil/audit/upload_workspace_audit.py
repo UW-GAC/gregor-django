@@ -131,15 +131,11 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
             self._audit_workspace_and_group_for_rc_non_members(upload_workspace, managed_group)
         elif managed_group.name == settings.ANVIL_DCC_ADMINS_GROUP_NAME:
             self._audit_workspace_and_group_for_dcc_admin(upload_workspace, managed_group)
-        elif managed_group.name == "GREGOR_DCC_WRITERS":
-            self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
-        elif managed_group.name == "GREGOR_DCC_MEMBERS":
+        elif managed_group.name == "GREGOR_DCC_WRITERS" or managed_group.name == "GREGOR_DCC_MEMBERS":
             self._audit_workspace_and_group_for_dcc(upload_workspace, managed_group)
         elif managed_group.name == "GREGOR_ALL":
             self._audit_workspace_and_group_for_gregor_all(upload_workspace, managed_group)
-        elif managed_group.name == "anvil-admins":
-            self._audit_workspace_and_anvil_group(upload_workspace, managed_group)
-        elif managed_group.name == "anvil_devs":
+        elif managed_group.name == "anvil-admins" or managed_group.name == "anvil_devs":
             self._audit_workspace_and_anvil_group(upload_workspace, managed_group)
         else:
             self._audit_workspace_and_other_group(upload_workspace, managed_group)
@@ -161,15 +157,7 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             else:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **result_kwargs))
-        elif upload_workspace.upload_cycle.is_current:
-            note = self.RC_UPLOADERS_BEFORE_QC
-            if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
-                self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
-            elif membership:
-                self.verified.append(workspace_auth_domain_audit_results.VerifiedMember(note=note, **result_kwargs))
-            else:
-                self.needs_action.append(workspace_auth_domain_audit_results.AddMember(note=note, **result_kwargs))
-        elif upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
+        elif upload_workspace.upload_cycle.is_current or upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
             note = self.RC_UPLOADERS_BEFORE_QC
             if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))
@@ -334,7 +322,6 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
         """Ignore the AnVIL groups in this audit.
 
         We don't want to make assumptions about what access level AnVIL has."""
-        pass
 
     def _audit_workspace_and_other_group(self, upload_workspace, managed_group):
         membership = self._get_current_membership(upload_workspace, managed_group)
@@ -483,7 +470,6 @@ class UploadWorkspaceSharingAudit(GREGoRAudit):
         """Ignore the AnVIL groups in this audit.
 
         We don't want to make assumptions about what access level AnVIL has."""
-        pass
 
     def _audit_workspace_and_rc_uploader_group(self, upload_workspace, managed_group):
         """Audit access for a specific UploadWorkspace and RC uploader group.

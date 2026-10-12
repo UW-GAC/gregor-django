@@ -107,7 +107,7 @@ class CustomProviderLoginTest(TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.client = Client()
-        self.setup_time = datetime.datetime.now(datetime.timezone.utc)
+        self.setup_time = datetime.datetime.now(datetime.UTC)
         # Create a SocialApp for your custom provider
         self.social_app = SocialApp.objects.create(
             provider=CustomProvider.id,  # Replace with your provider ID
