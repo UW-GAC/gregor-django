@@ -115,8 +115,10 @@ class UploadWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter)
     workspace_list_template_name = "gregor_anvil/uploadworkspace_list.html"
     share_permissions = [workspace_admin_sharing_permission]
 
-    def get_autocomplete_queryset(self, queryset, q, forwarded={}):
+    def get_autocomplete_queryset(self, queryset, q, forwarded=None):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
+        if forwarded is None:
+            forwarded = {}
         consent_group = forwarded.get("consent_group", None)
         if consent_group:
             queryset = queryset.filter(consent_group=consent_group)

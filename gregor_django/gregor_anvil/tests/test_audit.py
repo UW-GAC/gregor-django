@@ -10268,12 +10268,12 @@ class DCCProcessedDataWorkspaceSharingAuditTest(TestCase):
         audit.run_audit()
         results = audit.get_all_results()
         self.assertEqual(len(results), 2)
-        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_1.workspace)
         self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
         self.assertEqual(record.workspace, workspace_data_1.workspace)
         self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
         self.assertNotEqual(record.note, audit.OTHER_GROUP)
-        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_2.workspace)
         self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
         self.assertEqual(record.workspace, workspace_data_2.workspace)
         self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
@@ -11997,11 +11997,12 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
         audit.run_audit()
         results = audit.get_all_results()
         self.assertEqual(len(results), 2)
-        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_1.workspace)
         self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
         self.assertEqual(record.workspace, workspace_data_1.workspace)
         self.assertEqual(record.managed_group, group)
-        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+
+        record = next(x for x in results if x.workspace == workspace_data_2.workspace)
         self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
         self.assertEqual(record.workspace, workspace_data_2.workspace)
         self.assertEqual(record.managed_group, group)

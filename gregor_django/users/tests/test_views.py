@@ -101,7 +101,7 @@ class TestUserRedirectView:
 class TestUserDetailView:
     def test_authenticated(self, client, user: User):
         client.force_login(user)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -116,7 +116,7 @@ class TestUserDetailView:
         account.save()
         account_user.partner_groups.add(pg1)
         account_user.research_centers.add(rc1)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=account_user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": account_user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -129,7 +129,7 @@ class TestUserDetailView:
 
         user.partner_groups.add(pg1)
         user.research_centers.add(rc1)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
 
         response = client.get(user_detail_url)
 

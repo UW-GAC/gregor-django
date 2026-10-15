@@ -7,6 +7,7 @@ exclude = [
 ]
 
 [lint]
+ignore = ["RUF012", "FLY002"]
 extend-select = [
     "E",
     "F",
@@ -15,6 +16,10 @@ extend-select = [
     "DJ", # flake8-django
     "E501", # line-too-long
 ]
+extend-safe-fixes = ["C408"]
 
 [lint.isort]
 known-first-party = ["gregor_django", "config", ]
+
+[lint.per-file-ignores]
+"*/management/commands/sync-drupal-data.py" = ["N999"]

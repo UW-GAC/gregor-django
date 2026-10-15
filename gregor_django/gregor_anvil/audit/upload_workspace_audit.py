@@ -157,7 +157,11 @@ class UploadWorkspaceAuthDomainAudit(GREGoRAudit):
                 self.needs_action.append(workspace_auth_domain_audit_results.Remove(note=note, **result_kwargs))
             else:
                 self.verified.append(workspace_auth_domain_audit_results.VerifiedNotMember(note=note, **result_kwargs))
-        elif upload_workspace.upload_cycle.is_current or upload_workspace.upload_cycle.is_past and not upload_workspace.date_qc_completed:
+        elif (
+            upload_workspace.upload_cycle.is_current
+            or upload_workspace.upload_cycle.is_past
+            and not upload_workspace.date_qc_completed
+        ):
             note = self.RC_UPLOADERS_BEFORE_QC
             if membership and membership.role == GroupGroupMembership.RoleChoices.ADMIN:
                 self.errors.append(workspace_auth_domain_audit_results.ChangeToMember(note=note, **result_kwargs))

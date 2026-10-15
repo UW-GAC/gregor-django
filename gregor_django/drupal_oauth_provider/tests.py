@@ -174,13 +174,12 @@ class CustomProviderLoginTest(TestCase):
         pub_key = adapter.get_public_key(headers={"HTTP_HOST": "foo"})
         self.assertEqual(pub_key, None)
 
-    @responses.activate
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_complete_oauth_login_flow(self):
         """Test the complete OAuth login flow with mocked responses"""
 
         # Start the OAuth flow by visiting the login URL
         login_url = reverse(f"{CustomProvider.id}_login")
-        responses.add(responses.POST, login_url, json=self.mock_token_data, status=200)
 
         # This should redirect to the provider's authorization URL
         response = self.client.post(login_url)
@@ -193,7 +192,6 @@ class CustomProviderLoginTest(TestCase):
 
         # Simulate the callback from the provider with an authorization code
         callback_url = reverse(f"{CustomProvider.id}_callback")
-        responses.add(responses.GET, callback_url, json=self.mock_user_data, status=200)
 
         responses.add(responses.POST, CustomAdapter.access_token_url, json=self.get_login_response_json(), status=200)
         responses.add(responses.GET, CustomAdapter.public_key_url, json=KEY_SERVER_RESP_JSON, status=200)
@@ -218,9 +216,8 @@ class CustomProviderLoginTest(TestCase):
         # Verify user is logged in
         self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session}")
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.id)
-        responses.mock.assert_all_requests_are_fired
 
-    @responses.activate
+    @responses.activate(assert_all_requests_are_fired=True)
     def test_login_existing_user(self):
         """Test login flow for existing user"""
         uid = "99999"
@@ -231,7 +228,6 @@ class CustomProviderLoginTest(TestCase):
         )
         # Start the OAuth flow by visiting the login URL
         login_url = reverse(f"{CustomProvider.id}_login")
-        responses.add(responses.POST, login_url, json=self.mock_token_data, status=200)
 
         response = self.client.post(login_url)
         self.assertEqual(response.status_code, 302)
@@ -243,12 +239,7 @@ class CustomProviderLoginTest(TestCase):
 
         # Simulate the callback from the provider with an authorization code
         callback_url = reverse(f"{CustomProvider.id}_callback")
-        responses.add(
-            responses.GET,
-            callback_url,
-            json={"id": uid, "email": "testuser@example.com", "name": "Existing User", "username": "existinguser"},
-            status=200,
-        )
+
         responses.add(responses.POST, CustomAdapter.access_token_url, json=self.get_login_response_json(), status=200)
         responses.add(responses.GET, CustomAdapter.public_key_url, json=KEY_SERVER_RESP_JSON, status=200)
         responses.add(responses.GET, CustomAdapter.profile_url, json=EXISTING_USER_RESP_JSON, status=200)
@@ -263,7 +254,6 @@ class CustomProviderLoginTest(TestCase):
         # Verify user is logged in
         self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session.__dict__}")
         self.assertEqual(int(self.client.session["_auth_user_id"]), existing_user.id)
-        responses.mock.assert_all_requests_are_fired
 
     @patch("requests.post")
     def test_token_exchange_failure(self, mock_post):
@@ -358,9 +348,10 @@ class TestProviderConfig(TestCase):
         rf = RequestFactory()
         request = rf.get("/fake-url/")
         custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = None
-        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request, app=self.app).get_provider_scope_config()
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+            ImproperlyConfigured
+        ):
+            CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_detail_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
@@ -373,9 +364,10 @@ class TestProviderConfig(TestCase):
                 "django_group_name": "Z",
             }
         ]
-        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request, app=self.app).get_provider_managed_scope_status()
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+            ImproperlyConfigured
+        ):
+            CustomProvider(request, app=self.app).get_provider_managed_scope_status()
 
     def test_custom_provider_has_scope(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS

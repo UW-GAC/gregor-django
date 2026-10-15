@@ -263,9 +263,8 @@ class UserAudit(GREGoRAudit):
                                 )
                             if new_sites:
                                 for new_site in new_user_sites:
-                                    if new_site.short_name in new_user_site_names:
-                                        if self.apply_changes is True:
-                                            sa.user.research_centers.add(new_site)
+                                    if new_site.short_name in new_user_site_names and self.apply_changes is True:
+                                        sa.user.research_centers.add(new_site)
 
                     if user_updates:
                         if self.apply_changes is True:
@@ -294,9 +293,8 @@ class UserAudit(GREGoRAudit):
         user_ids_to_check = []
         count_inactive = unaudited_drupal_accounts.count()
         over_threshold = False
-        if self.ignore_deactivate_threshold is False:
-            if count_inactive > self.USER_DEACTIVATE_THRESHOLD:
-                over_threshold = True
+        if self.ignore_deactivate_threshold is False and count_inactive > self.USER_DEACTIVATE_THRESHOLD:
+            over_threshold = True
 
         for uda in unaudited_drupal_accounts:
             user_ids_to_check.append(uda.user.id)
@@ -637,9 +635,11 @@ class PartnerGroupAudit(GREGoRAudit):
             Q(status=PartnerGroup.StatusTypes.INACTIVE) | Q(id__in=newly_inactive_partner_groups)
         )
         for inactive_partner_group in inactive_partner_groups:
-            if inactive_partner_group.member_group is not None:
-                if inactive_partner_group.member_group.parent_memberships.filter(parent_group__name="GREGOR_ALL"):
-                    self.errors.append(MembershipIssuePartnerGroup(local_partner_group=inactive_partner_group))
+            if (
+                inactive_partner_group.member_group is not None
+                and inactive_partner_group.member_group.parent_memberships.filter(parent_group__name="GREGOR_ALL")
+            ):
+                self.errors.append(MembershipIssuePartnerGroup(local_partner_group=inactive_partner_group))
 
 
 def get_drupal_json_api():
@@ -672,7 +672,7 @@ def get_drupal_json_api():
 def get_study_sites(json_api):
     study_sites_endpoint = json_api.endpoint("node/research_center")
     study_sites_response = study_sites_endpoint.get()
-    study_sites_info = dict()
+    study_sites_info = {}
 
     for ss in study_sites_response.data:
         short_name = ss.attributes["field_short_name"]
@@ -701,7 +701,7 @@ def partner_group_short_name_from_full_name(full_name):
 def get_partner_groups(json_api):
     partner_groups_endpoint = json_api.endpoint("node/partner_group")
     partner_groups_response = partner_groups_endpoint.get()
-    partner_groups_info = dict()
+    partner_groups_info = {}
 
     for ss in partner_groups_response.data:
         full_name = ss.attributes["title"]
