@@ -14,6 +14,7 @@ from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.core import mail
 from django.test import TestCase
 
+from gregor_django.gregor_anvil.models import UploadWorkspace
 from gregor_django.gregor_anvil.tests.factories import (
     PartnerGroupFactory,
     ResearchCenterFactory,
@@ -21,6 +22,13 @@ from gregor_django.gregor_anvil.tests.factories import (
 from gregor_django.users.tests.factories import UserFactory
 
 from .. import adapters
+
+
+class UploadWorkspaceAdapterTest(TestCase):
+    def test_autocomplete_queryset_non_forwarded(self):
+        """get_autocomplete_queryset works when forwarded not passed"""
+        queryset = adapters.UploadWorkspaceAdapter().get_autocomplete_queryset(UploadWorkspace.objects.all(), "")
+        self.assertEqual(len(queryset), 0)
 
 
 class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):

@@ -148,9 +148,6 @@ class CustomProviderLoginTest(TestCase):
             }
         )
 
-    def get_access_token(self) -> str:
-        return self.get_id_token()
-
     def get_login_response_json(self, with_refresh_token=True):
         id_token = self.get_id_token()
         response_data = {
