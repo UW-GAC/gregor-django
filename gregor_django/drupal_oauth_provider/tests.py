@@ -7,6 +7,7 @@ import jwt
 import responses
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.models import SocialAccount, SocialApp
+from allauth.socialaccount.providers.oauth2.client import OAuth2Error
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
@@ -316,6 +317,29 @@ class CustomProviderLoginTest(TestCase):
         provider_classes = providers.registry.get_class_list()
         provider_ids = [p.id for p in provider_classes]
         self.assertIn(CustomProvider.id, provider_ids)
+
+    def test_invalid_id_token_raises_oauth2_error(self):
+        """Test that a PyJWTError is converted to OAuth2Error."""
+        request = RequestFactory().get("/fake-url/", HTTP_HOST="testserver")
+        adapter = CustomAdapter(request)
+
+        id_token = Mock(token=self.get_id_token())
+
+        with (
+            patch.object(adapter, "get_public_key", return_value="mock-public-key"),
+            patch.object(
+                jwt,
+                "decode",
+                side_effect=jwt.InvalidTokenError("invalid token"),
+            ),
+            self.assertRaisesRegex(OAuth2Error, "Invalid id_token") as context,
+        ):
+            adapter.get_scopes_from_token(
+                id_token=id_token,
+                headers={"HTTP_HOST": "testserver"},
+            )
+
+        self.assertIsInstance(context.exception.__cause__, jwt.PyJWTError)
 
 
 class TestProviderConfig(TestCase):

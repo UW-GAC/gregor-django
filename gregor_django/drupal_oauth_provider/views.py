@@ -66,7 +66,6 @@ class CustomAdapter(OAuth2Adapter):
         scopes = None
 
         try:
-            unverified_header = jwt.get_unverified_header(id_token.token)
             token_payload = jwt.decode(
                 id_token.token,
                 public_key,
@@ -77,9 +76,6 @@ class CustomAdapter(OAuth2Adapter):
         except jwt.PyJWTError as e:
             logger.error(f"Invalid id_token {e} {id_token.token}")
             raise OAuth2Error("Invalid id_token") from e
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"Other exception parsing token {e} header {unverified_header} token {id_token}")
-            raise OAuth2Error("Error when decoding token {e}")
         else:
             scopes = token_payload.get("scope")
 
