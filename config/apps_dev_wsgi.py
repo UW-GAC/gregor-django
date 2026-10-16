@@ -20,7 +20,7 @@ This code assumes it is in a relative directory to the wsgi script.
 """
 
 activate_file = "/var/www/django/apps_dev/venv/bin/activate_this.py"
-exec(open(activate_file).read(), {"__file__": activate_file})
+exec(open(activate_file).read(), {"__file__": activate_file})  # noqa: S102, SIM115
 
 import os  # noqa: E402
 import sys  # noqa: E402

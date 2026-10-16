@@ -44,16 +44,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("problems found."))
 
         # Print results
-        self.stdout.write("* Verified: {}".format(len(audit.verified)))
-        self.stdout.write("* Needs action: {}".format(len(audit.needs_action)))
-        self.stdout.write("* Errors: {}".format(len(audit.errors)))
+        self.stdout.write(f"* Verified: {len(audit.verified)}")
+        self.stdout.write(f"* Needs action: {len(audit.needs_action)}")
+        self.stdout.write(f"* Errors: {len(audit.errors)}")
 
         if not audit_ok:
             self.stdout.write(self.style.ERROR(f"Please visit {url} to resolve these issues."))
 
             # Send email if requested and there are problems.
             email = options["email"]
-            subject = "{} - problems found".format(audit.__class__.__name__)
+            subject = f"{audit.__class__.__name__} - problems found"
             html_body = render_to_string(
                 "gregor_anvil/email_audit_report.html",
                 context={

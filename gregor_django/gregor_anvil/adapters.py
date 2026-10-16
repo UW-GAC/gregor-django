@@ -51,7 +51,7 @@ class AccountAdapter(BaseAccountAdapter):
             name = account.user.name
         else:
             name = "---"
-        return "{} ({})".format(name, account.email)
+        return f"{name} ({account.email})"
 
     def after_account_verification(self, account):
         """Add the user to appropriate MEMBERS groups."""
@@ -115,8 +115,10 @@ class UploadWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter)
     workspace_list_template_name = "gregor_anvil/uploadworkspace_list.html"
     share_permissions = [workspace_admin_sharing_permission]
 
-    def get_autocomplete_queryset(self, queryset, q, forwarded={}):
+    def get_autocomplete_queryset(self, queryset, q, forwarded=None):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
+        if forwarded is None:
+            forwarded = {}
         consent_group = forwarded.get("consent_group", None)
         if consent_group:
             queryset = queryset.filter(consent_group=consent_group)
@@ -153,7 +155,7 @@ class ResourceWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapte
     type = "resource"
     name = "Resource workspace"
     description = (
-        "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"  # noqa: E501
+        "Workspaces that contain general Consortium resources (e.g., examples of using AnVIL, working with data, etc.)"
     )
     list_table_class_view = tables.DefaultWorkspaceTable
     list_table_class_staff_view = tables.DefaultWorkspaceStaffTable

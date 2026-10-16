@@ -10268,12 +10268,12 @@ class DCCProcessedDataWorkspaceSharingAuditTest(TestCase):
         audit.run_audit()
         results = audit.get_all_results()
         self.assertEqual(len(results), 2)
-        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_1.workspace)
         self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
         self.assertEqual(record.workspace, workspace_data_1.workspace)
         self.assertEqual(record.managed_group, workspace_data_1.workspace.authorization_domains.first())
         self.assertNotEqual(record.note, audit.OTHER_GROUP)
-        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_2.workspace)
         self.assertIsInstance(record, workspace_sharing_audit_results.WorkspaceSharingAuditResult)
         self.assertEqual(record.workspace, workspace_data_2.workspace)
         self.assertEqual(record.managed_group, workspace_data_2.workspace.authorization_domains.first())
@@ -10458,7 +10458,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_not_shared(self):
@@ -10475,7 +10475,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_sharing_instance, None)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_writer_can_compute(self):
@@ -10498,7 +10498,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_reader(self):
@@ -10518,7 +10518,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_owner(self):
@@ -10538,7 +10538,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_auth_domain_shared_as_writer_no_compute(self):
@@ -10978,7 +10978,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_not_shared(self):
@@ -10995,7 +10995,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, None)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_writer_can_compute(self):
@@ -11018,7 +11018,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_reader(self):
@@ -11038,7 +11038,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_owner(self):
@@ -11058,7 +11058,7 @@ class DCCProcessedDataWorkspaceSharingAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_auth_domain_shared_as_writer_no_compute(self):
@@ -11501,7 +11501,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_not_shared(self):
@@ -11518,7 +11518,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, None)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_writer_can_compute(self):
@@ -11541,7 +11541,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_reader(self):
@@ -11561,7 +11561,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
 
     def test_dcc_writers_shared_as_owner(self):
@@ -11581,7 +11581,7 @@ class DCCProcessedDataWorkspaceSharingAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_sharing_instance, sharing)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceSharingAudit.DCC_WRITERS_AFTER_COMBINED_COMPLETE,
         )
 
     def test_auth_domain_shared_as_writer_no_compute(self):
@@ -11997,11 +11997,12 @@ class DCCProcessedDataWorkspaceAuthDomainAuditTest(TestCase):
         audit.run_audit()
         results = audit.get_all_results()
         self.assertEqual(len(results), 2)
-        record = [x for x in results if x.workspace == workspace_data_1.workspace][0]
+        record = next(x for x in results if x.workspace == workspace_data_1.workspace)
         self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
         self.assertEqual(record.workspace, workspace_data_1.workspace)
         self.assertEqual(record.managed_group, group)
-        record = [x for x in results if x.workspace == workspace_data_2.workspace][0]
+
+        record = next(x for x in results if x.workspace == workspace_data_2.workspace)
         self.assertIsInstance(record, workspace_auth_domain_audit_results.WorkspaceAuthDomainAuditResult)
         self.assertEqual(record.workspace, workspace_data_2.workspace)
         self.assertEqual(record.managed_group, group)
@@ -12333,7 +12334,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_member(self):
@@ -12355,7 +12356,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_admin(self):
@@ -12377,7 +12378,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_other_group_not_member(self):
@@ -12728,7 +12729,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_member(self):
@@ -12750,7 +12751,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_admin(self):
@@ -12772,7 +12773,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditBeforeCombinedReadyTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_BEFORE_COMBINED_COMPLETE,
         )
 
     def test_other_group_not_member(self):
@@ -13129,7 +13130,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         self.assertIsNone(record.current_membership_instance)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_member(self):
@@ -13151,7 +13152,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,
         )
 
     def test_gregor_all_admin(self):
@@ -13173,7 +13174,7 @@ class DCCProcessedDataWorkspaceAuthDomainAuditAfterCombinedReadyTest(TestCase):
         self.assertEqual(record.current_membership_instance, membership)
         self.assertEqual(
             record.note,
-            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,  # noqa: E501
+            dcc_processed_data_workspace_audit.DCCProcessedDataWorkspaceAuthDomainAudit.GREGOR_ALL_AFTER_COMBINED_COMPLETE,
         )
 
     def test_other_group_not_member(self):

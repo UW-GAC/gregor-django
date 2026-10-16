@@ -42,7 +42,7 @@ class CustomProvider(OAuth2Provider):
         return str(data["sub"])
 
     def extract_common_fields(self, data):
-        extra_common = super(CustomProvider, self).extract_common_fields(data)
+        extra_common = super().extract_common_fields(data)
 
         first_name = data.get("first_name")
         last_name = data.get("last_name")
@@ -84,7 +84,9 @@ class CustomProvider(OAuth2Provider):
 
         return gregor_oauth_scopes
 
-    def get_provider_managed_scope_status(self, scopes_granted=[]):
+    def get_provider_managed_scope_status(self, scopes_granted=None):
+        if scopes_granted is None:
+            scopes_granted = []
         provider_managed_django_group_status = {}
 
         gregor_oauth_scopes = self.get_provider_scope_config()
