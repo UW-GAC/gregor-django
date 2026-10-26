@@ -51,7 +51,7 @@ dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==5.2.16
+django==5.2.18
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -68,8 +68,10 @@ docutils==0.22.4
     # via sphinx
 executing==2.0.1
     # via stack-data
-filelock==3.20.3
-    # via virtualenv
+filelock==3.32.7
+    # via
+    #   python-discovery
+    #   virtualenv
 h11==0.16.0
     # via uvicorn
 identify==2.5.35
@@ -146,6 +148,8 @@ pylint-django==2.8.0
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
+python-discovery==1.6.2
+    # via virtualenv
 pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
@@ -157,7 +161,7 @@ requests==2.33.0
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.16.7
+ruff==0.17.2
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -209,14 +213,14 @@ typing-extensions==4.16.0
     #   django-stubs-ext
     #   mypy
     #   starlette
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   requests
 uvicorn==0.30.5
     # via sphinx-autobuild
-virtualenv==20.36.1
+virtualenv==21.7.13
     # via pre-commit
 watchfiles==0.22.0
     # via sphinx-autobuild

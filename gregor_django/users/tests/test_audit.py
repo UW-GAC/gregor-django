@@ -112,70 +112,40 @@ class UserSchema(Schema):
 
 
 TEST_STUDY_SITE_DATA = [
-    ResearchCenterMockObject(
-        **{
-            "id": "1",
-            "drupal_internal__nid": "1",
-            "field_short_name": "SS1",
-            "title": "S S 1",
-            # "document_meta": {"page": {"offset": 10}},
-        }
-    ),
-    ResearchCenterMockObject(
-        **{
-            "id": "2",
-            "drupal_internal__nid": "2",
-            "field_short_name": "SS2",
-            "title": "S S 2",
-            # "document_meta": {"page": {"offset": 10}},
-        }
-    ),
+    ResearchCenterMockObject(id="1", drupal_internal__nid="1", field_short_name="SS1", title="S S 1"),
+    ResearchCenterMockObject(id="2", drupal_internal__nid="2", field_short_name="SS2", title="S S 2"),
 ]
 
 TEST_PARTNER_GROUP_DATA = [
     PartnerGroupMockObject(
-        **{
-            "id": "11",
-            "title": "Partner Group 11",
-            "drupal_internal__nid": "11",
-            "field_status": PartnerGroup.StatusTypes.ACTIVE,
-        }
+        id="11", title="Partner Group 11", drupal_internal__nid="11", field_status=PartnerGroup.StatusTypes.ACTIVE
     ),
     PartnerGroupMockObject(
-        **{
-            "id": "22",
-            "title": "Partner Group 22",
-            "drupal_internal__nid": "22",
-            "field_status": PartnerGroup.StatusTypes.INACTIVE,
-        }
+        id="22", title="Partner Group 22", drupal_internal__nid="22", field_status=PartnerGroup.StatusTypes.INACTIVE
     ),
 ]
 
 TEST_USER_DATA = [
     UserMockObject(
-        **{
-            "id": "usr1",
-            "display_name": "dnusr1",
-            "drupal_internal__uid": "usr1",
-            "name": "testuser1",
-            "mail": "testuser1@test.com",
-            "field_fname": "test1",
-            "field_lname": "user1",
-            "field_research_center_or_site": [],
-        }
+        id="usr1",
+        display_name="dnusr1",
+        drupal_internal__uid="usr1",
+        name="testuser1",
+        mail="testuser1@test.com",
+        field_fname="test1",
+        field_lname="user1",
+        field_research_center_or_site=[],
     ),
     # second mock object is deactivated user (no drupal uid)
     UserMockObject(
-        **{
-            "id": "usr2",
-            "display_name": "dnusr2",
-            "drupal_internal__uid": "",
-            "name": "testuser2",
-            "mail": "testuser2@test.com",
-            "field_fname": "test2",
-            "field_lname": "user2",
-            "field_research_center_or_site": [],
-        }
+        id="usr2",
+        display_name="dnusr2",
+        drupal_internal__uid="",
+        name="testuser2",
+        mail="testuser2@test.com",
+        field_fname="test2",
+        field_lname="user2",
+        field_research_center_or_site=[],
     ),
 ]
 
@@ -456,10 +426,7 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].field_short_name,
             full_name=TEST_STUDY_SITE_DATA[1].title,
         )
-        drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_fname,
-            TEST_USER_DATA[0].field_lname,
-        )
+        drupal_fullname = f"{TEST_USER_DATA[0].field_fname} {TEST_USER_DATA[0].field_lname}"
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -492,10 +459,7 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].field_short_name,
             full_name=TEST_STUDY_SITE_DATA[1].title,
         )
-        drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_fname,
-            TEST_USER_DATA[0].field_lname,
-        )
+        drupal_fullname = f"{TEST_USER_DATA[0].field_fname} {TEST_USER_DATA[0].field_lname}"
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -527,10 +491,7 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].field_short_name,
             full_name=TEST_STUDY_SITE_DATA[0].title,
         )
-        drupal_fullname = "{} {}".format(
-            TEST_USER_DATA[0].field_fname,
-            TEST_USER_DATA[0].field_lname,
-        )
+        drupal_fullname = f"{TEST_USER_DATA[0].field_fname} {TEST_USER_DATA[0].field_lname}"
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
