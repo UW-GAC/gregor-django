@@ -51,20 +51,20 @@ django==5.2.18
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.20.1
+django-allauth==65.21.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.36.0
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.4.0
+django-constance==4.5.0
     # via -r requirements/requirements.in
 django-crispy-forms==2.7
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==5.3.1
+django-dbbackup==5.4.0
     # via -r requirements/requirements.in
 django-environ==0.14.0
     # via -r requirements/requirements.in
@@ -104,7 +104,7 @@ networkx==3.1
     # via django-anvil-consortium-manager
 numpy==2.3.5
     # via django-anvil-consortium-manager
-oauthlib==4.0.0
+oauthlib==4.0.1
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
@@ -117,7 +117,7 @@ pip-tools==7.6.2
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via
     #   pyasn1-modules
     #   rsa

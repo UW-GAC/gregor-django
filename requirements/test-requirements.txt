@@ -16,7 +16,7 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   requests
-coverage[toml]==7.17.0
+coverage[toml]==7.17.1
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
@@ -97,7 +97,7 @@ sqlparse==0.6.0
     #   django
 termcolor==2.4.0
     # via pytest-sugar
-types-requests==2.33.0.20261006
+types-requests==2.33.0.20261030
     # via -r requirements/test-requirements.in
 urllib3==2.8.0
     # via
