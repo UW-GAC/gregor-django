@@ -52,7 +52,7 @@ packaging==26.0
     #   -c requirements/requirements.txt
     #   marshmallow
     #   pytest
-pluggy==1.5.0
+pluggy==1.7.0
     # via
     #   pytest
     #   pytest-cov
@@ -60,7 +60,7 @@ pygments==2.21.0
     # via
     #   -r requirements/test-requirements.in
     #   pytest
-pytest==9.1.1
+pytest==9.2.0
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
