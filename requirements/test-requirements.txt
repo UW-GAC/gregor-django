@@ -8,7 +8,7 @@ asgiref==3.10.0
     # via
     #   -c requirements/requirements.txt
     #   django
-certifi==2024.7.4
+certifi==2026.10.23
     # via
     #   -c requirements/requirements.txt
     #   requests
@@ -47,7 +47,7 @@ marshmallow==3.26.2
     # via marshmallow-jsonapi
 marshmallow-jsonapi==0.24.0
     # via -r requirements/test-requirements.in
-packaging==26.0
+packaging==26.3
     # via
     #   -c requirements/requirements.txt
     #   marshmallow
