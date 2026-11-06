@@ -25,7 +25,7 @@ babel==2.14.0
     # via sphinx
 backcall==0.2.0
     # via ipython
-certifi==2024.7.4
+certifi==2026.10.23
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -49,7 +49,7 @@ decorator==5.1.1
     #   ipython
 dill==0.3.8
     # via pylint
-distlib==0.3.8
+distlib==0.4.4
     # via virtualenv
 django==5.2.18
     # via
@@ -68,7 +68,7 @@ docutils==0.22.4
     # via sphinx
 executing==2.0.1
     # via stack-data
-filelock==3.32.7
+filelock==4.2.1
     # via
     #   python-discovery
     #   virtualenv
@@ -110,11 +110,12 @@ mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
     # via pre-commit
-packaging==26.0
+packaging==26.3
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
+    #   virtualenv
 parso==0.8.3
     # via jedi
 pathspec==1.0.4
@@ -123,7 +124,7 @@ pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-platformdirs==4.2.0
+platformdirs==4.14.5
     # via
     #   pylint
     #   virtualenv
@@ -220,7 +221,7 @@ urllib3==2.8.0
     #   requests
 uvicorn==0.30.5
     # via sphinx-autobuild
-virtualenv==21.7.13
+virtualenv==21.14.13
     # via pre-commit
 watchfiles==0.22.0
     # via sphinx-autobuild

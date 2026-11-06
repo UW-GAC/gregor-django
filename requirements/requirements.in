@@ -5,6 +5,7 @@ pip-tools
 whitenoise  # https://github.com/evansd/whitenoise
 # Login via oauth
 oauthlib  # https://github.com/oauthlib/oauthlib
+certifi>=2026.10.18
 cryptography # https://github.com/pyca/cryptography
 pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
